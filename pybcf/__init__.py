@@ -6,12 +6,29 @@ SCHEMA_PREFIX = "/api/v1/schema/"
 
 ALIASES = {"switches":"/core/switch"}
 
-class AttrDict(dict):
+class AttrDict(object):
+    def __init__(self, values=None):
+        if values is None:
+            values = {}
+        self.__dict__["_values"] = values
+
     def __getattr__(self, k):
-        return self[k]
+        return self._values[k]
 
     def __setattr__(self, k, v):
-        self[k] = v
+        self._values[k] = v
+
+    def __getitem__(self, k):
+        return self._values[k]
+
+    def __setitem__(self, k, v):
+        self._values[k] = v
+
+    def __repr__(self):
+        return self._values.__repr__()
+
+    def __str__(self):
+        return self._values.__str__()
 
 class BCFJSONEncoder(json.JSONEncoder):
     def default(self, obj):
