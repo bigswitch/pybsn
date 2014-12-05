@@ -2,6 +2,7 @@ import requests, json, attrdict
 
 AUTH_URL = "/api/v1/auth/login"
 PREFIX = "/api/v1/data/"
+SCHEMA_PREFIX = "/api/v1/schema/"
 
 ALIASES = {"switches":"/core/switch"}
 
@@ -31,13 +32,17 @@ class Node(object):
         return self._session.request(method, url, data=data, params=params)
 
     def get(self, params=None):
-        return from_json(self._request("GET", params=params).text)[0]
+        return from_json(self._request("GET", params=params).text)
 
     def post(self, data):
         self._request("POST", data=to_json(data))
 
     def patch(self, data):
         self._request("PATCH", data=to_json(data))
+
+    def schema(self):
+        url = self._session.url + SCHEMA_PREFIX + self._path
+        return json.loads(self._session.request("GET", url, data=None, params=None).text)
 
     def __call__(self):
         return self.get()
