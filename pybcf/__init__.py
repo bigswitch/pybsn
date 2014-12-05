@@ -1,6 +1,9 @@
 import requests, json, attrdict
+
 AUTH_URL = "/api/v1/auth/login"
 PREFIX = "/api/v1/data/"
+
+ALIASES = {"switches":"/core/switch"}
 
 class BCFJSONEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -54,3 +57,7 @@ class BCF(object):
 
     def connect(self):
         return Node("controller", self.session)
+
+    def __getattr__(self, name):
+        aliased_path = ALIASES[name]
+        return Node("controller" + aliased_path, self.session)
