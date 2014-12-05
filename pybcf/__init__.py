@@ -1,4 +1,4 @@
-import requests, json, attrdict
+import requests, json
 
 AUTH_URL = "/api/v1/auth/login"
 PREFIX = "/api/v1/data/"
@@ -6,17 +6,24 @@ SCHEMA_PREFIX = "/api/v1/schema/"
 
 ALIASES = {"switches":"/core/switch"}
 
+class AttrDict(dict):
+    def __getattr__(self, k):
+        return self[k]
+
+    def __setattr__(self, k, v):
+        self[k] = v
+
 class BCFJSONEncoder(json.JSONEncoder):
     def default(self, obj):
-        if isinstance(obj, attrdict.AttrDict):
-            return obj._mapping
+        if isinstance(obj, AttrDict):
+            return obj._values
         return json.JSONEncoder.default(self, obj)
 
 def to_json(data):
     return json.dumps(data, cls=BCFJSONEncoder)
 
 def from_json(text):
-    return json.loads(text, object_hook=attrdict.AttrDict)
+    return json.loads(text, object_hook=AttrDict)
 
 class Node(object):
     def __init__(self, path, session):
@@ -42,7 +49,7 @@ class Node(object):
 
     def schema(self):
         url = self._session.url + SCHEMA_PREFIX + self._path
-        return json.loads(self._session.request("GET", url, data=None, params=None).text)
+        return from_json(self._session.request("GET", url, data=None, params=None).text)
 
     def __call__(self):
         return self.get()
