@@ -1,4 +1,5 @@
 import requests, json, attrdict
+AUTH_URL = "/api/v1/auth/login"
 PREFIX = "/api/v1/data/"
 
 class BCFJSONEncoder(json.JSONEncoder):
@@ -44,9 +45,12 @@ class Node(object):
     def __exit__(self, *args):
         pass
 
-def connect(url, username, password):
-    session = requests.Session()
-    session.url = url
-    data = json.dumps({ 'user': username, 'password': password })
-    session.post(url + "/api/v1/auth/login", data).json()
-    return Node("controller", session)
+class BCF(object):
+    def __init__(self, url, username, password):
+        self.session = requests.Session()
+        self.session.url = url
+        data = json.dumps({ 'user': username, 'password': password })
+        self.session.post(url + AUTH_URL, data).json()
+
+    def connect(self):
+        return Node("controller", self.session)
