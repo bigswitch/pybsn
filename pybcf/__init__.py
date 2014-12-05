@@ -64,10 +64,10 @@ class Node(object):
         return from_json(self._request("GET", params=params).text)
 
     def post(self, data):
-        self._request("POST", data=to_json(data))
+        return self._request("POST", data=to_json(data))
 
     def patch(self, data):
-        self._request("PATCH", data=to_json(data))
+        return self._request("PATCH", data=to_json(data))
 
     def schema(self):
         url = self._session.url + SCHEMA_PREFIX + self._path
