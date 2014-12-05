@@ -88,9 +88,11 @@ class BCF(object):
         self.session.url = url
         data = json.dumps({ 'user': username, 'password': password })
         self.session.post(url + AUTH_URL, data).json()
+        self.root = Node("controller", self.session)
 
+    # deprecated
     def connect(self):
-        return Node("controller", self.session)
+        return root
 
     def __getattr__(self, name):
         aliased_path = ALIASES[name]
