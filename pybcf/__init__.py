@@ -71,7 +71,7 @@ class Node(object):
 
     def schema(self):
         url = self._session.url + SCHEMA_PREFIX + self._path
-        return from_json(self._session.request("GET", url, data=None, params=None).text)
+        return from_json(self._session.get(url).text)
 
     def __call__(self):
         return self.get()
