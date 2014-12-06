@@ -1,4 +1,5 @@
 import requests, json
+from string import Template
 
 AUTH_URL = "/api/v1/auth/login"
 PREFIX = "/api/v1/data/"
@@ -69,6 +70,17 @@ class Node(object):
 
     def schema(self):
         return self._connection.schema(self._path)
+
+    def filter(self, template, *args, **kwargs):
+        # TODO escape values better than repr()
+        kwargs = { k: repr(v) for k, v in kwargs.items() }
+        predicate = '[' + Template(template).substitute(**kwargs) + ']'
+        return Node(self._path + predicate, self._connection)
+
+    def match(self, **kwargs):
+        for k, v in kwargs.items():
+            self = self.filter("%s=$x" % k, x=v)
+        return self
 
     def __call__(self):
         return self.get()
