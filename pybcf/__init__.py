@@ -48,36 +48,27 @@ def from_json(text):
     return json.loads(text, object_hook=AttrDict)
 
 class Node(object):
-    def __init__(self, path, session):
+    def __init__(self, path, connection):
         self._path = path
-        self._session = session
+        self._connection = connection
 
     def __getattr__(self, name):
         return self[name.replace("_", "-")]
 
     def __getitem__(self, name):
-        return Node(self._path + "/" + name, self._session)
-
-    def _request(self, method, data=None, params=None):
-        url = self._session.url + PREFIX + self._path
-        response = self._session.request(method, url, data=data, params=params)
-        response.raise_for_status()
-        return response
+        return Node(self._path + "/" + name, self._connection)
 
     def get(self, params=None):
-        return from_json(self._request("GET", params=params).text)
+        return self._connection.get(self._path, params)
 
     def post(self, data):
-        return self._request("POST", data=to_json(data))
+        return self._connection.post(self._path, data)
 
     def patch(self, data):
-        return self._request("PATCH", data=to_json(data))
+        return self._connection.patch(self._path, data)
 
     def schema(self):
-        url = self._session.url + SCHEMA_PREFIX + self._path
-        response = self._session.get(url)
-        response.raise_for_status()
-        return from_json(response.text)
+        return self._connection.schema(self._path)
 
     def __call__(self):
         return self.get()
@@ -91,10 +82,10 @@ class Node(object):
 class BCF(object):
     def __init__(self, url, username, password):
         self.session = requests.Session()
-        self.session.url = url
+        self.url = url
         data = json.dumps({ 'user': username, 'password': password })
         self.session.post(url + AUTH_URL, data).json()
-        self.root = Node("controller", self.session)
+        self.root = Node("controller", self)
 
     # deprecated
     def connect(self):
@@ -103,3 +94,24 @@ class BCF(object):
     def __getattr__(self, name):
         aliased_path = ALIASES[name]
         return Node("controller" + aliased_path, self.session)
+
+    def request(self, method, path, data=None, params=None):
+        url = self.url + PREFIX + path
+        response = self.session.request(method, url, data=data, params=params)
+        response.raise_for_status()
+        return response
+
+    def get(self, path, params=None):
+        return from_json(self.request("GET", path, params=params).text)
+
+    def post(self, path, data):
+        return self.request("POST", path, data=to_json(data))
+
+    def patch(self, path, data):
+        return self.request("PATCH", path, data=to_json(data))
+
+    def schema(self, path=""):
+        url = self.url + SCHEMA_PREFIX + path
+        response = self.session.get(url)
+        response.raise_for_status()
+        return from_json(response.text)
