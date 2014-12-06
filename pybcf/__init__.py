@@ -53,7 +53,9 @@ class Node(object):
         self._session = session
 
     def __getattr__(self, name):
-        name = name.replace("_", "-")
+        return self[name.replace("_", "-")]
+
+    def __getitem__(self, name):
         return Node(self._path + "/" + name, self._session)
 
     def _request(self, method, data=None, params=None):
