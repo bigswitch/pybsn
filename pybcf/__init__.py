@@ -58,7 +58,9 @@ class Node(object):
 
     def _request(self, method, data=None, params=None):
         url = self._session.url + PREFIX + self._path
-        return self._session.request(method, url, data=data, params=params)
+        response = self._session.request(method, url, data=data, params=params)
+        response.raise_for_status()
+        return response
 
     def get(self, params=None):
         return from_json(self._request("GET", params=params).text)
