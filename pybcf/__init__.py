@@ -6,6 +6,7 @@ PREFIX = "/api/v1/data/"
 SCHEMA_PREFIX = "/api/v1/schema/"
 
 ALIASES = {"switches":"/core/switch",
+            "fabric_switches":"/applications/bcf/info/fabric/switch",
             "interfaces":"/core/switch/interface",
             "links":"/applications/bcf/info/fabric/link",
             "controllers":"/cluster",
