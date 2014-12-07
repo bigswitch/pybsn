@@ -1,5 +1,6 @@
 import pybcf
 import argparse
+import json
 
 parser = argparse.ArgumentParser(description='Add a static endpoint')
 
@@ -9,6 +10,7 @@ parser.add_argument('--user', '-u', type=str, default="admin", help="Username")
 parser.add_argument('--password', '-p', type=str, default="adminadmin", help="Password")
 
 parser.add_argument("--max-depth", "-d", type=int, help="Maximum recursion depth")
+parser.add_argument("--raw", action="store_true", help="Print raw JSON")
 
 args = parser.parse_args()
 
@@ -38,4 +40,8 @@ def traverse(node, depth=0, name="root"):
         assert False, "unknown node type %s" % node['nodeType']
 
 path = args.path.replace('.', '/').replace('_', '-')
-traverse(bcf.schema(path), name=path)
+
+if args.raw:
+    print json.dumps(bcf.schema(path), indent=4, cls=pybcf.BCFJSONEncoder)
+else:
+    traverse(bcf.schema(path), name=path)
