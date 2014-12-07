@@ -97,26 +97,26 @@ class Node(object):
     def __exit__(self, *args):
         pass
 
-class DataNode(object):
-    def __init__(self, path, connection, value):
-        self._path = path
-        self._connection = connection
-        self._value = value
+# class DataNode(object):
+#     def __init__(self, path, connection, value):
+#         self._path = path
+#         self._connection = connection
+#         self._value = value
 
-    def get(self, name):
-        return DataNode(self._path, self._connection, self._value[name])
+#     def get(self, name):
+#         return DataNode(self._path, self._connection, self._value[name])
 
-    def __getattr__(self, name):
-        print "get attr"
-        print self._value[name]
-        return DataNode(self._path, self._connection, self._value[name])
+#     def __getattr__(self, name):
+#         print "get attr"
+#         print self._value[name]
+#         return DataNode(self._path, self._connection, self._value[name])
 
-    def __getitem__(self, k):
-        print self._value[k]
-        return DataNode(self._path, self._connection, self._value[k])
+#     def __getitem__(self, k):
+#         print self._value[k]
+#         return DataNode(self._path, self._connection, self._value[k])
 
-    def __call__(self):
-        return self.get()
+#     def __call__(self):
+#         return self.get()
 
 class BCF(object):
     def __init__(self, url, username, password):
@@ -132,7 +132,7 @@ class BCF(object):
 
     def __getattr__(self, name):
         aliased_path = ALIASES[name]
-        return Node("controller" + aliased_path, self.session)
+        return Node("controller" + aliased_path, self)
 
     def request(self, method, path, data=None, params=None):
         url = self.url + PREFIX + path
@@ -142,8 +142,7 @@ class BCF(object):
         return response
 
     def get(self, path, params=None):
-        value = from_json(self.request("GET", path, params=params).text)
-        return DataNode(path, self, value)
+        return from_json(self.request("GET", path, params=params).text)
 
     def post(self, path, data):
         return self.request("POST", path, data=to_json(data))
