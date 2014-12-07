@@ -143,8 +143,15 @@ class BCF(object):
     def request(self, method, path, data=None, params=None):
         url = self.url + PREFIX + path
         response = self.session.request(method, url, data=data, params=params)
-        # Raise an HTTPError for 4xx/5xx codes
-        response.raise_for_status()
+        try:
+            # Raise an HTTPError for 4xx/5xx codes
+            response.raise_for_status()
+        except requests.exceptions.HTTPError, e:
+            if e.response.text:
+                error_json = json.loads(e.response.text)
+                if 'description' in error_json:
+                    e.args = (e.args[0] + ': ' + error_json['description'],)
+            raise
         return response
 
     def get(self, path, params=None):
