@@ -37,5 +37,5 @@ def traverse(node, depth=0, name="root"):
     else:
         assert False, "unknown node type %s" % node['nodeType']
 
-path = args.path.replace('.', '/')
+path = args.path.replace('.', '/').replace('_', '-')
 traverse(bcf.schema(path), name=path)
