@@ -5,7 +5,14 @@ AUTH_URL = "/api/v1/auth/login"
 PREFIX = "/api/v1/data/"
 SCHEMA_PREFIX = "/api/v1/schema/"
 
-ALIASES = {"switches":"/core/switch"}
+ALIASES = {"switches":"/core/switch",
+            "interfaces":"/core/switch/interface",
+            "links":"/applications/bcf/info/fabric/link",
+            "controllers":"/cluster",
+            "lags":"/core/switch/fabric-lag",
+            "users":"/core/aaa/local-user",
+            "groups":"/core/aaa/group",
+            "fabric":"/applications/bcf/info/summary/fabric"}
 
 class AttrDict(object):
     def __init__(self, values=None):
