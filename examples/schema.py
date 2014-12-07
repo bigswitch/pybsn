@@ -16,6 +16,21 @@ args = parser.parse_args()
 
 bcf = pybcf.BCF("http://%s:8080" % args.host, args.user, args.password)
 
+def pretty_type(node):
+    if not 'typeSchemaNode' in node:
+        return node['leafType'].lower()
+
+    t = node['typeSchemaNode']
+
+    if t['leafType'] == 'ENUMERATION':
+        names = [x for x in t['typeValidator'] if x['type'] == 'ENUMERATION_VALIDATOR'][0]['names']
+        return "enum { %s }" % ', '.join(names)
+    elif t['leafType'] == 'UNION':
+        names = [x['name'] for x in t['typeSchemaNodes']]
+        return "union { %s }" % ', '.join(names)
+    else:
+        return t['leafType'].lower()
+
 def traverse(node, depth=0, name="root"):
     def output(*s):
         print " " * (depth * 2) + ' '.join(s)
@@ -32,10 +47,9 @@ def traverse(node, depth=0, name="root"):
     elif node['nodeType'] == 'LIST':
         traverse(node['listElementSchemaNode'], depth, name)
     elif node['nodeType'] == 'LEAF':
-        if True:
-            output(name, ":", node['leafType'].lower())
+        output(name, ":", pretty_type(node))
     elif node['nodeType'] == 'LEAF_LIST':
-        output(name, ":", "list of", node['leafSchemaNode']['leafType'].lower())
+        output(name, ":", "list of", pretty_type(node['leafSchemaNode']))
     else:
         assert False, "unknown node type %s" % node['nodeType']
 
