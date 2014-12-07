@@ -78,8 +78,14 @@ class Node(object):
     def post(self, data):
         return self._connection.post(self._path, data)
 
+    def put(self, data):
+        return self._connection.put(self._path, data)
+
     def patch(self, data):
         return self._connection.patch(self._path, data)
+
+    def delete(self):
+        return self._connection.delete(self._path)
 
     def schema(self):
         return self._connection.schema(self._path)
@@ -144,8 +150,15 @@ class BCF(object):
     def request(self, method, path, data=None, params=None):
         url = self.url + PREFIX + path
         response = self.session.request(method, url, data=data, params=params)
-        # Raise an HTTPError for 4xx/5xx codes
-        response.raise_for_status()
+        try:
+            # Raise an HTTPError for 4xx/5xx codes
+            response.raise_for_status()
+        except requests.exceptions.HTTPError, e:
+            if e.response.text:
+                error_json = json.loads(e.response.text)
+                if 'description' in error_json:
+                    e.args = (e.args[0] + ': ' + error_json['description'],)
+            raise
         return response
 
     def get(self, path, params=None):
@@ -154,8 +167,14 @@ class BCF(object):
     def post(self, path, data):
         return self.request("POST", path, data=to_json(data))
 
+    def put(self, path, data):
+        return self.request("PUT", path, data=to_json(data))
+
     def patch(self, path, data):
         return self.request("PATCH", path, data=to_json(data))
+
+    def delete(self, path):
+        return self.request("DELETE", path)
 
     def schema(self, path=""):
         url = self.url + SCHEMA_PREFIX + path
