@@ -18,6 +18,9 @@ class AttrDict(object):
     def _key(k):
         return k.replace("_", "-")
 
+    def keys(self):
+        return self._values.keys()
+
     def __getattr__(self, k):
         return self[k]
 
@@ -104,7 +107,7 @@ class BCF(object):
 
     # deprecated
     def connect(self):
-        return root
+        return self.root
 
     def __getattr__(self, name):
         aliased_path = ALIASES[name]
