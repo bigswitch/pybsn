@@ -33,7 +33,7 @@ def traverse(node, depth=0, name="root"):
         if True:
             output(name, ":", node['leafType'].lower())
     elif node['nodeType'] == 'LEAF_LIST':
-        output(name, "(leaf list)")
+        output(name, ":", "list of", node['leafSchemaNode']['leafType'].lower())
     else:
         assert False, "unknown node type %s" % node['nodeType']
 
