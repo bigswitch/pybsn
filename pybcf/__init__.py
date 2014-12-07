@@ -36,6 +36,9 @@ class AttrDict(object):
     def __str__(self):
         return self._values.__str__()
 
+    def __iter__(self):
+        return self._values.__iter__()
+
 class BCFJSONEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, AttrDict):
