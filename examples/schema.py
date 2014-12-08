@@ -4,7 +4,7 @@ import json
 import textwrap
 import re
 
-parser = argparse.ArgumentParser(description='Add a static endpoint')
+parser = argparse.ArgumentParser(description='Display the schema in human readable form')
 
 parser.add_argument('path', type=str, default='controller', nargs='?')
 parser.add_argument('--host', '-H', type=str, default="127.0.0.1", help="Controller IP/Hostname to connect to")
