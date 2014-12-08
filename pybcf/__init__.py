@@ -16,8 +16,10 @@ ALIASES = {"switches":"/core/switch",
             "fabric":"/applications/bcf/info/summary/fabric"}
 
 class AttrDict(object):
+    __slots__ = ['_values']
+
     def __init__(self, values=None):
-        self.__dict__["_values"] = {}
+        object.__setattr__(self, "_values", {})
         if values is not None:
             for k, v in values.items():
                 self[k] = v
