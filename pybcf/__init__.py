@@ -41,6 +41,9 @@ class AttrDict(object):
     def __setitem__(self, k, v):
         self._values[self._key(k)] = v
 
+    def __contains__(self, k):
+        return self._key(k) in self._values
+
     def __repr__(self):
         return self._values.__repr__()
 
