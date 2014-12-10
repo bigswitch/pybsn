@@ -2,6 +2,7 @@ import requests, json
 from string import Template
 
 AUTH_URL = "/api/v1/auth/login"
+LEGACY_AUTH_URL = "/auth/login"
 PREFIX = "/api/v1/data/"
 SCHEMA_PREFIX = "/api/v1/schema/"
 
@@ -142,7 +143,7 @@ class BCF(object):
         self.session = requests.Session()
         self.url = url
         data = json.dumps({ 'user': username, 'password': password })
-        self.session.post(url + AUTH_URL, data).json()
+        self.session.post(url + AUTH_URL, data).raise_for_status()
         self.root = Node("controller", self)
 
     # deprecated
@@ -187,3 +188,16 @@ class BCF(object):
         response = self.session.get(url)
         response.raise_for_status()
         return from_json(response.text)
+
+class BigTap(BCF):
+    def __init__(self, url, username, password):
+        self.session = requests.Session()
+        self.url = url
+        data = json.dumps({ 'user': username, 'password': password })
+        response = self.session.post(url + LEGACY_AUTH_URL, data)
+        response.raise_for_status()
+        # Fix up cookie path
+        for cookie in self.session.cookies:
+            if cookie.path == "/auth":
+                cookie.path = "/api"
+        self.root = Node("controller", self)
