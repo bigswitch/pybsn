@@ -19,6 +19,10 @@ for interface_type in ['core', 'filter', 'delivery', 'service']:
         interface.type = interface_type
         interfaces.append(interface)
 
+switches_by_dpid = {}
+for switch in bt.root.core.switch():
+    switches_by_dpid[switch.dpid] = switch
+
 def atoi(text):
     return int(text) if text.isdigit() else text
 
@@ -36,7 +40,11 @@ def sort_key(interface):
 for interface in sorted(interfaces, key=sort_key):
     if interface.count_rx_error > 0 or interface.count_xmit_error > 0:
         direction = interface.direction == "rx" and "<-" or "->"
-        print interface.switch, interface.interface, interface.type, direction, interface.peer
+        if interface.switch in switches_by_dpid:
+            switch_name = switches_by_dpid[interface.switch].alias
+        else:
+            switch_name = interface.switch
+        print switch_name, interface.interface, interface.type, direction, interface.peer
         for k, v in interface._values.items():
             if re.match(r'count-[\w-]+-error', k) and v > 0:
                 print "  %s: %u" % (k, v)
