@@ -56,6 +56,11 @@ def traverse(node, depth=0, name="root"):
     else:
         description = ''
 
+    if args.verbose:
+        config = "config" in node['dataSources'] and "(config)" or ""
+    else:
+        config = ""
+
     if node['nodeType'] == 'CONTAINER' or node['nodeType'] == 'LIST_ELEMENT':
         if node['nodeType'] == 'CONTAINER':
             output(name, description)
@@ -66,9 +71,9 @@ def traverse(node, depth=0, name="root"):
         output(name, "(list)", description)
         traverse(node['listElementSchemaNode'], depth, name)
     elif node['nodeType'] == 'LEAF':
-        output(name, ":", pretty_type(node), description)
+        output(name, ":", pretty_type(node), config, description)
     elif node['nodeType'] == 'LEAF_LIST':
-        output(name, ":", "list of", pretty_type(node['leafSchemaNode']), description)
+        output(name, ":", "list of", pretty_type(node['leafSchemaNode']), config, description)
     else:
         assert False, "unknown node type %s" % node['nodeType']
 
