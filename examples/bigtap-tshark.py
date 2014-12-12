@@ -20,6 +20,7 @@ parser.add_argument('--password', '-p', type=str, default="adminadmin", help="Pa
 parser.add_argument('filter_interface', help="Filter interface to capture from")
 parser.add_argument('--duration', '-d', type=int, default=60, help="Duration of the policy in seconds (0 for unlimited)")
 parser.add_argument('--priority', '-P', type=int, default=100, help="Priority of the policy")
+parser.add_argument('--rule', '-r', default='all', choices=['all', 'tcp-syn'], help="Filter rule")
 
 args = parser.parse_args()
 
@@ -43,10 +44,19 @@ policy.filter_group.match(name=args.filter_interface).put({
     'name': args.filter_interface,
 })
 
-policy.rule.match(sequence=1).put({
-    'sequence': 1,
-    'any-traffic': True,
-})
+if args.rule == 'all':
+    policy.rule.match(sequence=1).put({
+        'sequence': 1,
+        'any-traffic': True,
+    })
+elif args.rule == 'tcp-syn':
+    policy.rule.match(sequence=1).put({
+        'sequence': 1,
+        'ether-type': 0x0800,
+        'ip-proto': 6,
+        'tcp-flags': 2,
+        'tcp-flags-mask': 63,
+    })
 
 policy.patch({
     'start-time': now,
