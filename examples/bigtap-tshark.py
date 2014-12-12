@@ -4,6 +4,7 @@ import time
 import re
 import subprocess
 import signal
+import os
 
 finished = False
 def sigint(signal, frame):
@@ -76,7 +77,7 @@ while not finished:
 
 print "Capturing packets"
 
-tshark = subprocess.Popen(["tshark", "-i-"], stdin=subprocess.PIPE)
+tshark = subprocess.Popen(["tshark", "-i-"], stdin=subprocess.PIPE, preexec_fn=os.setsid)
 
 offset = 0
 while not finished:
