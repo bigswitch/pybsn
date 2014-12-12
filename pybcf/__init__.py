@@ -105,7 +105,7 @@ class Node(object):
 
     def match(self, **kwargs):
         for k, v in kwargs.items():
-            self = self.filter("%s=$x" % k, x=v)
+            self = self.filter("%s=$x" % k.replace('_', '-'), x=v)
         return self
 
     def __call__(self):
