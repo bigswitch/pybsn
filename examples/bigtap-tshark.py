@@ -64,35 +64,38 @@ policy.patch({
     'duration': args.duration,
 })
 
-print "Waiting for policy to be applied"
+try:
+    print "Waiting for policy to be applied"
 
-while not finished:
-    events = policy.policy_history.match(policy_event="installation complete")()
-    if events:
-        event = events[-1]
-        if event.timestamp >= now:
-            url = re.search(r'http://.*\.pcap', event.event_detail).group()
-            break
-    time.sleep(0.5)
+    while not finished:
+        events = policy.policy_history.match(policy_event="installation complete")()
+        if events:
+            event = events[-1]
+            if event.timestamp >= now:
+                url = re.search(r'http://.*\.pcap', event.event_detail).group()
+                break
+        time.sleep(0.5)
 
-print "Capturing packets"
+    print "Capturing packets"
 
-tshark = subprocess.Popen(["tshark", "-i-"], stdin=subprocess.PIPE, preexec_fn=os.setsid)
+    tshark = subprocess.Popen(["tshark", "-i-"], stdin=subprocess.PIPE, preexec_fn=os.setsid)
 
-offset = 0
-while not finished:
-    r = bt.session.get(url, stream=True, headers={ 'Range': 'bytes=%d-' % offset })
-    if r.status_code == 416:
-        time.sleep(1.0)
-        continue
-    r.raise_for_status()
-    for chunk in r.iter_content(128):
-        tshark.stdin.write(chunk)
-        offset += len(chunk)
-    if offset == 0:
-        time.sleep(1.0)
+    try:
+        offset = 0
+        while not finished:
+            r = bt.session.get(url, stream=True, headers={ 'Range': 'bytes=%d-' % offset })
+            if r.status_code == 416:
+                time.sleep(1.0)
+                continue
+            r.raise_for_status()
+            for chunk in r.iter_content(128):
+                tshark.stdin.write(chunk)
+                offset += len(chunk)
+            if offset == 0:
+                time.sleep(1.0)
+    finally:
+        tshark.stdin.close()
+        tshark.wait()
 
-tshark.stdin.close()
-tshark.wait()
-
-policy.delete()
+finally:
+    policy.delete()
