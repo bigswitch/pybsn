@@ -22,6 +22,7 @@ parser.add_argument('filter_interface', help="Filter interface to capture from")
 parser.add_argument('--duration', '-d', type=int, default=60, help="Duration of the policy in seconds (0 for unlimited)")
 parser.add_argument('--priority', '-P', type=int, default=100, help="Priority of the policy")
 parser.add_argument('--rule', '-r', default='all', choices=['all', 'tcp-syn'], help="Filter rule")
+parser.add_argument('--tool', '-t', default='tshark', type=str, help="Packet display tool (tshark or wireshark")
 
 args = parser.parse_args()
 
@@ -78,7 +79,14 @@ try:
 
     print "Capturing packets"
 
-    tshark = subprocess.Popen(["tshark", "-i-"], stdin=subprocess.PIPE, preexec_fn=os.setsid)
+    if 'tshark' in args.tool:
+        tool_args = ['-i-']
+    elif 'wireshark' in args.tool:
+        tool_args = ['-i-', '-k']
+    else:
+        raise Exception("unknown tool %r" % args.tool)
+
+    tshark = subprocess.Popen([args.tool] + tool_args, stdin=subprocess.PIPE, preexec_fn=os.setsid)
 
     try:
         offset = 0
