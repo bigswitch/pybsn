@@ -17,9 +17,9 @@ bcf = pybcf.BCF("http://%s:8080" % args.host, args.user, args.password)
 print "Generating..."
 reply = bcf.root.support.generate_bundle.get()[0]
 print "Downloading..."
-name = args.output or reply['name']
+name = args.output or reply.name
 with open(name, "w") as f:
-    r = bcf.session.get(bcf.url + reply['url-path'], stream=True)
+    r = bcf.session.get(bcf.url + reply.url_path, stream=True)
     r.raise_for_status()
     for chunk in r.iter_content(4096):
         f.write(chunk)

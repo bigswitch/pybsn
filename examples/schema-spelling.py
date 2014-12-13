@@ -18,16 +18,16 @@ descriptions = []
 
 def traverse(node):
     if 'name' in node:
-        names.append(node['name'])
+        names.append(node.name)
 
     if 'description' in node:
-        descriptions.append(node['description'])
+        descriptions.append(node.description)
 
-    if node['nodeType'] == 'CONTAINER' or node['nodeType'] == 'LIST_ELEMENT':
-        for child_name in node['childNodes']:
-            traverse(node['childNodes'][child_name])
-    elif node['nodeType'] == 'LIST':
-        traverse(node['listElementSchemaNode'])
+    if node.nodeType == 'CONTAINER' or node.nodeType == 'LIST_ELEMENT':
+        for child_name in node.childNodes:
+            traverse(getattr(node.childNodes, child_name))
+    elif node.nodeType == 'LIST':
+        traverse(node.listElementSchemaNode)
 
 traverse(bcf.root.schema())
 

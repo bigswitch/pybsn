@@ -15,7 +15,7 @@ topology = bt.root.applications.bigtap.topology
 
 interfaces = []
 for interface_type in ['core', 'filter', 'delivery', 'service']:
-    for interface in topology[interface_type + '-interface']():
+    for interface in getattr(topology, interface_type + '_interface')():
         interface.type = interface_type
         interfaces.append(interface)
 
@@ -35,7 +35,7 @@ def natural_keys(text):
     return [ atoi(c) for c in re.split('(\d+)', text) ]
 
 def sort_key(interface):
-    return (interface['switch'], natural_keys(interface['interface']))
+    return (interface.switch, natural_keys(interface.interface))
 
 for interface in sorted(interfaces, key=sort_key):
     if interface.count_rx_error > 0 or interface.count_xmit_error > 0:
@@ -45,6 +45,7 @@ for interface in sorted(interfaces, key=sort_key):
         else:
             switch_name = interface.switch
         print switch_name, interface.interface, interface.type, direction, interface.peer
-        for k, v in interface._values.items():
-            if re.match(r'count-[\w-]+-error', k) and v > 0:
+        for k in interface:
+            v = getattr(interface, k)
+            if re.match(r'count.*error', k) and v > 0:
                 print "  %s: %u" % (k, v)

@@ -19,18 +19,18 @@ seen = set()
 failed = False
 
 def traverse(node):
-    name = 'name' in node and node['name'] or None
+    name = 'name' in node and node.name or None
     if name and name not in seen:
         seen.add(name)
         if name in blacklist or '_' in name:
             print name
             failed = True
 
-    if node['nodeType'] == 'CONTAINER' or node['nodeType'] == 'LIST_ELEMENT':
-        for child_name in node['childNodes']:
-            traverse(node['childNodes'][child_name])
-    elif node['nodeType'] == 'LIST':
-        traverse(node['listElementSchemaNode'])
+    if node.nodeType == 'CONTAINER' or node.nodeType == 'LIST_ELEMENT':
+        for child_name in node.childNodes:
+            traverse(getattr(node.childNodes, child_name))
+    elif node.nodeType == 'LIST':
+        traverse(node.listElementSchemaNode)
 
 traverse(bcf.schema('controller'))
 
