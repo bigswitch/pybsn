@@ -139,12 +139,13 @@ class Node(object):
 #         return self.get()
 
 class BCF(object):
-    def __init__(self, url, username, password):
+    def __init__(self, url, username, password, verify=True):
         self.session = requests.Session()
         self.url = url
         data = json.dumps({ 'user': username, 'password': password })
-        self.session.post(url + AUTH_URL, data).raise_for_status()
+        self.session.post(url + AUTH_URL, data, verify=verify).raise_for_status()
         self.root = Node("controller", self)
+        self.verify = verify
 
     # deprecated
     def connect(self):
@@ -156,7 +157,7 @@ class BCF(object):
 
     def request(self, method, path, data=None, params=None):
         url = self.url + PREFIX + path
-        response = self.session.request(method, url, data=data, params=params)
+        response = self.session.request(method, url, data=data, params=params, verify=self.verify)
         try:
             # Raise an HTTPError for 4xx/5xx codes
             response.raise_for_status()
@@ -185,19 +186,20 @@ class BCF(object):
 
     def schema(self, path=""):
         url = self.url + SCHEMA_PREFIX + path
-        response = self.session.get(url)
+        response = self.session.get(url, verify=self.verify)
         response.raise_for_status()
         return from_json(response.text)
 
 class BigTap(BCF):
-    def __init__(self, url, username, password):
+    def __init__(self, url, username, password, verify=True):
         self.session = requests.Session()
         self.url = url
         data = json.dumps({ 'user': username, 'password': password })
-        response = self.session.post(url + LEGACY_AUTH_URL, data)
+        response = self.session.post(url + LEGACY_AUTH_URL, data, verify=verify)
         response.raise_for_status()
         # Fix up cookie path
         for cookie in self.session.cookies:
             if cookie.path == "/auth":
                 cookie.path = "/api"
         self.root = Node("controller", self)
+        self.verify = verify
