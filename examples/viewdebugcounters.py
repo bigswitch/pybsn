@@ -27,6 +27,7 @@ parser = argparse.ArgumentParser(description='View debug counters for all switch
 parser.add_argument('--host', '-H', type=str, default="127.0.0.1", help="Controller IP/Hostname to connect to")
 parser.add_argument('--user', '-u', type=str, default="admin", help="Username")
 parser.add_argument('--password', '-p', type=str, default="adminadmin", help="Password")
+parser.add_argument('filter', nargs='*', help="Limit counters to those containing this string")
 
 args = parser.parse_args()
 
@@ -46,6 +47,8 @@ class DebugCounterSource(object):
         for switch_counter in switch_counters:
             for counter in switch_counter.counter:
                 name = switch_counter.switch_name + ':' + counter.name
+                if not all(x in name for x in args.filter):
+                    continue
                 yield DebugCounter(
                     name=name,
                     description=counter.description,
