@@ -1,8 +1,6 @@
 import requests, json
 from string import Template
 
-AUTH_URL = "/api/v1/auth/login"
-LEGACY_AUTH_URL = "/auth/login"
 PREFIX = "/api/v1/data/"
 SCHEMA_PREFIX = "/api/v1/schema/"
 
@@ -138,12 +136,10 @@ class Node(object):
 #     def __call__(self):
 #         return self.get()
 
-class BCF(object):
-    def __init__(self, url, username, password, verify=True):
-        self.session = requests.Session()
+class BigDbClient(object):
+    def __init__(self, url, session, verify=True):
         self.url = url
-        data = json.dumps({ 'user': username, 'password': password })
-        self.session.post(url + AUTH_URL, data, verify=verify).raise_for_status()
+        self.session = session
         self.root = Node("controller", self)
         self.verify = verify
 
@@ -190,16 +186,27 @@ class BCF(object):
         response.raise_for_status()
         return from_json(response.text)
 
-class BigTap(BCF):
-    def __init__(self, url, username, password, verify=True):
-        self.session = requests.Session()
-        self.url = url
-        data = json.dumps({ 'user': username, 'password': password })
-        response = self.session.post(url + LEGACY_AUTH_URL, data, verify=verify)
-        response.raise_for_status()
-        # Fix up cookie path
-        for cookie in self.session.cookies:
-            if cookie.path == "/auth":
-                cookie.path = "/api"
-        self.root = Node("controller", self)
-        self.verify = verify
+AUTH_ATTEMPTS = [
+    ('https', 8443, "/api/v1/auth/login"),
+    ('https', 443, "/auth/login"),
+]
+
+def attempt_login(session, host, username, password, verify):
+    auth_data = json.dumps({ 'user': username, 'password': password })
+    for schema, port, path in AUTH_ATTEMPTS:
+        url = "%s://%s:%d" % (schema, host, port)
+        response = session.post(url + path, auth_data, verify=verify)
+        if response.status_code == 200: # OK
+            # Fix up cookie path
+            for cookie in session.cookies:
+                if cookie.path == "/auth":
+                    cookie.path = "/api"
+            return url
+        elif response.status_code == 401: # Unauthorized
+            response.raise_for_status()
+    raise Exception("Login failed")
+
+def connect(host, username, password, verify=False):
+    session = requests.Session()
+    url = attempt_login(session, host, username, password, verify)
+    return BigDbClient(url, session, verify=verify)

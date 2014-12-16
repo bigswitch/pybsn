@@ -14,14 +14,10 @@ parser.add_argument('--password', '-p', type=str, default="adminadmin", help="Pa
 parser.add_argument("--max-depth", "-d", type=int, help="Maximum recursion depth")
 parser.add_argument("--raw", action="store_true", help="Print raw JSON")
 parser.add_argument("--verbose", "-v", action="store_true", help="Include descriptions in the output")
-parser.add_argument("--bigtap", action="store_true", help="Support BigTap controller")
 
 args = parser.parse_args()
 
-if args.bigtap:
-    bcf = pybcf.BigTap("http://%s:8082" % args.host, args.user, args.password)
-else:
-    bcf = pybcf.BCF("http://%s:8080" % args.host, args.user, args.password)
+bcf = pybcf.connect(args.host, args.user, args.password)
 
 def pretty_type(node):
     if not 'typeSchemaNode' in node:

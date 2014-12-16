@@ -10,7 +10,7 @@ parser.add_argument('--password', '-p', type=str, default="adminadmin", help="Pa
 
 args = parser.parse_args()
 
-bt = pybcf.BigTap("http://%s:8082" % args.host, args.user, args.password)
+bt = pybcf.connect(args.host, args.user, args.password)
 topology = bt.root.applications.bigtap.topology
 
 interfaces = []

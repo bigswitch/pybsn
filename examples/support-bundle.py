@@ -12,7 +12,7 @@ parser.add_argument('--output', '-o', help="Output filename")
 
 args = parser.parse_args()
 
-bcf = pybcf.BCF("http://%s:8080" % args.host, args.user, args.password)
+bcf = pybcf.connect(args.host, args.user, args.password)
 
 print "Generating..."
 reply = bcf.root.support.generate_bundle.get()[0]

@@ -31,7 +31,7 @@ parser.add_argument('filter', nargs='*', help="Limit counters to those containin
 
 args = parser.parse_args()
 
-bcf = pybcf.BCF("http://%s:8080" % args.host, args.user, args.password)
+bcf = pybcf.connect(args.host, args.user, args.password)
 
 class DebugCounter(namedtuple("DebugCounter",
         ["name", "description", "value", "initial_value"])):

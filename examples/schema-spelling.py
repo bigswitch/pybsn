@@ -11,7 +11,7 @@ parser.add_argument('--password', '-p', type=str, default="adminadmin", help="Pa
 
 args = parser.parse_args()
 
-bcf = pybcf.BCF("http://%s:8080" % args.host, args.user, args.password)
+bcf = pybcf.connect(args.host, args.user, args.password)
 
 names = []
 descriptions = []

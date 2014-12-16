@@ -26,7 +26,7 @@ parser.add_argument('--tool', '-t', default='tshark', type=str, help="Packet dis
 
 args = parser.parse_args()
 
-bt = pybcf.BigTap("http://%s:8082" % args.host, args.user, args.password)
+bt = pybcf.connect(args.host, args.user, args.password)
 
 policies = bt.root.applications.bigtap.view.match(name='admin-view').policy
 

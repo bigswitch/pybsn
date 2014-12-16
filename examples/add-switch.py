@@ -14,7 +14,7 @@ parser.add_argument('--leaf-group', help='Leaf group')
 
 args = parser.parse_args()
 
-bcf = pybcf.BCF("http://%s:8080" % args.host, args.user, args.password)
+bcf = pybcf.connect(args.host, args.user, args.password)
 bcf.root.core.switch_config.put({
     'name': args.name,
     'dpid': args.dpid,
