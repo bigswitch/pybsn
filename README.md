@@ -20,3 +20,9 @@ guidelines:
    [GitHub issue](https://github.com/Sovietaced/pybsn/issues/new).
 
 Please see `CONTRIBUTING.md` for more details on contributing and running test.
+
+---
+
+## License
+
+Please see LICENSE at the top level of the repository.
