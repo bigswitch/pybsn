@@ -4,16 +4,6 @@ from string import Template
 PREFIX = "/api/v1/data/"
 SCHEMA_PREFIX = "/api/v1/schema/"
 
-ALIASES = {"switches":"/core/switch",
-            "fabric_switches":"/applications/bcf/info/fabric/switch",
-            "interfaces":"/core/switch/interface",
-            "links":"/applications/bcf/info/fabric/link",
-            "controllers":"/cluster",
-            "lags":"/core/switch/fabric-lag",
-            "users":"/core/aaa/local-user",
-            "groups":"/core/aaa/group",
-            "fabric":"/applications/bcf/info/summary/fabric"}
-
 class AttrDict(object):
     __slots__ = ['_values']
 
@@ -115,27 +105,6 @@ class Node(object):
     def __exit__(self, *args):
         pass
 
-# class DataNode(object):
-#     def __init__(self, path, connection, value):
-#         self._path = path
-#         self._connection = connection
-#         self._value = value
-
-#     def get(self, name):
-#         return DataNode(self._path, self._connection, self._value[name])
-
-#     def __getattr__(self, name):
-#         print "get attr"
-#         print self._value[name]
-#         return DataNode(self._path, self._connection, self._value[name])
-
-#     def __getitem__(self, k):
-#         print self._value[k]
-#         return DataNode(self._path, self._connection, self._value[k])
-
-#     def __call__(self):
-#         return self.get()
-
 class BigDbClient(object):
     def __init__(self, url, session, verify=True):
         self.url = url
@@ -146,10 +115,6 @@ class BigDbClient(object):
     # deprecated
     def connect(self):
         return self.root
-
-    def __getattr__(self, name):
-        aliased_path = ALIASES[name]
-        return Node("controller" + aliased_path, self)
 
     def request(self, method, path, data=None, params=None):
         url = self.url + PREFIX + path
