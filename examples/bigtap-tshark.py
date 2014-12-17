@@ -72,8 +72,8 @@ try:
         events = policy.policy_history.match(policy_event="installation complete")()
         if events:
             event = events[-1]
-            if event.timestamp >= now:
-                url = re.search(r'http://.*\.pcap', event.event_detail).group()
+            if event['timestamp'] >= now:
+                url = re.search(r'http://.*\.pcap', event['event-detail']).group()
                 break
         time.sleep(0.5)
 

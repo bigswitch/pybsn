@@ -25,9 +25,9 @@ new_data = []
 import random
 for host in hosts:
     new_data.append(Host(
-        ip=host.ip_addr,
-        mac=host.mac_addr,
-        hostname=host.host_name))
+        ip=host['ip-addr'],
+        mac=host['mac-addr'],
+        hostname=host['host-name']))
 new_data.sort()
 
 if os.path.exists(FILENAME):
