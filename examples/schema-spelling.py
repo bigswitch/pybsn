@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import pybsn
 import argparse
 from enchant.checker import SpellChecker

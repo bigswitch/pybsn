@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+#!/usr/bin/env python
 help = """
 This program displays the debug counters exposed by all switches in
 the fabric in real time. Counters with zero values are not shown.
