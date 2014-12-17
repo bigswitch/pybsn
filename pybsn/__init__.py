@@ -1,6 +1,13 @@
 import requests, json
 from string import Template
 
+try:
+    import warnings
+    from requests.packages.urllib3.exceptions import InsecureRequestWarning
+    warnings.simplefilter("ignore", InsecureRequestWarning)
+except ImportError:
+    pass
+
 PREFIX = "/api/v1/data/"
 SCHEMA_PREFIX = "/api/v1/schema/"
 
