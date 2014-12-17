@@ -4,58 +4,6 @@ from string import Template
 PREFIX = "/api/v1/data/"
 SCHEMA_PREFIX = "/api/v1/schema/"
 
-class AttrDict(object):
-    __slots__ = ['_values']
-
-    def __init__(self, values=None):
-        object.__setattr__(self, "_values", {})
-        if values is not None:
-            for k, v in values.items():
-                self[k] = v
-
-    @staticmethod
-    def _key(k):
-        return k.replace("_", "-")
-
-    def keys(self):
-        return self._values.keys()
-
-    def __getattr__(self, k):
-        return self[k]
-
-    def __setattr__(self, k, v):
-        self[k] = v
-
-    def __getitem__(self, k):
-        return self._values[self._key(k)]
-
-    def __setitem__(self, k, v):
-        self._values[self._key(k)] = v
-
-    def __contains__(self, k):
-        return self._key(k) in self._values
-
-    def __repr__(self):
-        return self._values.__repr__()
-
-    def __str__(self):
-        return self._values.__str__()
-
-    def __iter__(self):
-        return self._values.__iter__()
-
-class BCFJSONEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, AttrDict):
-            return obj._values
-        return json.JSONEncoder.default(self, obj)
-
-def to_json(data):
-    return json.dumps(data, cls=BCFJSONEncoder)
-
-def from_json(text):
-    return json.loads(text, object_hook=AttrDict)
-
 class Node(object):
     def __init__(self, path, connection):
         self._path = path
@@ -132,16 +80,16 @@ class BigDbClient(object):
         return response
 
     def get(self, path, params=None):
-        return from_json(self.request("GET", path, params=params).text)
+        return json.loads(self.request("GET", path, params=params).text)
 
     def post(self, path, data):
-        return self.request("POST", path, data=to_json(data))
+        return self.request("POST", path, data=json.dumps(data))
 
     def put(self, path, data):
-        return self.request("PUT", path, data=to_json(data))
+        return self.request("PUT", path, data=json.dumps(data))
 
     def patch(self, path, data):
-        return self.request("PATCH", path, data=to_json(data))
+        return self.request("PATCH", path, data=json.dumps(data))
 
     def delete(self, path):
         return self.request("DELETE", path)
@@ -150,7 +98,7 @@ class BigDbClient(object):
         url = self.url + SCHEMA_PREFIX + path
         response = self.session.get(url, verify=self.verify)
         response.raise_for_status()
-        return from_json(response.text)
+        return json.loads(response.text)
 
 AUTH_ATTEMPTS = [
     ('https', 8443, "/api/v1/auth/login"),

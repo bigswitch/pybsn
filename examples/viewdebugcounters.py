@@ -45,22 +45,22 @@ class DebugCounterSource(object):
     def get_debug_counters(self):
         switch_counters = self.bcf.root.applications.bcf.info.statistic.switch_counter()
         for switch_counter in switch_counters:
-            for counter in switch_counter.counter:
-                name = switch_counter.switch_name + ':' + counter.name
+            for counter in switch_counter['counter']:
+                name = switch_counter['switch-name'] + ':' + counter['name']
                 if not all(x in name for x in args.filter):
                     continue
                 yield DebugCounter(
                     name=name,
-                    description=counter.description,
-                    value=counter.value,
+                    description=counter['description'],
+                    value=counter['value'],
                     initial_value=self.initial_values.get(name, 0))
 
     def zero(self):
         switch_counters = self.bcf.root.applications.bcf.info.statistic.switch_counter()
         for switch_counter in switch_counters:
-            for counter in switch_counter.counter:
-                name = switch_counter.switch_name + ':' + counter.name
-                self.initial_values[name] = counter.value
+            for counter in switch_counter['counter']:
+                name = switch_counter['switch-name'] + ':' + counter['name']
+                self.initial_values[name] = counter['value']
 
     def unzero(self):
         self.initial_values = {}
