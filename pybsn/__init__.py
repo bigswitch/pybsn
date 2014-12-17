@@ -67,10 +67,6 @@ class BigDbClient(object):
         self.root = Node("controller", self)
         self.verify = verify
 
-    # deprecated
-    def connect(self):
-        return self.root
-
     def request(self, method, path, data=None, params=None):
         url = self.url + PREFIX + path
         response = self.session.request(method, url, data=data, params=params, verify=self.verify)
