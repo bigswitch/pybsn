@@ -1,4 +1,4 @@
-import pybcf
+import pybsn
 import argparse
 import json
 import textwrap
@@ -17,7 +17,7 @@ parser.add_argument("--verbose", "-v", action="store_true", help="Include descri
 
 args = parser.parse_args()
 
-bcf = pybcf.connect(args.host, args.user, args.password)
+bcf = pybsn.connect(args.host, args.user, args.password)
 
 def pretty_type(node):
     if not 'typeSchemaNode' in node:

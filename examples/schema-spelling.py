@@ -1,4 +1,4 @@
-import pybcf
+import pybsn
 import argparse
 from enchant.checker import SpellChecker
 
@@ -11,7 +11,7 @@ parser.add_argument('--password', '-p', type=str, default="adminadmin", help="Pa
 
 args = parser.parse_args()
 
-bcf = pybcf.connect(args.host, args.user, args.password)
+bcf = pybsn.connect(args.host, args.user, args.password)
 
 names = []
 descriptions = []

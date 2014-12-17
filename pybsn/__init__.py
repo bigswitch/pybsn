@@ -4,16 +4,6 @@ from string import Template
 PREFIX = "/api/v1/data/"
 SCHEMA_PREFIX = "/api/v1/schema/"
 
-ALIASES = {"switches":"/core/switch",
-            "fabric_switches":"/applications/bcf/info/fabric/switch",
-            "interfaces":"/core/switch/interface",
-            "links":"/applications/bcf/info/fabric/link",
-            "controllers":"/cluster",
-            "lags":"/core/switch/fabric-lag",
-            "users":"/core/aaa/local-user",
-            "groups":"/core/aaa/group",
-            "fabric":"/applications/bcf/info/summary/fabric"}
-
 class Node(object):
     def __init__(self, path, connection):
         self._path = path
@@ -74,10 +64,6 @@ class BigDbClient(object):
     def connect(self):
         return self.root
 
-    def __getattr__(self, name):
-        aliased_path = ALIASES[name]
-        return Node("controller" + aliased_path, self)
-
     def request(self, method, path, data=None, params=None):
         url = self.url + PREFIX + path
         response = self.session.request(method, url, data=data, params=params, verify=self.verify)
@@ -87,6 +73,7 @@ class BigDbClient(object):
         except requests.exceptions.HTTPError, e:
             if e.response.text:
                 error_json = json.loads(e.response.text)
+                # Attempt to capture the REST API error description and pass it along to the HTTPError
                 if 'description' in error_json:
                     e.args = (e.args[0] + ': ' + error_json['description'],)
             raise

@@ -16,7 +16,7 @@ Keybindings:
   'z' - zero counters
   'Z' - unzero counters (show absolute values)
 """
-import pybcf
+import pybsn
 import argparse
 import time
 import npyscreen
@@ -31,7 +31,7 @@ parser.add_argument('filter', nargs='*', help="Limit counters to those containin
 
 args = parser.parse_args()
 
-bcf = pybcf.connect(args.host, args.user, args.password)
+bcf = pybsn.connect(args.host, args.user, args.password)
 
 class DebugCounter(namedtuple("DebugCounter",
         ["name", "description", "value", "initial_value"])):

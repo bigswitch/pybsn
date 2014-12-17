@@ -1,4 +1,4 @@
-import pybcf
+import pybsn
 import argparse
 import os
 import pickle
@@ -18,7 +18,7 @@ parser.add_argument('--password', '-p', type=str, default="adminadmin", help="Pa
 
 args = parser.parse_args()
 
-bt = pybcf.connect(args.host, args.user, args.password)
+bt = pybsn.connect(args.host, args.user, args.password)
 hosts = bt.root.applications.bigtap.tracked_host()
 
 new_data = []
