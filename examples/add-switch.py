@@ -1,4 +1,4 @@
-import pybcf
+import pybsn
 import argparse
 
 parser = argparse.ArgumentParser(description='Add a switch')
@@ -14,7 +14,7 @@ parser.add_argument('--leaf-group', help='Leaf group')
 
 args = parser.parse_args()
 
-bcf = pybcf.connect(args.host, args.user, args.password)
+bcf = pybsn.connect(args.host, args.user, args.password)
 bcf.root.core.switch_config.put({
     'name': args.name,
     'dpid': args.dpid,

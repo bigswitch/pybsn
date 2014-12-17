@@ -1,4 +1,4 @@
-import pybcf
+import pybsn
 import argparse
 import IPython
 from IPython.config.loader import Config
@@ -11,7 +11,7 @@ parser.add_argument('--password', '-p', type=str, default="adminadmin", help="Pa
 
 args = parser.parse_args()
 
-ctrl = pybcf.connect(args.host, args.user, args.password)
+ctrl = pybsn.connect(args.host, args.user, args.password)
 
 config = Config()
 config.TerminalInteractiveShell.banner1 = """\

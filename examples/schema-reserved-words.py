@@ -1,5 +1,5 @@
 # Check for words or syntax in schema names that collide with names used by pybcf
-import pybcf
+import pybsn
 import argparse
 import sys
 
@@ -12,7 +12,7 @@ parser.add_argument('--password', '-p', type=str, default="adminadmin", help="Pa
 
 args = parser.parse_args()
 
-bcf = pybcf.connect(args.host, args.user, args.password)
+bcf = pybsn.connect(args.host, args.user, args.password)
 
 blacklist = set(dir(bcf.root))
 seen = set()

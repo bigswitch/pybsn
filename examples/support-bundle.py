@@ -1,4 +1,4 @@
-import pybcf
+import pybsn
 import argparse
 
 parser = argparse.ArgumentParser(description='Generate and download a support bundle')
@@ -12,7 +12,7 @@ parser.add_argument('--output', '-o', help="Output filename")
 
 args = parser.parse_args()
 
-bcf = pybcf.connect(args.host, args.user, args.password)
+bcf = pybsn.connect(args.host, args.user, args.password)
 
 print "Generating..."
 reply = bcf.root.support.generate_bundle.get()[0]

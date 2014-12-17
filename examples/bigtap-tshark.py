@@ -1,4 +1,4 @@
-import pybcf
+import pybsn
 import argparse
 import time
 import re
@@ -26,7 +26,7 @@ parser.add_argument('--tool', '-t', default='tshark', type=str, help="Packet dis
 
 args = parser.parse_args()
 
-bt = pybcf.connect(args.host, args.user, args.password)
+bt = pybsn.connect(args.host, args.user, args.password)
 
 policies = bt.root.applications.bigtap.view.match(name='admin-view').policy
 
