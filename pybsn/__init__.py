@@ -125,6 +125,7 @@ class BigDbClient(object):
         except requests.exceptions.HTTPError, e:
             if e.response.text:
                 error_json = json.loads(e.response.text)
+                # Attempt to capture the REST API error description and pass it along to the HTTPError
                 if 'description' in error_json:
                     e.args = (e.args[0] + ': ' + error_json['description'],)
             raise
