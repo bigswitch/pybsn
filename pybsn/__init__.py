@@ -60,6 +60,9 @@ class Node(object):
     def __exit__(self, *args):
         pass
 
+    def __repr__(self):
+        return "Node(%s)" % self._path
+
 class BigDbClient(object):
     def __init__(self, url, session, verify=True):
         self.url = url
@@ -102,6 +105,9 @@ class BigDbClient(object):
         response = self.session.get(url, verify=self.verify)
         response.raise_for_status()
         return json.loads(response.text)
+
+    def __repr__(self):
+        return "BigDbClient(%s)" % self.url
 
 AUTH_ATTEMPTS = [
     ('https', 8443, "/api/v1/auth/login"),
