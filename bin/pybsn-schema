@@ -1,11 +1,27 @@
 #!/usr/bin/env python
+"""
+Display the schema in human-readable form
+
+The BSN REST API is self-documenting: you can GET http://.../api/v1/schema/controller
+to get a JSON document describing the tree of containers, lists, and leaf
+nodes. The raw JSON is very verbose though, so it's not easy to use as
+documentation when writing scripts against the REST API. This script shows
+the most important information in an easy to read way.
+
+By default this will display the entire schema. To navigate the schema more
+easily, you'll want to use the 'path' and '--max-depth' options. For example:
+
+    pybsn-schema -H $HOSTNAME -d 2 -v controller.core.switch
+
+This shows 2 levels of schema starting from the path "controller.core.switch".
+"""
 import pybsn
 import argparse
 import json
 import textwrap
 import re
 
-parser = argparse.ArgumentParser(description='Display the schema in human readable form')
+parser = argparse.ArgumentParser(description=__doc__)
 
 parser.add_argument('path', type=str, default='controller', nargs='?')
 parser.add_argument('--host', '-H', type=str, default="127.0.0.1", help="Controller IP/Hostname to connect to")
