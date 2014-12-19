@@ -43,7 +43,9 @@ def pretty_type(node):
     t = node['typeSchemaNode']
 
     if t['leafType'] == 'ENUMERATION':
-        names = [x for x in t['typeValidator'] if x['type'] == 'ENUMERATION_VALIDATOR'][0]['names']
+        names = [x for x in t['typeValidator'] if x['type'] == 'ENUMERATION_VALIDATOR'][0]['names'].keys()
+        if not args.verbose and len(names) > 4:
+            names = names[:4] + ['...']
         return "enum { %s }" % ', '.join(names)
     elif t['leafType'] == 'UNION':
         names = [x['name'] for x in t['typeSchemaNodes']]
