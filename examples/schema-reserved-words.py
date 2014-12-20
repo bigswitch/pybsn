@@ -3,6 +3,7 @@
 import pybsn
 import argparse
 import sys
+import keyword
 
 parser = argparse.ArgumentParser(description='Check for use of reserved names in the schema')
 
@@ -15,7 +16,7 @@ args = parser.parse_args()
 
 bcf = pybsn.connect(args.host, args.user, args.password)
 
-blacklist = set(dir(bcf.root))
+blacklist = set(dir(bcf.root) + keyword.kwlist)
 seen = set()
 failed = False
 
