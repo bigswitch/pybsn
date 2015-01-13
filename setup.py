@@ -11,4 +11,5 @@ setup(name='pybsn',
     zip_safe=False,
     install_requires=[
     "requests >= 2.3.0"
-    ])
+    ],
+    scripts=['bin/pybsn-repl', 'bin/pybsn-schema'])

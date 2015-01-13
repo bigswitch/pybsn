@@ -3,6 +3,7 @@
 import pybsn
 import argparse
 import sys
+import keyword
 
 parser = argparse.ArgumentParser(description='Check for use of reserved names in the schema')
 
@@ -15,25 +16,25 @@ args = parser.parse_args()
 
 bcf = pybsn.connect(args.host, args.user, args.password)
 
-blacklist = set(dir(bcf.root))
+blacklist = set(dir(bcf.root) + keyword.kwlist)
 seen = set()
 failed = False
 
-def traverse(node):
+def traverse(node, path):
     name = 'name' in node and node['name'] or None
     if name and name not in seen:
         seen.add(name)
         if name in blacklist or '_' in name:
-            print name
+            print name, node['nodeType'], "at", path
             failed = True
 
     if node['nodeType'] == 'CONTAINER' or node['nodeType'] == 'LIST_ELEMENT':
         for child_name, child in node['childNodes'].items():
-            traverse(child)
+            traverse(child, path + "/" + child_name)
     elif node['nodeType'] == 'LIST':
-        traverse(node['listElementSchemaNode'])
+        traverse(node['listElementSchemaNode'], path)
 
-traverse(bcf.schema('controller'))
+traverse(bcf.schema('controller'), 'controller')
 
 if failed:
     sys.exit(1)
