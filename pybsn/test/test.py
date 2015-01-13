@@ -1,42 +1,53 @@
 #!/usr/bin/env python
-from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
-import SocketServer
-import threading
+import unittest
 from nose.tools import with_setup
+import responses
+import requests
+import json
 
-class BSNRestAPI(BaseHTTPRequestHandler):
-    def _set_headers(self):
-        self.send_response(200)
-        self.send_header('Content-type', 'text/html')
-        self.end_headers()
+PREFIX = "/api/v1/data/"
 
-    def do_GET(self):
-        self._set_headers()
-        self.wfile.write("<html><body><h1>hi!</h1></body></html>")
+@responses.activate
 
-    def do_HEAD(self):
-        self._set_headers()
-        
-    def do_POST(self):
-        # Doesn't do anything with posted data
-        self._set_headers()
-        self.wfile.write("<html><body><h1>POST!</h1></body></html>")
-        
-def run(server_class=HTTPServer, handler_class=BSNRestAPI, port=8080):
-    server_address = ('', port)
-    httpd = server_class(server_address, handler_class)
-    print 'Starting httpd...'
-    httpd.serve_forever()
+def mock_leaf_response(leaf_node, path):
 
-def setUp():
-    task = run
-    thread = threading.Thread(target=task)
-    thread.daemon = True
-    thread.start()
+    type_schema_node = leaf_node['typeSchemaNode']
+    node_type = type_schema_node['leafType']
 
-def tearDown():
-	pass
+    if node_type == 'STRING':
+        body = "string"
 
-@with_setup(setUp, tearDown)
-def test_base():
-	print "testing"
+    responses.add(responses.GET, PREFIX + path,
+              body=body, status=200,
+              content_type='application/json')
+
+def traverse(node, path="controller"):
+    if node['nodeType'] == 'CONTAINER' or node['nodeType'] == 'LIST_ELEMENT':
+        for child in node['childNodes']:
+            traverse(child)
+    elif node['nodeType'] == 'LIST':
+        traverse(node['listElementSchemaNode'])
+    elif node['nodeType'] == 'LEAF':
+        path += "/" + node['name']
+        mock_leaf_response(node, path)
+    elif node['nodeType'] == 'LEAF_LIST':
+        pass
+        # do stuff
+    else:
+        assert False, "unknown node type %s" % node['nodeType']
+
+def load_schema():
+    json_data=open('schema')
+    node = json.load(json_data)
+    json_data.close()
+
+    traverse(node)
+
+
+class BigDBClientTest(unittest.TestCase):
+
+    def setUp(self):
+        load_schema()
+
+    def test_client(self):
+        print "testing"
