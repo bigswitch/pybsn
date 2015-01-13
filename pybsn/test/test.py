@@ -39,22 +39,19 @@ def mock_leaf_response(leaf_node, path):
 
 def traverse(node, path="controller"):
 
-    if type(node) is dict:
-        if node['nodeType'] == 'CONTAINER' or node['nodeType'] == 'LIST_ELEMENT':
-            for child in node['childNodes']:
-                traverse(node['childNodes'][child])
-        elif node['nodeType'] == 'LIST':
-            traverse(node['listElementSchemaNode'])
-        elif node['nodeType'] == 'LEAF':
-            path += "/" + node['name']
-            mock_leaf_response(node, path)
-        elif node['nodeType'] == 'LEAF_LIST':
-            pass
-            # do stuff
-        else:
-            assert False, "unknown node type %s" % node['nodeType']
+    if node['nodeType'] == 'CONTAINER' or node['nodeType'] == 'LIST_ELEMENT':
+        for child in node['childNodes']:
+            traverse(node['childNodes'][child])
+    elif node['nodeType'] == 'LIST':
+        traverse(node['listElementSchemaNode'])
+    elif node['nodeType'] == 'LEAF':
+        path += "/" + node['name']
+        mock_leaf_response(node, path)
+    elif node['nodeType'] == 'LEAF_LIST':
+        pass
+        # do stuff
     else:
-        print node
+        assert False, "unknown node type %s" % node['nodeType']
 
 def load_schema():
     json_data=open('schema')
