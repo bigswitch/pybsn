@@ -39,12 +39,21 @@ def mock_leaf_response(leaf_node, path):
                 regex_pattern = pattern['pattern']
                 value = rstr.xeger(regex_pattern)[:value_length]
 
+        # Base case
         if not value:
             value = "string"
-            
+
         body += '"' + value + '"}'
     elif node_type == 'BOOLEAN':
-        body += 'false}'
+        # Randomly calculate a true or false value
+        random_boolean = bool(random.getrandbits(1))
+
+        if random_boolean:
+            value = "true"
+        else: 
+            value = "false"
+
+        body += value + '}'
     elif node_type == 'INTEGER':
         body += '1}'
     elif node_type == 'ENUMERATION':
