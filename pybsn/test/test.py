@@ -6,6 +6,7 @@ import responses
 import requests
 import json
 import random
+import rstr
 
 PREFIX = "/api/v1/data/"
 
@@ -18,8 +19,30 @@ def mock_leaf_response(leaf_node, path):
     node_type = type_schema_node['leafType']
 
     body = "{\"#{leaf_node['name']}\":"
+    value = None
+
     if node_type == 'STRING':
-        body += '"string"}'
+        if 'typeValidator' in type_schema_node:
+            type_validator = type_schema_node['typeValidator']
+            length = len(type_validator)
+            
+            # value we are going to return
+            if length > 0:
+                ranges_obj = type_validator[0]
+                ranges_array = ranges_obj['ranges']
+                # Get the max size
+                value_length = ranges_array[0]['end']
+                example = "abcdefghijklmnopqrstuvwxyz"
+                value = example[:value_length]
+            if length > 1:
+                pattern = type_validator[1]
+                regex_pattern = pattern['pattern']
+                value = rstr.xeger(regex_pattern)[:value_length]
+
+        if not value:
+            value = "string"
+            
+        body += '"' + value + '"}'
     elif node_type == 'BOOLEAN':
         body += 'false}'
     elif node_type == 'INTEGER':
