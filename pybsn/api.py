@@ -8,9 +8,9 @@ class Api(object):
                 username,
                 password):
 
-        self._client = connect(host, username, password)
+        self.client = connect(host, username, password)
 
     def get_switches(self):
-        return Switch.get_switches(self._client)
+        return Switch.get_switches(self.client)
 
 
