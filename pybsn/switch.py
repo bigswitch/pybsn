@@ -18,5 +18,3 @@ class Switch(object):
             switches.append(sw)
 
         return switches
-
-    def set_dpid()
