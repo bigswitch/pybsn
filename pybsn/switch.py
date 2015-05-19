@@ -1,6 +1,6 @@
 class Switch(object): 
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self):
         # Defining Default Values
         self.dpid = None
         self.name = None
@@ -18,3 +18,5 @@ class Switch(object):
             switches.append(sw)
 
         return switches
+
+    def set_dpid()
