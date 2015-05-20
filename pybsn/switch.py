@@ -10,14 +10,24 @@ class Switch(object):
         self.leaf_group = None
 
     @staticmethod
-    def get_switches(client):
-        response = client.root.applications.bcf.info.fabric.switch.get()
+    def get_switches(client, filter=None):
+
+        if filter:
+            # Handle filtering
+            if 'name' in filter:
+                response = client.root.applications.bcf.info.fabric.switch.filter("name=$name", name=filter['name']).get()
+            elif 'dpid' in filter:
+                response = client.root.applications.bcf.info.fabric.switch.filter("dpid=$dpid", dpid=filter['dpid']).get()
+            else:
+                response = client.root.applications.bcf.info.fabric.switch.get()
+        else: 
+            response = client.root.applications.bcf.info.fabric.switch.get()
+
         switches = []
 
         for item in response:
             sw = Switch(client)
-            for attr in item.keys():
-                setattr(sw, attr, str(item[attr]))
+            sw.set_attributes(item)
             switches.append(sw)
 
         return switches
@@ -25,10 +35,7 @@ class Switch(object):
     @staticmethod
     def add_switch(client, **kwargs):
         sw = Switch(client)
-
-        # Load arguments into switch object
-        for key, value in kwargs.iteritems():
-            setattr(sw, key, str(value))
+        sw.set_attributes(**kwargs)
 
         # Validate switch object
         sw.validate()
@@ -42,6 +49,10 @@ class Switch(object):
         })
 
         return sw
+
+    def set_attributes(self, attributes):
+        for key, value in attributes.iteritems():
+            setattr(self, key.replace('-', '_'), str(value))
 
     # Potentially generate the validations based on the schema dynamically
     def validate(self):
