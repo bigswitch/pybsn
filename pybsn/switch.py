@@ -2,8 +2,8 @@ class Switch(object):
 
     def __init__(self):
         # Defining Default Values
-        self.dpid = None
         self.name = None
+        self.dpid = None
 
     @staticmethod
     def get_switches(client):
@@ -18,3 +18,26 @@ class Switch(object):
             switches.append(sw)
 
         return switches
+
+    @staticmethod
+    def add_switch(client, **kwargs):
+        sw = Switch()
+
+        # Load arguments into switch object
+        for key, value in kwargs.iteritems():
+            setattr(sw, key, value)
+
+        # Validate switch object
+        sw.validate()
+
+        # Write switch object to REST API
+        client.root.core.switch_config.put({
+            'name': sw.name,
+            'dpid': sw.dpid,
+        })
+
+        return sw
+
+    # Potentially generate the validations based on the schema dynamically
+    def validate(self):
+        assert self.name != None

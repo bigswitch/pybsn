@@ -13,4 +13,7 @@ class Api(object):
     def get_switches(self):
         return Switch.get_switches(self.client)
 
+    def add_switch(self, **kwargs):
+        return Switch.add_switch(self.client, **kwargs)
+
 
