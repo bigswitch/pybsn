@@ -1,9 +1,11 @@
 class Switch(object): 
+    """Switch based API operations
 
+    """
     def __init__(self, client):
         self.client = client
 
-        # Configurable values
+        # Default configurable values
         self.name = None
         self.dpid = None
         self.fabric_role = None
@@ -50,6 +52,7 @@ class Switch(object):
 
         return sw
 
+    # Set dictionary of values onto switch object
     def set_attributes(self, attributes):
         for key, value in attributes.iteritems():
             setattr(self, key.replace('-', '_'), str(value))
@@ -58,6 +61,7 @@ class Switch(object):
     def validate(self):
         assert self.name != None
 
+    # Disconnect a switch from the controller (reset the connection)
     def disconnect(self):
         assert self.dpid != None
         
