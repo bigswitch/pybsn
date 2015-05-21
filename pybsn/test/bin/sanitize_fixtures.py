@@ -1,3 +1,8 @@
+""" Sanitize fixtures
+
+    Removes environment variables from fixtures and replaces them with constants...
+
+"""
 import os
 import fileinput
 import re
