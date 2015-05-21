@@ -52,11 +52,22 @@ class Switch(object):
 
         return sw
 
+    def update(self):
+        assert self.name != None or self.dpid != None
+
+        if self.name != None:
+            response = self.client.root.applications.bcf.info.fabric.switch.filter("name=$name", name=self.name).get()
+        elif self.dpid != None:
+            response = self.client.root.applications.bcf.info.fabric.switch.filter("dpid=$dpid", dpid=self.dpid).get()
+
+        self.set_attributes(response[0])
+
     # Set dictionary of values onto switch object
     def set_attributes(self, attributes):
         for key, value in attributes.iteritems():
             setattr(self, key.replace('-', '_'), str(value))
 
+    # FIXME: can we make this private?
     # Potentially generate the validations based on the schema dynamically
     def validate(self):
         assert self.name != None
@@ -68,3 +79,8 @@ class Switch(object):
         # Make REST CALL
         self.client.root.core.switch.filter("dpid=$dpid", dpid=self.dpid).disconnect.post(True)
 
+    def get_interfaces(self):
+        assert self.dpid != None 
+
+        # Make REST CALL
+        return self.client.root.core.switch.filter("dpid=$dpid", dpid=self.dpid).interface.get()
