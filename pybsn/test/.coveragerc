@@ -1,0 +1,9 @@
+[run]
+source = 
+	pybsn
+
+[report]
+omit =  
+    */python?.?/*
+    */site-packages/nose/*
+    *__init__*
