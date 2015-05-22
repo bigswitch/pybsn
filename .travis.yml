@@ -7,6 +7,5 @@ install:
   - "pip install coveralls"
 # command to run tests
 script: 
-  - cd pybsn/test; nosetests
-  - cd pybsn/test; coverage run nosetests
+  - cd pybsn/test; nosetests --with-coverage
 after_success: coveralls
