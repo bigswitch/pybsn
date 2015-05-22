@@ -2,7 +2,7 @@ import os
 from betamax import Betamax
 from requests import Session
 from nose import with_setup
-from ..api import Api
+from ..bcf.api import Api
 
 with Betamax.configure() as config:
     config.cassette_library_dir = 'fixtures/cassettes/switch'
@@ -46,7 +46,7 @@ def test_update():
 		sw.update()
 
 		assert sw != None
-		
+
 def test_disconnect_switch():
 	api = Api(os.environ['PYBSN_HOST'], os.environ['PYBSN_USER'], os.environ['PYBSN_PASS'])
 	with Betamax(api.client.session).use_cassette('disconnect_switch'):

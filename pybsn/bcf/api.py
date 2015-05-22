@@ -1,5 +1,9 @@
-from __init__ import connect
+from ..__init__ import connect
 from switch import Switch
+
+AUTH_PATH = "/api/v1/auth/login"
+AUTH_PORT = 8443
+AUTH_PROTOCOL = "https"
 
 class Api(object):
     """A python interface into the Big Switch Networks Big Cloud Fabric API
@@ -18,7 +22,8 @@ class Api(object):
                 password,
                 login=False):
 
-        self.client = connect(host, username, password, login=login)
+        url = "%s://%s:%d" % (AUTH_PROTOCOL, host, AUTH_PORT)
+        self.client = connect(url, AUTH_PATH, username, password, login=login)
 
     def get_switches(self):
         return Switch.get_switches(self.client)

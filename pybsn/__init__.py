@@ -1,4 +1,5 @@
 import requests, json
+from requests import Session
 from string import Template
 
 try:
@@ -114,22 +115,17 @@ AUTH_ATTEMPTS = [
     ('https', 443, "/auth/login"),
 ]
 
-def attempt_login(session, host, username, password, verify):
+def attempt_login(session, auth_url, username, password, verify):
     auth_data = json.dumps({ 'user': username, 'password': password })
-    for schema, port, path in AUTH_ATTEMPTS:
-        url = "%s://%s:%d" % (schema, host, port)
-        response = session.post(url + path, auth_data, verify=verify)
-        if response.status_code == 200: # OK
-            # Fix up cookie path
-            for cookie in session.cookies:
-                if cookie.path == "/auth":
-                    cookie.path = "/api"
-            return url
-        elif response.status_code == 401: # Unauthorized
-            response.raise_for_status()
+    response = session.post(url, auth_data, verify=verify)
+    if response.status_code == 200: # OK
+        return
+    elif response.status_code == 401: # Unauthorized
+        response.raise_for_status()
     raise Exception("Login failed")
 
-def connect(host, username, password, verify=False):
-    session = requests.Session()
-    url = attempt_login(session, host, username, password, verify)
+def connect(url, auth_path, username, password, verify=False, login=True):
+    session = Session()
+    if login:
+        attempt_login(session, url+auth_path, username, password, verify)
     return BigDbClient(url, session, verify=verify)
