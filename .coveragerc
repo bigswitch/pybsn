@@ -1,3 +1,6 @@
-[report]
+[run]
 source = 
 	pybsn
+
+omit =
+    /*/tests/*
