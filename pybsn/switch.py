@@ -12,18 +12,9 @@ class Switch(object):
         self.leaf_group = None
 
     @staticmethod
-    def get_switches(client, filter=None):
+    def get_switches(client):
 
-        if filter:
-            # Handle filtering
-            if 'name' in filter:
-                response = client.root.applications.bcf.info.fabric.switch.filter("name=$name", name=filter['name']).get()
-            elif 'dpid' in filter:
-                response = client.root.applications.bcf.info.fabric.switch.filter("dpid=$dpid", dpid=filter['dpid']).get()
-            else:
-                response = client.root.applications.bcf.info.fabric.switch.get()
-        else: 
-            response = client.root.applications.bcf.info.fabric.switch.get()
+        response = client.root.applications.bcf.info.fabric.switch.get()
 
         switches = []
 
@@ -33,6 +24,30 @@ class Switch(object):
             switches.append(sw)
 
         return switches
+
+    @staticmethod
+    def get_switch_by_name(client, name):
+        assert name != None
+
+        response = client.root.applications.bcf.info.fabric.switch.filter("name=$name", name=name).get()
+
+        if len(response) > 0:
+            item = response[0]
+            sw = Switch(client)
+            sw.set_attributes(item)
+            return sw
+
+    @staticmethod
+    def get_switch_by_dpid(client, dpid):
+        assert dpid != None
+
+        response = client.root.applications.bcf.info.fabric.switch.filter("dpid=$dpid", dpid=dpid).get()
+
+        if len(response) > 0:
+            item = response[0]
+            sw = Switch(client)
+            sw.set_attributes(item)
+            return sw
 
     @staticmethod
     def add_switch(client, **kwargs):
@@ -79,8 +94,16 @@ class Switch(object):
         # Make REST CALL
         self.client.root.core.switch.filter("dpid=$dpid", dpid=self.dpid).disconnect.post(True)
 
+    # Get the switch interfaces
     def get_interfaces(self):
         assert self.dpid != None 
 
         # Make REST CALL
         return self.client.root.core.switch.filter("dpid=$dpid", dpid=self.dpid).interface.get()
+
+        # Get the switch interfaces
+    def get_connections(self):
+        assert self.dpid != None 
+
+        # Make REST CALL
+        return self.client.root.core.switch.filter("dpid=$dpid", dpid=self.dpid).connection.get()

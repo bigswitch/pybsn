@@ -19,8 +19,14 @@ class Api(object):
 
         self.client = connect(host, username, password)
 
-    def get_switches(self, filter=None):
-        return Switch.get_switches(self.client, filter)
+    def get_switches(self):
+        return Switch.get_switches(self.client)
+
+    def get_switch_by_name(self, name):
+        return Switch.get_switch_by_name(self.client, name)
+
+    def get_switch_by_dpid(self, dpid):
+        return Switch.get_switch_by_dpid(self.client, dpid)
 
     def add_switch(self, **kwargs):
         return Switch.add_switch(self.client, **kwargs)
