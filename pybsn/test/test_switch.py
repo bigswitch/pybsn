@@ -36,6 +36,17 @@ def test_get_switch_by_dpid():
 		assert sw != None
 		assert sw.dpid == "00:00:00:00:00:01:00:01"
 
+def test_update():
+	api = Api(os.environ['PYBSN_HOST'], os.environ['PYBSN_USER'], os.environ['PYBSN_PASS'])
+	with Betamax(api.client.session).use_cassette('update'):
+		sw = api.get_switch_by_dpid("00:00:00:00:00:01:00:01")
+
+		assert sw != None
+		
+		sw.update()
+
+		assert sw != None
+		
 def test_disconnect_switch():
 	api = Api(os.environ['PYBSN_HOST'], os.environ['PYBSN_USER'], os.environ['PYBSN_PASS'])
 	with Betamax(api.client.session).use_cassette('disconnect_switch'):
@@ -52,7 +63,7 @@ def test_get_interfaces():
 		sw = api.get_switch_by_dpid("00:00:00:00:00:01:00:01")
 
 		assert sw != None
-		
+
 		interfaces = sw.get_interfaces()
 
 		assert len(interfaces) == 9

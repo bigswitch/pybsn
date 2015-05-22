@@ -71,11 +71,9 @@ class Switch(object):
         assert self.name != None or self.dpid != None
 
         if self.name != None:
-            response = self.client.root.applications.bcf.info.fabric.switch.filter("name=$name", name=self.name).get()
+            self = self.get_switch_by_name(self.client, self.name)
         elif self.dpid != None:
-            response = self.client.root.applications.bcf.info.fabric.switch.filter("dpid=$dpid", dpid=self.dpid).get()
-
-        self.set_attributes(response[0])
+            self = self.get_switch_by_dpid(self.client, self.dpid)
 
     # Set dictionary of values onto switch object
     def set_attributes(self, attributes):
