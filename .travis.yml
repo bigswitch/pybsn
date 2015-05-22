@@ -8,5 +8,5 @@ install:
 # command to run tests
 script: 
   - cd pybsn/test; nosetests
-  - coverage run cd pybsn/test; nosetests
+  - cd pybsn/test; coverage run nosetests
 after_success: coveralls
