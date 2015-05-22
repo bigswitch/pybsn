@@ -6,5 +6,7 @@ install:
   - "pip install -r requirements.txt"
   - "pip install coveralls"
 # command to run tests
-script: cd pybsn/test; nosetests
+script: 
+  - cd pybsn/test; nosetests
+  - coverage cd pybsn/test; nosetests
 after_success: coveralls
