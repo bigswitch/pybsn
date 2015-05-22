@@ -3,9 +3,11 @@ python:
   - "2.7"
 # command to install dependencies
 install: 
-  - "pip install -r requirements.txt"
-  - "pip install coveralls"
+  - pip install -r requirements.txt
+  - pip install coverage
+  - pip install python-coveralls
 # command to run tests
 script: 
   - cd pybsn/test; nosetests --with-coverage
-after_success: coveralls
+after_success: 
+  - coveralls
