@@ -119,6 +119,10 @@ def attempt_login(session, auth_url, username, password, verify):
     auth_data = json.dumps({ 'user': username, 'password': password })
     response = session.post(auth_url, auth_data, verify=verify)
     if response.status_code == 200: # OK
+        # Fix up cookie path
+        for cookie in session.cookies:
+            if cookie.path == "/auth":
+                cookie.path = "/api"
         return
     elif response.status_code == 401: # Unauthorized
         response.raise_for_status()
