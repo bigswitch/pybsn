@@ -6,6 +6,7 @@ from ..api import Api
 
 with Betamax.configure() as config:
     config.cassette_library_dir = 'fixtures/cassettes/switch'
+    config.define_cassette_placeholder('<PYBSN_HOST>', os.environ['PYBSN_HOST'])
 
 
 def test_get_switches():
@@ -19,7 +20,7 @@ def test_get_switches():
 			assert sw.name == None
 			assert sw.dpid != None
 
-def test_get_switches():
+def test_get_switches_filtered():
 	api = Api(os.environ['PYBSN_HOST'], os.environ['PYBSN_USER'], os.environ['PYBSN_PASS'])
 	with Betamax(api.client.session).use_cassette('get_switches_filtered'):
 		switches = api.get_switches(filter={"dpid":"00:00:00:00:00:01:00:01"})
