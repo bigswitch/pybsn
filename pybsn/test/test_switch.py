@@ -2,7 +2,7 @@ import os
 from betamax import Betamax
 from requests import Session
 from nose import with_setup
-from ..api import Api
+from ..bcf.api import Api
 
 with Betamax.configure() as config:
     config.cassette_library_dir = 'fixtures/cassettes/switch'
@@ -10,7 +10,7 @@ with Betamax.configure() as config:
 
 
 def test_get_switches():
-	api = Api(os.environ['PYBSN_HOST'], os.environ['PYBSN_USER'], os.environ['PYBSN_PASS'])
+	api = Api(os.environ['PYBSN_HOST'], os.environ['PYBSN_USER'], os.environ['PYBSN_PASS'], login=False)
 	with Betamax(api.client.session).use_cassette('get_switches'):
 		switches = api.get_switches()
 
@@ -21,7 +21,7 @@ def test_get_switches():
 			assert sw.dpid != None
 
 def test_get_switch_by_name():
-	api = Api(os.environ['PYBSN_HOST'], os.environ['PYBSN_USER'], os.environ['PYBSN_PASS'])
+	api = Api(os.environ['PYBSN_HOST'], os.environ['PYBSN_USER'], os.environ['PYBSN_PASS'], login=False)
 	with Betamax(api.client.session).use_cassette('get_switch_by_name'):
 		sw = api.get_switch_by_name("test")
 
@@ -29,7 +29,7 @@ def test_get_switch_by_name():
 		assert sw.name == "test"
 
 def test_get_switch_by_dpid():
-	api = Api(os.environ['PYBSN_HOST'], os.environ['PYBSN_USER'], os.environ['PYBSN_PASS'])
+	api = Api(os.environ['PYBSN_HOST'], os.environ['PYBSN_USER'], os.environ['PYBSN_PASS'], login=False)
 	with Betamax(api.client.session).use_cassette('get_switch_by_dpid'):
 		sw = api.get_switch_by_dpid("00:00:00:00:00:01:00:01")
 
@@ -37,7 +37,7 @@ def test_get_switch_by_dpid():
 		assert sw.dpid == "00:00:00:00:00:01:00:01"
 
 def test_update():
-	api = Api(os.environ['PYBSN_HOST'], os.environ['PYBSN_USER'], os.environ['PYBSN_PASS'])
+	api = Api(os.environ['PYBSN_HOST'], os.environ['PYBSN_USER'], os.environ['PYBSN_PASS'], login=False)
 	with Betamax(api.client.session).use_cassette('update'):
 		sw = api.get_switch_by_dpid("00:00:00:00:00:01:00:01")
 
@@ -46,9 +46,9 @@ def test_update():
 		sw.update()
 
 		assert sw != None
-		
+
 def test_disconnect_switch():
-	api = Api(os.environ['PYBSN_HOST'], os.environ['PYBSN_USER'], os.environ['PYBSN_PASS'])
+	api = Api(os.environ['PYBSN_HOST'], os.environ['PYBSN_USER'], os.environ['PYBSN_PASS'], login=False)
 	with Betamax(api.client.session).use_cassette('disconnect_switch'):
 		switches = api.get_switches()
 
@@ -58,7 +58,7 @@ def test_disconnect_switch():
 			sw.disconnect()
 
 def test_get_interfaces():
-	api = Api(os.environ['PYBSN_HOST'], os.environ['PYBSN_USER'], os.environ['PYBSN_PASS'])
+	api = Api(os.environ['PYBSN_HOST'], os.environ['PYBSN_USER'], os.environ['PYBSN_PASS'], login=False)
 	with Betamax(api.client.session).use_cassette('get_interfaces'):
 		sw = api.get_switch_by_dpid("00:00:00:00:00:01:00:01")
 
