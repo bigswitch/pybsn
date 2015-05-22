@@ -117,7 +117,7 @@ AUTH_ATTEMPTS = [
 
 def attempt_login(session, auth_url, username, password, verify):
     auth_data = json.dumps({ 'user': username, 'password': password })
-    response = session.post(url, auth_data, verify=verify)
+    response = session.post(auth_url, auth_data, verify=verify)
     if response.status_code == 200: # OK
         return
     elif response.status_code == 401: # Unauthorized

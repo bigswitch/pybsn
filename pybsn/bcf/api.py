@@ -20,7 +20,7 @@ class Api(object):
                 host,
                 username,
                 password,
-                login=False):
+                login=True):
 
         url = "%s://%s:%d" % (AUTH_PROTOCOL, host, AUTH_PORT)
         self.client = connect(url, AUTH_PATH, username, password, login=login)
