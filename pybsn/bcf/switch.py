@@ -56,6 +56,12 @@ class Switch(object):
             return sw
 
     @staticmethod
+    def remove_switch_by_dpid(client, dpid):
+        assert dpid != None
+
+        client.root.core.switch_config.filter("dpid=$dpid", dpid=dpid).delete()
+
+    @staticmethod
     def add_switch(client, **kwargs):
         sw = Switch(client)
         sw.set_attributes(kwargs)
@@ -85,9 +91,12 @@ class Switch(object):
             self.set_attributes(sw.__dict__)
 
     def remove(self):
-        assert self.name != None
+        assert self.name != None or self.dpid != None
 
-        self.remove_switch_by_name(self.client, self.name)
+        if self.name != None:
+            self.remove_switch_by_name(self.client, self.name)
+        elif self.dpid != None:
+            self.remove_switch_by_dpid(self.client, self.dpid)
 
     # Set dictionary of values onto switch object
     def set_attributes(self, attributes):
