@@ -67,3 +67,14 @@ def test_get_interfaces():
 		interfaces = sw.get_interfaces()
 
 		assert len(interfaces) == 9
+
+def test_get_connections():
+	api = Api(os.environ['PYBSN_HOST'], os.environ['PYBSN_USER'], os.environ['PYBSN_PASS'], login=False)
+	with Betamax(api.client.session).use_cassette('get_connections'):
+		sw = api.get_switch_by_dpid("00:00:00:00:00:01:00:01")
+
+		assert sw != None
+
+		connections = sw.get_connections()
+
+		assert len(connections) == 4
