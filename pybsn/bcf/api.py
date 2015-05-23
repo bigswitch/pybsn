@@ -31,6 +31,9 @@ class Api(object):
     def get_switch_by_name(self, name):
         return Switch.get_switch_by_name(self.client, name)
 
+    def remove_switch_by_name(self, name):
+        return Switch.remove_switch_by_name(self.client, name)
+
     def get_switch_by_dpid(self, dpid):
         return Switch.get_switch_by_dpid(self.client, dpid)
 

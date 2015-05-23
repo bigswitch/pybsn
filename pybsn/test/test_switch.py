@@ -28,6 +28,17 @@ def test_get_switch_by_name():
 		assert sw != None
 		assert sw.name == "test"
 
+def test_remove_switch_by_name():
+	api = Api(os.environ['PYBSN_HOST'], os.environ['PYBSN_USER'], os.environ['PYBSN_PASS'], login=False)
+	with Betamax(api.client.session).use_cassette('remove_switch_by_name'):
+		test_add_switch()
+
+		api.remove_switch_by_name("test")
+
+		sw = api.get_switch_by_name("test")
+
+		assert sw == None
+
 def test_get_switch_by_dpid():
 	api = Api(os.environ['PYBSN_HOST'], os.environ['PYBSN_USER'], os.environ['PYBSN_PASS'], login=False)
 	with Betamax(api.client.session).use_cassette('get_switch_by_dpid'):
