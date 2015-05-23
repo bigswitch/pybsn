@@ -38,6 +38,12 @@ class Switch(object):
             return sw
 
     @staticmethod
+    def remove_switch_by_name(client, name):
+        assert name != None
+
+        client.root.core.switch_config.filter("name=$name", name=name).delete()
+
+    @staticmethod
     def get_switch_by_dpid(client, dpid):
         assert dpid != None
 
@@ -50,12 +56,15 @@ class Switch(object):
             return sw
 
     @staticmethod
+    def remove_switch_by_dpid(client, dpid):
+        assert dpid != None
+
+        client.root.core.switch_config.filter("dpid=$dpid", dpid=dpid).delete()
+
+    @staticmethod
     def add_switch(client, **kwargs):
         sw = Switch(client)
-        sw.set_attributes(**kwargs)
-
-        # Validate switch object
-        sw.validate()
+        sw.set_attributes(kwargs)
 
         # Write switch object to REST API
         client.root.core.switch_config.put({
@@ -65,25 +74,36 @@ class Switch(object):
             'leaf-group': sw.leaf_group
         })
 
+        sw.update()
+
         return sw
 
+    # Update this reference with the most recent data from the REST API
     def update(self):
         assert self.name != None or self.dpid != None
 
         if self.name != None:
-            self = self.get_switch_by_name(self.client, self.name)
+            sw = self.get_switch_by_name(self.client, self.name)
         elif self.dpid != None:
-            self = self.get_switch_by_dpid(self.client, self.dpid)
+            sw = self.get_switch_by_dpid(self.client, self.dpid)
+
+        if sw != None:
+            self.set_attributes(sw.__dict__)
+
+    def remove(self):
+        assert self.name != None or self.dpid != None
+
+        if self.name != None:
+            self.remove_switch_by_name(self.client, self.name)
+        elif self.dpid != None:
+            self.remove_switch_by_dpid(self.client, self.dpid)
 
     # Set dictionary of values onto switch object
     def set_attributes(self, attributes):
         for key, value in attributes.iteritems():
-            setattr(self, key.replace('-', '_'), str(value))
-
-    # FIXME: can we make this private?
-    # Potentially generate the validations based on the schema dynamically
-    def validate(self):
-        assert self.name != None
+            if isinstance(value, basestring):
+                value = str(value)
+            setattr(self, key.replace('-', '_'), value)
 
     # Disconnect a switch from the controller (reset the connection)
     def disconnect(self):
