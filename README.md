@@ -14,7 +14,7 @@ pip install pybsn
 
 ```python
 from pybsn.bcf.api import Api
-api = Api("127.0.0.1", "admin", "adminadmin",)
+api = Api("127.0.0.1", "admin", "adminadmin")
 
 switches = api.get_switches()
 print switches
