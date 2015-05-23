@@ -48,7 +48,7 @@ def test_update():
 		assert sw != None
 
 def test_add_switch():
-	api = Api(os.environ['PYBSN_HOST'], os.environ['PYBSN_USER'], os.environ['PYBSN_PASS'], login=True)
+	api = Api(os.environ['PYBSN_HOST'], os.environ['PYBSN_USER'], os.environ['PYBSN_PASS'], login=False)
 	with Betamax(api.client.session).use_cassette('add_switch'):
 		sw = api.add_switch(dpid="00:00:00:00:01:01:01:01", name="test")
 
