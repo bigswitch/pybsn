@@ -76,7 +76,7 @@ class BigDbClient(object):
         try:
             # Raise an HTTPError for 4xx/5xx codes
             response.raise_for_status()
-        except requests.exceptions.HTTPError, e:
+        except requests.exceptions.HTTPError as e:
             if e.response.text:
                 error_json = json.loads(e.response.text)
                 # Attempt to capture the REST API error description and pass it along to the HTTPError

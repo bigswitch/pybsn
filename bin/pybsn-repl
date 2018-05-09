@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """
 Start an IPython shell to interact with the REST API
 
@@ -19,6 +19,8 @@ Examples:
     # Get info for a specific switch
     root.core.switch.match(name="leaf0a").get()
 """
+from __future__ import print_function
+
 import pybsn
 import argparse
 import textwrap
@@ -49,7 +51,7 @@ def LineTransformer(line):
 class BsnMagics(Magics):
     @line_magic
     def help(self, s):
-        print __doc__.strip()
+        print(__doc__.strip())
 
 def show_schema(root, max_depth=1, verbose=True):
     def pretty_type(node):
@@ -69,7 +71,7 @@ def show_schema(root, max_depth=1, verbose=True):
 
     def traverse(node, depth=0, name="root"):
         def output(*s):
-            print " " * (depth * 2) + ' '.join(s)
+            print(" " * (depth * 2) + ' '.join(s))
 
         if max_depth is not None and depth > max_depth:
             return
