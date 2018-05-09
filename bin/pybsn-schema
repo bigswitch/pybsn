@@ -54,8 +54,9 @@ def pretty_type(node):
         return t['leafType'].lower()
 
 def traverse(node, depth=0, name="root"):
-    def output(*s):
-        print " " * (depth * 2) + ' '.join(s)
+    def output(*s, **kw):
+        d = kw.get("depth", depth)
+        print " " * (d * 2) + ' '.join(s)
 
     if args.max_depth is not None and depth > args.max_depth:
         return
@@ -79,7 +80,7 @@ def traverse(node, depth=0, name="root"):
     if node['nodeType'] == 'CONTAINER' or node['nodeType'] == 'LIST_ELEMENT':
         if node['nodeType'] == 'CONTAINER':
             output(name, description)
-        for child_name, child in node['childNodes'].items():
+        for child_name, child in node.get('childNodes', {}).items():
             traverse(child, depth+1, child_name)
     elif node['nodeType'] == 'LIST':
         output(name, "(list)", description)
@@ -88,6 +89,13 @@ def traverse(node, depth=0, name="root"):
         output(name, ":", pretty_type(node), config, description)
     elif node['nodeType'] == 'LEAF_LIST':
         output(name, ":", "list of", pretty_type(node['leafSchemaNode']), config, description)
+    elif node['nodeType'] == 'RPC':
+        output(name, description, "(RPC)")
+        for name, item in ( ("in", "inputSchemaNode"), ("out", "outputSchemaNode")):
+            if item in node:
+                traverse(node[item], depth+1, name)
+            else:
+                output(name, "(NONE)", depth=depth+1)
     else:
         assert False, "unknown node type %s" % node['nodeType']
 
