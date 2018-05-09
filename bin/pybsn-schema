@@ -27,6 +27,7 @@ parser.add_argument('path', type=str, default='controller', nargs='?')
 parser.add_argument('--host', '-H', type=str, default="127.0.0.1", help="Controller IP/Hostname to connect to")
 parser.add_argument('--user', '-u', type=str, default="admin", help="Username")
 parser.add_argument('--password', '-p', type=str, default="adminadmin", help="Password")
+parser.add_argument('--json-file', '-j', type=str, help="JSON Schema to consume")
 
 parser.add_argument("--max-depth", "-d", type=int, help="Maximum recursion depth")
 parser.add_argument("--raw", action="store_true", help="Print raw JSON")
@@ -34,7 +35,6 @@ parser.add_argument("--verbose", "-v", action="store_true", help="Include descri
 
 args = parser.parse_args()
 
-bcf = pybsn.connect(args.host, args.user, args.password)
 
 def pretty_type(node):
     if not 'typeSchemaNode' in node:
@@ -101,7 +101,15 @@ def traverse(node, depth=0, name="root"):
 
 path = args.path.replace('.', '/').replace('_', '-')
 
-if args.raw:
-    print json.dumps(bcf.schema(path), indent=4, cls=pybcf.BCFJSONEncoder)
+
+if args.json_file:
+    with open(args.json_file) as file_:
+        schema = json.load(file_)
 else:
-    traverse(bcf.schema(path), name=path)
+    bcf = pybsn.connect(args.host, args.user, args.password)
+    schema = bcf.schema(path)
+
+if args.raw:
+    print json.dumps(schema, indent=4, cls=pybcf.BCFJSONEncoder)
+else:
+    traverse(schema, name=path)
