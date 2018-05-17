@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """
 Start an IPython shell to interact with the REST API
 
@@ -19,6 +19,8 @@ Examples:
     # Get info for a specific switch
     root.core.switch.match(name="leaf0a").get()
 """
+from __future__ import print_function
+
 import pybsn
 import argparse
 import textwrap
@@ -49,7 +51,7 @@ def LineTransformer(line):
 class BsnMagics(Magics):
     @line_magic
     def help(self, s):
-        print __doc__.strip()
+        print(__doc__.strip())
 
 def show_schema(root, max_depth=1, verbose=True):
     def pretty_type(node):
@@ -68,8 +70,9 @@ def show_schema(root, max_depth=1, verbose=True):
             return t['leafType'].lower()
 
     def traverse(node, depth=0, name="root"):
-        def output(*s):
-            print " " * (depth * 2) + ' '.join(s)
+        def output(*s, **kw):
+            d = kw.get("depth", depth)
+            print(" " * (d * 2) + ' '.join(s))
 
         if max_depth is not None and depth > max_depth:
             return
@@ -86,7 +89,7 @@ def show_schema(root, max_depth=1, verbose=True):
             description = ''
 
         if verbose:
-            config = "config" in node['dataSources'] and "(config)" or ""
+            config = "config" in node.get('dataSources', []) and "(config)" or ""
         else:
             config = ""
 
@@ -102,6 +105,13 @@ def show_schema(root, max_depth=1, verbose=True):
             output(name, ":", pretty_type(node), config, description)
         elif node['nodeType'] == 'LEAF_LIST':
             output(name, ":", "list of", pretty_type(node['leafSchemaNode']), config, description)
+        elif node['nodeType'] == 'RPC':
+            output(name, "(rpc)", description)
+            for name, item in ( ("in", "inputSchemaNode"), ("out", "outputSchemaNode")):
+                if item in node:
+                    traverse(node[item], depth+1, name)
+                else:
+                    output(name, "(NONE)", depth=depth+1)
         else:
             assert False, "unknown node type %s" % node['nodeType']
 

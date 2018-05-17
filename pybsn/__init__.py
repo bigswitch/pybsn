@@ -76,7 +76,7 @@ class BigDbClient(object):
         try:
             # Raise an HTTPError for 4xx/5xx codes
             response.raise_for_status()
-        except requests.exceptions.HTTPError, e:
+        except requests.exceptions.HTTPError as e:
             if e.response.text:
                 error_json = json.loads(e.response.text)
                 # Attempt to capture the REST API error description and pass it along to the HTTPError
@@ -112,13 +112,17 @@ class BigDbClient(object):
 AUTH_ATTEMPTS = [
     ('https', 8443, "/api/v1/auth/login"),
     ('https', 443, "/auth/login"),
+    ('http', 8080, "/api/v1/auth/login"),
 ]
 
 def attempt_login(session, host, username, password, verify):
     auth_data = json.dumps({ 'user': username, 'password': password })
     for schema, port, path in AUTH_ATTEMPTS:
         url = "%s://%s:%d" % (schema, host, port)
-        response = session.post(url + path, auth_data, verify=verify)
+        try:
+            response = session.post(url + path, auth_data, verify=verify)
+        except requests.exceptions.ConnectionError:
+            continue
         if response.status_code == 200: # OK
             # Fix up cookie path
             for cookie in session.cookies:
