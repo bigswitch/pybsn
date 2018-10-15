@@ -25,7 +25,7 @@ import pybsn
 import argparse
 import textwrap
 import re
-from IPython.config.loader import Config
+from traitlets.config.loader import Config
 from IPython.terminal.ipapp import TerminalIPythonApp
 from IPython.core.inputtransformer import StatelessInputTransformer
 from IPython.core.magic import Magics, magics_class, line_magic
@@ -40,12 +40,14 @@ args = parser.parse_args()
 
 ctrl = pybsn.connect(args.host, args.user, args.password)
 
-@StatelessInputTransformer.wrap
-def LineTransformer(line):
-    if line.endswith('#'):
-        return "show_schema(%s)" % line[:-1]
-    else:
-        return line
+def line_transform(lines):
+    def convert(line):
+        if line.endswith('#'):
+            return "show_schema(%s)" % line[:-1]
+        else:
+            return line
+
+    return [ convert(l.strip()) + "\n" for l in lines ]
 
 @magics_class
 class BsnMagics(Magics):
@@ -96,7 +98,7 @@ def show_schema(root, max_depth=1, verbose=True):
         if node['nodeType'] == 'CONTAINER' or node['nodeType'] == 'LIST_ELEMENT':
             if node['nodeType'] == 'CONTAINER':
                 output(name, description)
-            for child_name, child in node['childNodes'].items():
+            for child_name, child in node.get('childNodes', {}).items():
                 traverse(child, depth+1, child_name)
         elif node['nodeType'] == 'LIST':
             output(name, "(list)", description)
@@ -126,6 +128,6 @@ user_ns = dict(ctrl=ctrl, root=ctrl.root, show_schema=show_schema)
 app = TerminalIPythonApp(config=config)
 app.initialize(argv=[])
 app.shell.push(user_ns, interactive=False)
-app.shell.input_transformer_manager.python_line_transforms.append(LineTransformer())
+app.shell.input_transformers_cleanup.append(line_transform)
 app.shell.register_magics(BsnMagics(app.shell))
 app.start()
