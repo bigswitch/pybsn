@@ -46,7 +46,7 @@ entry points:
 #### Node Hierarchy
 
 You can explore the DB Rest API anchored on `root`. Child nodes in the rest API are
-dynamically as python child properties of `root`. Hyphens (`-`) in the REST API
+dynamically exposed as child objects / properties of `root`. Hyphens (`-`) in the REST API
 are converted to `_` for python.
 
 E.g.,
