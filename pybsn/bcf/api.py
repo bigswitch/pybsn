@@ -16,9 +16,9 @@ class Api(object):
                 host,
                 username,
                 password,
-                login=True):
+                verify=True):
 
-        self.client = connect(host, username, password, login=login)
+        self.client = connect(host, username, password, verify=verify)
 
     def get_switches(self):
         return Switch.get_switches(self.client)
