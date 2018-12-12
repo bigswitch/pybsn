@@ -15,7 +15,7 @@ args = parser.parse_args()
 bcf = pybsn.connect(args.host, args.user, args.password)
 
 print "Generating..."
-reply = bcf.root.support.generate_bundle.get()[0]
+reply = root.support.generate_bundle.rpc()
 print "Downloading..."
 name = args.output or reply['name']
 with open(name, "w") as f:

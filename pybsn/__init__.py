@@ -8,7 +8,8 @@ try:
 except ImportError:
     pass
 
-PREFIX = "/api/v1/data/"
+DATA_PREFIX = "/api/v1/data/"
+RPC_PREFIX = "/api/v1/rpc/"
 SCHEMA_PREFIX = "/api/v1/schema/"
 
 class Node(object):
@@ -40,6 +41,9 @@ class Node(object):
     def schema(self):
         return self._connection.schema(self._path)
 
+    def rpc(self, data=None):
+        return self._connection.rpc(self._path, data)
+
     def filter(self, template, *args, **kwargs):
         # TODO escape values better than repr()
         kwargs = { k: repr(v) for k, v in kwargs.items() }
@@ -70,8 +74,8 @@ class BigDbClient(object):
         self.root = Node("controller", self)
         self.verify = verify
 
-    def request(self, method, path, data=None, params=None):
-        url = self.url + PREFIX + path
+    def request(self, method, path, data=None, params=None, rpc=False):
+        url = self.url + (RPC_PREFIX if rpc else DATA_PREFIX) + path
         response = self.session.request(method, url, data=data, params=params, verify=self.verify)
         try:
             # Raise an HTTPError for 4xx/5xx codes
@@ -86,16 +90,25 @@ class BigDbClient(object):
         return response
 
     def get(self, path, params=None):
-        return json.loads(self.request("GET", path, params=params).text)
+        return self.request("GET", path, params=params).json()
+
+    def rpc(self, path, data):
+         return self.request("POST", path, data=self._dump_if_present(data), rpc=True).json()
 
     def post(self, path, data):
-        return self.request("POST", path, data=json.dumps(data))
+        return self.request("POST", path, data=self._dump_if_present(data))
 
     def put(self, path, data):
-        return self.request("PUT", path, data=json.dumps(data))
+        return self.request("PUT", path, data=self._dump_if_present(data))
 
     def patch(self, path, data):
-        return self.request("PATCH", path, data=json.dumps(data))
+        return self.request("PATCH", path, data=self._dump_if_present(data))
+
+    def _dump_if_present(self, data):
+        if data is not None:
+            return json.dumps(data)
+        else:
+            return None
 
     def delete(self, path):
         return self.request("DELETE", path)
