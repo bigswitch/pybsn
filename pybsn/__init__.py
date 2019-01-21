@@ -1,5 +1,8 @@
-import requests, json
+import json
+import re
 from string import Template
+
+import requests
 
 try:
     import warnings
@@ -122,31 +125,51 @@ class BigDbClient(object):
     def __repr__(self):
         return "BigDbClient(%s)" % self.url
 
-AUTH_ATTEMPTS = [
-    ('https', 8443, "/api/v1/auth/login"),
-    ('https', 443, "/auth/login"),
-    ('http', 8080, "/api/v1/auth/login"),
+BIGDB_PROTO_PORTS = [
+    ('https', 8443),
+    ('http', 8080),
 ]
 
-def attempt_login(session, host, username, password, verify):
-    auth_data = json.dumps({ 'user': username, 'password': password })
-    for schema, port, path in AUTH_ATTEMPTS:
-        url = "%s://%s:%d" % (schema, host, port)
-        try:
-            response = session.post(url + path, auth_data, verify=verify)
-        except requests.exceptions.ConnectionError:
-            continue
-        if response.status_code == 200: # OK
-            # Fix up cookie path
-            for cookie in session.cookies:
-                if cookie.path == "/auth":
-                    cookie.path = "/api"
-            return url
-        elif response.status_code == 401: # Unauthorized
-            response.raise_for_status()
-    raise Exception("Login failed")
+def guess_url(session, host, validate_path="/api/v1/auth/healthy"):
+    if re.match(r'^https?://', host):
+        return host
+    else:
+        for schema, port in BIGDB_PROTO_PORTS:
+            url = "%s://%s:%d" % (schema, host, port)
+            try:
+                response = session.get(url + validate_path)
+            except requests.exceptions.ConnectionError:
+                continue
+            if response.status_code == 200: # OK
+                return url
+    raise Exception("Could not find available BigDB service on {}".format(host))
 
-def connect(host, username, password, verify=False):
+def attempt_login(session, url, username, password, verify):
+    auth_data = json.dumps({ 'user': username, 'password': password })
+    path = "/api/v1/auth/login"
+    response = session.post(url + path, auth_data, verify=verify)
+    if response.status_code == 200: # OK
+        # Fix up cookie path
+        for cookie in session.cookies:
+            if cookie.path == "/auth":
+                cookie.path = "/api"
+        return url
+    else:
+        response.raise_for_status()
+
+def connect(host, username, password, verify=False, token=None, login=None):
     session = requests.Session()
-    url = attempt_login(session, host, username, password, verify)
+    url = guess_url(session, host)
+    if login is None:
+        login = (token is None)
+
+    if login:
+        attempt_login(session=session, url=url, username=username, password=password, verify=verify)
+    elif token:
+        cookie = requests.cookies.create_cookie(name="session_cookie", value=token)
+        session.cookies.set_cookie(cookie)
+        response = session.get(url + "/api/v1/data/controller/core/aaa/auth-context")
+        if response.status_code != 200:
+            response.raise_for_status()
+
     return BigDbClient(url, session, verify=verify)
