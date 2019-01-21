@@ -100,9 +100,7 @@ class Switch(object):
 
     # Set dictionary of values onto switch object
     def set_attributes(self, attributes):
-        for key, value in attributes.iteritems():
-            if isinstance(value, basestring):
-                value = str(value)
+        for key, value in attributes.items():
             setattr(self, key.replace('-', '_'), value)
 
     # Disconnect a switch from the controller (reset the connection)
