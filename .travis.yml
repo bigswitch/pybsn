@@ -1,6 +1,9 @@
 language: python
 python:
-  - "2.7"
+  # betamax on py2 produces brokenness; we want to rip it out, but
+  # for now let's run at least the python 3 unit tests
+  #- "2.7"
+  - "3.5"
 # command to install dependencies
 install: 
   - pip install -r requirements.txt
@@ -8,6 +11,6 @@ install:
   - pip install python-coveralls
 # command to run tests
 script: 
-  - cd pybsn/test; nosetests --with-coverage || true
+  - cd test && nosetests --with-coverage
 after_success: 
   - coveralls

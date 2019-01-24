@@ -1,0 +1,155 @@
+{
+    "http_interactions": [
+        {
+            "recorded_at": "2015-05-23T01:07:37",
+            "request": {
+                "body": {
+                    "encoding": "utf-8",
+                    "string": "{\"leaf-group\": null, \"fabric-role\": null, \"name\": \"test\", \"dpid\": \"00:00:00:00:01:01:01:01\"}"
+                },
+                "headers": {
+                    "Accept": "*/*",
+                    "Accept-Encoding": "gzip, deflate",
+                    "Connection": "keep-alive",
+                    "Content-Length": "92",
+                    "Cookie": "session_cookie=ukFqrtiSxyGD4JYQP15evb4edtPh29Y1",
+                    "User-Agent": "python-requests/2.5.0 CPython/2.7.6 Darwin/14.1.0"
+                },
+                "method": "PUT",
+                "uri": "<PYBSN_HOST>/api/v1/data/controller/core/switch-config"
+            },
+            "response": {
+                "body": {
+                    "encoding": null,
+                    "string": ""
+                },
+                "headers": {
+                    "accept-ranges": "bytes",
+                    "connection": "keep-alive",
+                    "content-length": "0",
+                    "date": "Sat",
+                    "server": "nginx/1.1.19"
+                },
+                "status": {
+                    "code": 204,
+                    "message": "No Content"
+                },
+                "url": "<PYBSN_HOST>/api/v1/data/controller/core/switch-config"
+            }
+        },
+        {
+            "recorded_at": "2015-05-23T01:07:37",
+            "request": {
+                "body": {
+                    "encoding": "utf-8",
+                    "string": ""
+                },
+                "headers": {
+                    "Accept": "*/*",
+                    "Accept-Encoding": "gzip, deflate",
+                    "Connection": "keep-alive",
+                    "Cookie": "session_cookie=ukFqrtiSxyGD4JYQP15evb4edtPh29Y1",
+                    "User-Agent": "python-requests/2.5.0 CPython/2.7.6 Darwin/14.1.0"
+                },
+                "method": "GET",
+                "uri": "<PYBSN_HOST>/api/v1/data/controller/applications/bcf/info/fabric/switch[name='test']"
+            },
+            "response": {
+                "body": {
+                    "encoding": null,
+                    "string": "[ {\n  \"connected\" : false,\n  \"dpid\" : \"00:00:00:00:01:01:01:01\",\n  \"fabric-connection-state\" : \"not_connected\",\n  \"leaf-group\" : \"\",\n  \"name\" : \"test\",\n  \"shutdown\" : false\n} ]"
+                },
+                "headers": {
+                    "accept-ranges": "bytes",
+                    "connection": "keep-alive",
+                    "content-type": "application/json",
+                    "date": "Sat",
+                    "server": "nginx/1.1.19",
+                    "transfer-encoding": "chunked",
+                    "vary": "Accept-Charset"
+                },
+                "status": {
+                    "code": 200,
+                    "message": "OK"
+                },
+                "url": "<PYBSN_HOST>/api/v1/data/controller/applications/bcf/info/fabric/switch[name='test']"
+            }
+        },
+        {
+            "recorded_at": "2015-05-23T01:07:37",
+            "request": {
+                "body": {
+                    "encoding": "utf-8",
+                    "string": ""
+                },
+                "headers": {
+                    "Accept": "*/*",
+                    "Accept-Encoding": "gzip, deflate",
+                    "Connection": "keep-alive",
+                    "Cookie": "session_cookie=ukFqrtiSxyGD4JYQP15evb4edtPh29Y1",
+                    "User-Agent": "python-requests/2.5.0 CPython/2.7.6 Darwin/14.1.0"
+                },
+                "method": "GET",
+                "uri": "<PYBSN_HOST>/api/v1/data/controller/applications/bcf/info/fabric/switch[name='test']"
+            },
+            "response": {
+                "body": {
+                    "encoding": null,
+                    "string": "[ {\n  \"connected\" : false,\n  \"dpid\" : \"00:00:00:00:01:01:01:01\",\n  \"fabric-connection-state\" : \"not_connected\",\n  \"leaf-group\" : \"\",\n  \"name\" : \"test\",\n  \"shutdown\" : false\n} ]"
+                },
+                "headers": {
+                    "accept-ranges": "bytes",
+                    "connection": "keep-alive",
+                    "content-type": "application/json",
+                    "date": "Sat",
+                    "server": "nginx/1.1.19",
+                    "transfer-encoding": "chunked",
+                    "vary": "Accept-Charset"
+                },
+                "status": {
+                    "code": 200,
+                    "message": "OK"
+                },
+                "url": "<PYBSN_HOST>/api/v1/data/controller/applications/bcf/info/fabric/switch[name='test']"
+            }
+        },
+        {
+            "recorded_at": "2015-05-23T01:07:37",
+            "request": {
+                "body": {
+                    "encoding": "utf-8",
+                    "string": ""
+                },
+                "headers": {
+                    "Accept": "*/*",
+                    "Accept-Encoding": "gzip, deflate",
+                    "Connection": "keep-alive",
+                    "Content-Length": "0",
+                    "Cookie": "session_cookie=ukFqrtiSxyGD4JYQP15evb4edtPh29Y1",
+                    "User-Agent": "python-requests/2.5.0 CPython/2.7.6 Darwin/14.1.0"
+                },
+                "method": "DELETE",
+                "uri": "<PYBSN_HOST>/api/v1/data/controller/core/switch-config[name='test']"
+            },
+            "response": {
+                "body": {
+                    "encoding": null,
+                    "string": ""
+                },
+                "headers": {
+                    "accept-ranges": "bytes",
+                    "connection": "keep-alive",
+                    "content-length": "0",
+                    "date": "Sat",
+                    "server": "nginx/1.1.19"
+                },
+                "status": {
+                    "code": 204,
+                    "message": "No Content"
+                },
+                "url": "<PYBSN_HOST>/api/v1/data/controller/core/switch-config[name='test']"
+            }
+        }
+    ],
+    "recorded_with": "betamax/0.4.2"
+}
