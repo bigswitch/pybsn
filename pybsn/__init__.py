@@ -161,8 +161,9 @@ def attempt_login(session, url, username, password, verify):
     else:
         response.raise_for_status()
 
-def connect(host, username, password, verify=False, token=None, login=None):
+def connect(host, username=None, password=None, verify=False, token=None, login=None, verify_tls=False):
     session = requests.Session()
+    session.verify = verify_tls
     url = guess_url(session, host)
     if login is None:
         login = (token is None)
