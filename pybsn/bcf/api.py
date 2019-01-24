@@ -1,5 +1,6 @@
 from ..__init__ import connect
-from switch import Switch
+from pybsn.bcf.switch import Switch
+
 
 class Api(object):
     """A python interface into the Big Switch Networks Big Cloud Fabric API
