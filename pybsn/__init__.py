@@ -1,4 +1,5 @@
 import json
+import logging
 import re
 from string import Template
 
@@ -137,11 +138,14 @@ def guess_url(session, host, validate_path="/api/v1/auth/healthy"):
         for schema, port in BIGDB_PROTO_PORTS:
             url = "%s://%s:%d" % (schema, host, port)
             try:
-                response = session.get(url + validate_path)
-            except requests.exceptions.ConnectionError:
+                response = session.get(url + validate_path, timeout=2)
+            except requests.exceptions.ConnectionError as e:
+                logging.debug("Error connecting to %s: %s", url, str(e))
                 continue
             if response.status_code == 200: # OK
                 return url
+            else:
+                logging.debug("Could connect to URL %s: %s", url, response)
     raise Exception("Could not find available BigDB service on {}".format(host))
 
 def attempt_login(session, url, username, password, verify):
