@@ -23,6 +23,7 @@ from __future__ import print_function
 
 import pybsn
 import argparse
+import logging
 import textwrap
 import re
 from traitlets.config.loader import Config
@@ -33,12 +34,18 @@ from IPython.core.magic import Magics, magics_class, line_magic
 parser = argparse.ArgumentParser(description=__doc__)
 
 parser.add_argument('--host', '-H', type=str, default="127.0.0.1", help="Controller IP/Hostname to connect to")
+parser.add_argument('--token', '-t', type=str, help="Session/Token to use")
 parser.add_argument('--user', '-u', type=str, default="admin", help="Username")
 parser.add_argument('--password', '-p', type=str, default="adminadmin", help="Password")
+parser.add_argument('--verbose', '-v', action="store_true", help="Debug output")
 
 args = parser.parse_args()
+logging.basicConfig(level=logging.DEBUG if args.verbose else logging.INFO)
 
-ctrl = pybsn.connect(args.host, args.user, args.password)
+if args.token:
+    ctrl = pybsn.connect(host=args.host, token=args.token, login=False)
+else:
+    ctrl = pybsn.connect(host=args.host, username=args.user, password=args.password)
 
 def line_transform(lines):
     def convert(line):

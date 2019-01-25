@@ -1,6 +1,9 @@
 # Compiled python modules.
 *.pyc
 
+# vim tmp files
+*.swp
+
 # Setuptools distribution folder.
 /dist/
 /build/

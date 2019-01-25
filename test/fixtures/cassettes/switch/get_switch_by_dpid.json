@@ -1,0 +1,43 @@
+{
+    "http_interactions": [
+        {
+            "recorded_at": "2015-05-22T17:21:05",
+            "request": {
+                "body": {
+                    "encoding": "utf-8",
+                    "string": ""
+                },
+                "headers": {
+                    "Accept": "*/*",
+                    "Accept-Encoding": "gzip, deflate",
+                    "Connection": "keep-alive",
+                    "Cookie": "session_cookie=UoOfIH2VIivNrLI2fRrmhl9xuBDivcnw",
+                    "User-Agent": "python-requests/2.5.0 CPython/2.7.6 Darwin/14.1.0"
+                },
+                "method": "GET",
+                "uri": "<PYBSN_HOST>/api/v1/data/controller/applications/bcf/info/fabric/switch[dpid='00:00:00:00:00:01:00:01']"
+            },
+            "response": {
+                "body": {
+                    "encoding": null,
+                    "string": "[ {\n  \"connected\" : true,\n  \"connected-since\" : \"2015-05-22T16:49:57.750Z\",\n  \"dpid\" : \"00:00:00:00:00:01:00:01\",\n  \"fabric-connection-state\" : \"suspended\",\n  \"fabric-last-seen-time\" : \"2015-05-22T16:50:00.904Z\",\n  \"handshake-state\" : \"master-state\",\n  \"inet-address\" : {\n    \"inet-port\" : 48713,\n    \"ip\" : \"192.168.142.212\"\n  },\n  \"model-number-description\" : \"ivs 0.5\",\n  \"serial-number-description\" : \"\",\n  \"shutdown\" : false,\n  \"software-description\" : \"ivs 0.5\",\n  \"suspended-reason\" : \"No fabric role configured\"\n} ]"
+                },
+                "headers": {
+                    "accept-ranges": "bytes",
+                    "connection": "keep-alive",
+                    "content-type": "application/json",
+                    "date": "Fri",
+                    "server": "nginx/1.1.19",
+                    "transfer-encoding": "chunked",
+                    "vary": "Accept-Charset"
+                },
+                "status": {
+                    "code": 200,
+                    "message": "OK"
+                },
+                "url": "<PYBSN_HOST>/api/v1/data/controller/applications/bcf/info/fabric/switch[dpid='00:00:00:00:00:01:00:01']"
+            }
+        }
+    ],
+    "recorded_with": "betamax/0.4.2"
+}
