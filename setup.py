@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='pybsn',
-    version='0.1.1',
+    version='0.2.0',
     description="pybsn is a python interface to Big Switch Networks' products",
     url='https://github.com/floodlight/pybsn',
     author='Jason Parraga, Rich Lane, Andreas Wundsam',
