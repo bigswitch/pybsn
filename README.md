@@ -16,7 +16,17 @@ pybsn is compatible with python 2.7+ and python 3.
 ---
 ## PyBSN Repl - Interactive Shell
 
-`pybsn-repl` is a powerful, interactive shell for the REST API. It is based on and requires python3 and ipython 7.0.
+`pybsn-repl` is a powerful, interactive shell for the REST API. It is based on and requires python3 and ipython 7.0. (**Note**: The pybsn library works with python 2.7 and python 3, the repl program requires python 3!)
+
+### Installing Python3 on Mac
+
+[Homebrew](https://brew.sh/) is a recommended option to install python3 on mac
+
+After you install homebrew, install python3 with
+
+```
+brew install python
+```
 
 ### Installing IPython 7
 ```bash
