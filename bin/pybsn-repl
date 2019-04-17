@@ -78,7 +78,7 @@ def show_schema(root, max_depth=1, verbose=True):
         else:
             return t['leafType'].lower()
 
-    def traverse(node, depth=0, name="root"):
+    def traverse(node, depth=0, name="root", max_depth=None):
         def output(*s, **kw):
             d = kw.get("depth", depth)
             print(" " * (d * 2) + ' '.join(s))
@@ -118,13 +118,13 @@ def show_schema(root, max_depth=1, verbose=True):
             output(name, "(rpc)", description)
             for name, item in ( ("in", "inputSchemaNode"), ("out", "outputSchemaNode")):
                 if item in node:
-                    traverse(node[item], depth+1, name)
+                    traverse(node[item], depth+1, name, max_depth=None)
                 else:
                     output(name, "(NONE)", depth=depth+1)
         else:
             assert False, "unknown node type %s" % node['nodeType']
 
-    traverse(root.schema(), name=root._path)
+    traverse(root.schema(), name=root._path, max_depth=max_depth)
 
 config = Config()
 config.TerminalInteractiveShell.banner1 = "pybsn REPL - Run %help for help"
