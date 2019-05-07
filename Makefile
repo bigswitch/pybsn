@@ -1,6 +1,6 @@
 .PHONY: debian lint install
 debian:
-	fakeroot debian/rules build binary
+	fakeroot debian/rules clean build binary
 install:
 	python3 setup.py install
 lint:
