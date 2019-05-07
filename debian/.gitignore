@@ -1,0 +1,11 @@
+
+/*.debhelper.log
+/*.postinst.debhelper
+/*.postrm.debhelper
+/*.preinst.debhelper
+/*.prerm.debhelper
+/*.substvars
+
+/debhelper-build-stamp
+/files
+/python3-pybsn/
