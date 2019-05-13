@@ -97,7 +97,11 @@ class BigDbClient(object):
         return self.request("GET", path, params=params).json()
 
     def rpc(self, path, data):
-         return self.request("POST", path, data=self._dump_if_present(data), rpc=True).json()
+        response = self.request("POST", path, data=self._dump_if_present(data), rpc=True)
+        if response.status_code == requests.codes.no_content:
+            return None
+        else:
+            return response.json()
 
     def post(self, path, data):
         return self.request("POST", path, data=self._dump_if_present(data))
