@@ -94,6 +94,12 @@ class BigDbClient(object):
         self.session = session
         self.root = Node("controller", self)
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, trace_back):
+        self.close()
+
     def request(self, method, path, data=None, params=None, rpc=False):
         url = self.url + (RPC_PREFIX if rpc else DATA_PREFIX) + path
 
@@ -130,6 +136,10 @@ class BigDbClient(object):
 
     def patch(self, path, data):
         return self.request("PATCH", path, data=self._dump_if_present(data))
+
+    def close(self):
+        # This is a no-op/fine for tokens
+        self.root.core.aaa.session.match(auth_token=self.session.cookies.get_dict()["session_cookie"]).delete()
 
     def _dump_if_present(self, data):
         if data is not None:
