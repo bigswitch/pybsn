@@ -18,6 +18,13 @@ DATA_PREFIX = "/api/v1/data/"
 RPC_PREFIX = "/api/v1/rpc/"
 SCHEMA_PREFIX = "/api/v1/schema/"
 
+
+# for python2, need to handle unicode strings specially in filter
+try:
+    UNICODE_TYPE = unicode
+except NameError:
+    UNICODE_TYPE = None
+
 class Node(object):
     def __init__(self, path, connection):
         self._path = path
@@ -52,7 +59,15 @@ class Node(object):
 
     def filter(self, template, *args, **kwargs):
         # TODO escape values better than repr()
-        kwargs = { k: repr(v) for k, v in kwargs.items() }
+        def _convert(v):
+            # fix for py2: unicode strings are encoded as u'foo' - we can't have that in a predicate
+            # so convert to a "normal" string first.
+            if UNICODE_TYPE and isinstance(v, UNICODE_TYPE):
+                return repr(str(v))
+            else:
+                return repr(v)
+
+        kwargs = { k: _convert(v) for k, v in kwargs.items() }
         predicate = '[' + Template(template).substitute(**kwargs) + ']'
         return Node(self._path + predicate, self._connection)
 
