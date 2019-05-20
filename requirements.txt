@@ -1,3 +1,4 @@
+responses
 nose
 requests
 betamax

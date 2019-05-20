@@ -12,6 +12,9 @@ setup(name='pybsn',
     install_requires=[
     "requests >= 2.3.0"
     ],
+    tests_require=[
+        "responses >= 0.10.6"
+    ],
     scripts=['bin/pybsn-repl', 'bin/pybsn-schema'],
     test_suite="test",
 )
