@@ -2,7 +2,7 @@ language: python
 python:
   # betamax on py2 produces brokenness; we want to rip it out, but
   # for now let's run at least the python 3 unit tests
-  #- "2.7"
+  - "2.7"
   - "3.5"
 # command to install dependencies
 install: 
