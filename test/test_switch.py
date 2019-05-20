@@ -2,6 +2,7 @@ import copy
 import json
 import logging
 import os
+import re
 import sys
 import unittest
 from contextlib import contextmanager
@@ -33,12 +34,14 @@ def responses_from_cassette(cassette):
 
         for h in json_["http_interactions"]:
             url = h["request"]["uri"].replace("<PYBSN_HOST>", pybsn_host)
-            if sys.version_info < (3,0):
+            url = re.escape(url)
+            url = url.replace(r'\[', r'(\[|%5B)').replace(r'\]', r'(\]|%5D)')
+            #if True or sys.version_info < (3,0):
                 # python2 hack - py2 quotes the square brackets, py3 does not
-                url = url.replace("[", "%5B").replace("]", "%5D")
+                #url = url.replace("[", "%5B").replace("]", "%5D")
             method = h["request"]["method"]
             cb = lambda req, interaction=h: _handle_interaction_cb(req, interaction)
-            rsps.add_callback(method, url,
+            rsps.add_callback(method, re.compile(url),
                  callback = cb,
                  content_type = "application/json")
 
