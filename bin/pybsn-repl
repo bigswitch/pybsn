@@ -37,10 +37,11 @@ parser.add_argument('--host', '-H', type=str, default="127.0.0.1", help="Control
 parser.add_argument('--token', '-t', type=str, help="Session/Token to use")
 parser.add_argument('--user', '-u', type=str, default="admin", help="Username")
 parser.add_argument('--password', '-p', type=str, default="adminadmin", help="Password")
-parser.add_argument('--verbose', '-v', action="store_true", help="Debug output")
+parser.add_argument('--verbose', '-v', action="count", default=0, help="Debug output")
 
 args = parser.parse_args()
-logging.basicConfig(level=logging.DEBUG if args.verbose else logging.INFO)
+logging.basicConfig(level=logging.DEBUG if args.verbose > 0 else logging.INFO)
+logging.getLogger("pybsn").setLevel(logging.DEBUG if args.verbose > 1 else logging.INFO)
 
 if args.token:
     ctrl = pybsn.connect(host=args.host, token=args.token, login=False)
