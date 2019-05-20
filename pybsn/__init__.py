@@ -160,13 +160,15 @@ def logged_request(session, request):
     prepared = session.prepare_request(request)
 
     marker = "-" * 30
-    logger.debug("%s Request: %s\n%s\n%s\n\n%s", marker, marker, prepared.method + ' ' + prepared.url,
+    if logger.isEnabledFor(logging.DEBUG):
+        logger.debug("%s Request: %s\n%s\n%s\n\n%s", marker, marker, prepared.method + ' ' + prepared.url,
                   '\n'.join('{}: {}'.format(k, v) for k, v in prepared.headers.items()),
                   prepared.body)
 
     response = session.send(prepared)
 
-    logger.debug("%s Response: %s\n%s\n%s\n\n%s", marker, marker, response.status_code,
+    if logger.isEnabledFor(logging.DEBUG):
+        logger.debug("%s Response: %s\n%s\n%s\n\n%s", marker, marker, response.status_code,
                   '\n'.join('{}: {}'.format(k, v) for k, v in response.headers.items()),
                   response.content)
 
