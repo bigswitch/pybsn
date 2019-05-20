@@ -1,4 +1,3 @@
 responses
 nose
 requests
-betamax
