@@ -12,9 +12,18 @@ try:
 except ImportError:
     pass
 
+logger = logging.getLogger("pybsn")
+
 DATA_PREFIX = "/api/v1/data/"
 RPC_PREFIX = "/api/v1/rpc/"
 SCHEMA_PREFIX = "/api/v1/schema/"
+
+
+# for python2, need to handle unicode strings specially in filter
+try:
+    UNICODE_TYPE = unicode
+except NameError:
+    UNICODE_TYPE = None
 
 class Node(object):
     def __init__(self, path, connection):
@@ -50,7 +59,15 @@ class Node(object):
 
     def filter(self, template, *args, **kwargs):
         # TODO escape values better than repr()
-        kwargs = { k: repr(v) for k, v in kwargs.items() }
+        def _convert(v):
+            # fix for py2: unicode strings are encoded as u'foo' - we can't have that in a predicate
+            # so convert to a "normal" string first.
+            if UNICODE_TYPE and isinstance(v, UNICODE_TYPE):
+                return repr(str(v))
+            else:
+                return repr(v)
+
+        kwargs = { k: _convert(v) for k, v in kwargs.items() }
         predicate = '[' + Template(template).substitute(**kwargs) + ']'
         return Node(self._path + predicate, self._connection)
 
@@ -72,15 +89,17 @@ class Node(object):
         return "Node(%s)" % self._path
 
 class BigDbClient(object):
-    def __init__(self, url, session, verify=True):
+    def __init__(self, url, session):
         self.url = url
         self.session = session
         self.root = Node("controller", self)
-        self.verify = verify
 
     def request(self, method, path, data=None, params=None, rpc=False):
         url = self.url + (RPC_PREFIX if rpc else DATA_PREFIX) + path
-        response = self.session.request(method, url, data=data, params=params, verify=self.verify)
+
+        request = requests.Request(method=method, url=url, data=data, params=params)
+        response = logged_request(self.session, request)
+
         try:
             # Raise an HTTPError for 4xx/5xx codes
             response.raise_for_status()
@@ -97,7 +116,11 @@ class BigDbClient(object):
         return self.request("GET", path, params=params).json()
 
     def rpc(self, path, data):
-         return self.request("POST", path, data=self._dump_if_present(data), rpc=True).json()
+        response = self.request("POST", path, data=self._dump_if_present(data), rpc=True)
+        if response.status_code == requests.codes.no_content:
+            return None
+        else:
+            return response.json()
 
     def post(self, path, data):
         return self.request("POST", path, data=self._dump_if_present(data))
@@ -119,17 +142,38 @@ class BigDbClient(object):
 
     def schema(self, path=""):
         url = self.url + SCHEMA_PREFIX + path
-        response = self.session.get(url, verify=self.verify)
+        response = self.session.get(url)
         response.raise_for_status()
         return json.loads(response.text)
 
     def __repr__(self):
         return "BigDbClient(%s)" % self.url
 
+
 BIGDB_PROTO_PORTS = [
     ('https', 8443),
     ('http', 8080),
 ]
+
+
+def logged_request(session, request):
+    prepared = session.prepare_request(request)
+
+    marker = "-" * 30
+    if logger.isEnabledFor(logging.DEBUG):
+        logger.debug("%s Request: %s\n%s\n%s\n\n%s", marker, marker, prepared.method + ' ' + prepared.url,
+                  '\n'.join('{}: {}'.format(k, v) for k, v in prepared.headers.items()),
+                  prepared.body)
+
+    response = session.send(prepared)
+
+    if logger.isEnabledFor(logging.DEBUG):
+        logger.debug("%s Response: %s\n%s\n%s\n\n%s", marker, marker, response.status_code,
+                  '\n'.join('{}: {}'.format(k, v) for k, v in response.headers.items()),
+                  response.content)
+
+    return response
+
 
 def guess_url(session, host, validate_path="/api/v1/auth/healthy"):
     if re.match(r'^https?://', host):
@@ -140,18 +184,19 @@ def guess_url(session, host, validate_path="/api/v1/auth/healthy"):
             try:
                 response = session.get(url + validate_path, timeout=2)
             except requests.exceptions.ConnectionError as e:
-                logging.debug("Error connecting to %s: %s", url, str(e))
+                logger.debug("Error connecting to %s: %s", url, str(e))
                 continue
             if response.status_code == 200: # OK
                 return url
             else:
-                logging.debug("Could connect to URL %s: %s", url, response)
+                logger.debug("Could connect to URL %s: %s", url, response)
     raise Exception("Could not find available BigDB service on {}".format(host))
 
-def attempt_login(session, url, username, password, verify):
+def attempt_login(session, url, username, password):
     auth_data = json.dumps({ 'user': username, 'password': password })
     path = "/api/v1/auth/login"
-    response = session.post(url + path, auth_data, verify=verify)
+    request = requests.Request(method="POST", url=url + path, data=auth_data)
+    response = logged_request(session, request)
     if response.status_code == 200: # OK
         # Fix up cookie path
         for cookie in session.cookies:
@@ -161,20 +206,21 @@ def attempt_login(session, url, username, password, verify):
     else:
         response.raise_for_status()
 
-def connect(host, username=None, password=None, verify=False, token=None, login=None, verify_tls=False):
+def connect(host, username=None, password=None, token=None, login=None, verify_tls=False):
     session = requests.Session()
     session.verify = verify_tls
     url = guess_url(session, host)
     if login is None:
-        login = (token is None)
+        login = (token is None) and username is not None and password is not None
 
     if login:
-        attempt_login(session=session, url=url, username=username, password=password, verify=verify)
+        attempt_login(session=session, url=url, username=username, password=password)
     elif token:
         cookie = requests.cookies.create_cookie(name="session_cookie", value=token)
         session.cookies.set_cookie(cookie)
-        response = session.get(url + "/api/v1/data/controller/core/aaa/auth-context")
+        request = requests.Request(method="GET", url=url + "/api/v1/data/controller/core/aaa/auth-context")
+        response = logged_request(session, request)
         if response.status_code != 200:
             response.raise_for_status()
 
-    return BigDbClient(url, session, verify=verify)
+    return BigDbClient(url, session)

@@ -1,25 +1,61 @@
+import copy
+import json
+import logging
 import os
+import re
+import sys
 import unittest
+from contextlib import contextmanager
 
-from betamax import Betamax
+import responses
 from pybsn.bcf.api import Api
 
-pybsn_host = os.environ.get('PYBSN_HOST', 'http://127.0.0.1:8080')
-pybsn_user = os.environ.get('PYBSN_USER', 'admin')
-pybsn_pass = os.environ.get('PYBSN_PASS', 'admin')
+
+pybsn_host = "http://127.0.0.1:8080"
 
 my_dir = os.path.dirname(__file__)
 
-with Betamax.configure() as config:
-    config.cassette_library_dir = os.path.join(my_dir, 'fixtures/cassettes/switch')
-    config.define_cassette_placeholder('<PYBSN_HOST>', pybsn_host)
+logging.basicConfig()
+
+
+@contextmanager
+def responses_from_cassette(cassette):
+    with responses.RequestsMock() as rsps:
+        with open(os.path.join(my_dir, 'fixtures/cassettes/switch',cassette + ".json")) as file_:
+            json_ = json.load(file_)
+
+        def _handle_interaction_cb(req, interaction):
+            if interaction["request"]["body"]["string"]:
+                expected_req_body = json.loads(interaction["request"]["body"]["string"])
+                assert json.loads(req.body) == expected_req_body
+
+            return (interaction["response"]["status"]["code"], interaction["response"]["headers"],
+                    interaction["response"]["body"]["string"])
+
+        for h in json_["http_interactions"]:
+            url = h["request"]["uri"].replace("<PYBSN_HOST>", pybsn_host)
+            url = re.escape(url)
+            url = url.replace(r'\[', r'(\[|%5B)').replace(r'\]', r'(\]|%5D)')
+            #if True or sys.version_info < (3,0):
+                # python2 hack - py2 quotes the square brackets, py3 does not
+                #url = url.replace("[", "%5B").replace("]", "%5D")
+            method = h["request"]["method"]
+            cb = lambda req, interaction=h: _handle_interaction_cb(req, interaction)
+            rsps.add_callback(method, re.compile(url),
+                 callback = cb,
+                 content_type = "application/json")
+
+            print("registered callback %s %s" % (method, url))
+
+        yield
+
 
 class TestSwitch(unittest.TestCase):
     def setUp(self):
-        self.api = Api(pybsn_host, pybsn_user, pybsn_pass, login=False)
+        self.api = Api('http://127.0.0.1:8080', "admin", "pass", login=False)
 
     def test_get_switches(self):
-        with Betamax(self.api.client.session).use_cassette('get_switches'):
+        with responses_from_cassette('get_switches'):
             switches = self.api.get_switches()
 
             assert len(switches) == 14
@@ -30,22 +66,20 @@ class TestSwitch(unittest.TestCase):
 
 
     def test_get_switch_by_name(self):
-        with Betamax(self.api.client.session).use_cassette('get_switch_by_name'):
+        with responses_from_cassette('get_switch_by_name'):
             sw = self.api.get_switch_by_name("test")
 
             assert sw is not None
             assert sw.name == "test"
 
-
     def test_get_switch_by_name_fail(self):
-        with Betamax(self.api.client.session).use_cassette('get_switch_by_name_fail'):
+        with responses_from_cassette('get_switch_by_name_fail'):
             sw = self.api.get_switch_by_name("test")
 
             assert sw is None
 
-
     def test_remove_switch_by_name(self):
-        with Betamax(self.api.client.session).use_cassette('remove_switch_by_name'):
+        with responses_from_cassette('remove_switch_by_name'):
             # Add a switch first
             self.api.add_switch(dpid="00:00:00:00:01:01:01:01", name="test")
 
@@ -56,13 +90,12 @@ class TestSwitch(unittest.TestCase):
             # Remove it
             self.api.remove_switch_by_name("test")
 
-        with Betamax(self.api.client.session).use_cassette('remove_switch_by_name_2'):
+        with responses_from_cassette('remove_switch_by_name_2'):
             sw = self.api.get_switch_by_name("test")
             assert sw is None
 
-
     def test_remove_switch_by_dpid(self):
-        with Betamax(self.api.client.session).use_cassette('remove_switch_by_dpid'):
+        with responses_from_cassette('remove_switch_by_dpid'):
             # Add a switch first
             self.api.add_switch(dpid="00:00:00:00:01:01:01:01", name="test")
 
@@ -73,28 +106,25 @@ class TestSwitch(unittest.TestCase):
             # Remove it
             self.api.remove_switch_by_dpid("00:00:00:00:01:01:01:01")
 
-        with Betamax(self.api.client.session).use_cassette('remove_switch_by_dpid_2'):
+        with responses_from_cassette('remove_switch_by_dpid_2'):
             sw = self.api.get_switch_by_dpid("00:00:00:00:01:01:01:01")
             assert sw is None
 
-
     def test_get_switch_by_dpid(self):
-        with Betamax(self.api.client.session).use_cassette('get_switch_by_dpid'):
+        with responses_from_cassette('get_switch_by_dpid'):
             sw = self.api.get_switch_by_dpid("00:00:00:00:00:01:00:01")
 
             assert sw is not None
             assert sw.dpid == "00:00:00:00:00:01:00:01"
 
-
     def test_get_switch_by_dpid_fail(self):
-        with Betamax(self.api.client.session).use_cassette('get_switch_by_dpid_fail'):
+        with responses_from_cassette('get_switch_by_dpid_fail'):
             sw = self.api.get_switch_by_dpid("00:00:00:00:00:00:00:01")
 
             assert sw is None
 
-
     def test_update(self):
-        with Betamax(self.api.client.session).use_cassette('update'):
+        with responses_from_cassette('update'):
             sw = self.api.get_switch_by_dpid("00:00:00:00:00:01:00:01")
 
             assert sw is not None
@@ -103,10 +133,8 @@ class TestSwitch(unittest.TestCase):
 
             assert sw != None
 
-
     def test_remove(self):
-        with Betamax(self.api.client.session) as vcr:
-            vcr.use_cassette('remove')
+        with responses_from_cassette("remove"):
             # Add a switch first
             self.api.add_switch(dpid="00:00:00:00:01:01:01:01", name="test")
 
@@ -117,13 +145,13 @@ class TestSwitch(unittest.TestCase):
             # Remove it
             sw.remove()
 
-            vcr.use_cassette('get_switch_by_name_fail')
+        with responses_from_cassette("get_switch_by_name_fail"):
             sw = self.api.get_switch_by_name("test")
             assert sw is None
 
 
     def test_add_switch(self):
-        with Betamax(self.api.client.session).use_cassette('add_switch'):
+        with responses_from_cassette('add_switch'):
             sw = self.api.add_switch(dpid="00:00:00:00:01:01:01:01", name="test")
 
             assert sw is not None
@@ -136,7 +164,7 @@ class TestSwitch(unittest.TestCase):
 
 
     def test_disconnect_switch(self):
-        with Betamax(self.api.client.session).use_cassette('disconnect_switch'):
+        with responses_from_cassette('disconnect_switch'):
             switches = self.api.get_switches()
 
             assert len(switches) == 14
@@ -146,7 +174,7 @@ class TestSwitch(unittest.TestCase):
 
 
     def test_get_interfaces(self):
-        with Betamax(self.api.client.session).use_cassette('get_interfaces'):
+        with responses_from_cassette('get_interfaces'):
             sw = self.api.get_switch_by_dpid("00:00:00:00:00:01:00:01")
 
             assert sw is not None
@@ -157,7 +185,7 @@ class TestSwitch(unittest.TestCase):
 
 
     def test_get_connections(self):
-        with Betamax(self.api.client.session).use_cassette('get_connections'):
+        with responses_from_cassette('get_connections'):
             sw = self.api.get_switch_by_dpid("00:00:00:00:00:01:00:01")
 
             assert sw is not None
