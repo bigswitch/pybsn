@@ -138,8 +138,10 @@ class BigDbClient(object):
         return self.request("PATCH", path, data=self._dump_if_present(data))
 
     def close(self):
-        # This is a no-op/fine for tokens
-        self.root.core.aaa.session.match(auth_token=self.session.cookies.get_dict()["session_cookie"]).delete()
+        token = self.session.cookies.get_dict().get("session_cookie")
+        if token:
+            # This is a no-op/fine for api tokens
+            self.root.core.aaa.session.match(auth_token=token).delete()
 
     def _dump_if_present(self, data):
         if data is not None:
