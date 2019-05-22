@@ -1,6 +1,7 @@
 import json
 import os
 import logging
+import re
 import unittest
 
 import requests
@@ -46,6 +47,10 @@ class TestBigDbClient(unittest.TestCase):
         # responses.add_callback(responses.GET, "http://127.0.0.1:8080/api/v1/data/controller/test", callback=_get_cb,
         #                        content_type="application/json")
         # client.get("controller/test")
+
+    @responses.activate
+    def test_close_no_auth(self):
+        self.client.close
 
     @responses.activate
     def test_connect_wrong_pw(self):
@@ -96,6 +101,44 @@ class TestBigDbClient(unittest.TestCase):
         with self.assertRaises(requests.exceptions.HTTPError) as context:
             pybsn.connect("http://127.0.0.1:8080", token="wrong_token")
         self.assertEqual(context.exception.response.status_code, 401)
+
+    @responses.activate
+    def test_close_no_auth(self):
+        # no request
+        self.client.close()
+
+    @responses.activate
+    def test_close_session(self):
+        responses.add(method=responses.DELETE,
+                      url=re.compile(r"http://127\.0\.0\.1:8080/api/v1/data/controller/core/aaa/session"
+                                     r"(?:%5B|\[)auth-token='value'(?:%5D|\])"),
+                      status=204)
+
+        self.client.session.cookies.set_cookie(
+            requests.cookies.create_cookie(name="session_cookie", value="value"))
+        self.client.close()
+
+    @responses.activate
+    def test_client_contextmanager(self):
+        responses.add(responses.GET, "http://127.0.0.1:8080/api/v1/data/controller/core/healthy",
+                      status=200, json= [ { "status" : "healthy"}] )
+
+        with pybsn.connect("http://127.0.0.1:8080") as client:
+            client.get("controller/core/healthy")
+
+    @responses.activate
+    def test_client_contextmanager_with_session(self):
+        responses.add(method=responses.DELETE,
+                      url=re.compile(r"http://127\.0\.0\.1:8080/api/v1/data/controller/core/aaa/session"
+                                     r"(?:%5B|\[)auth-token='value'(?:%5D|\])"),
+                      status=204)
+        responses.add(responses.GET, "http://127.0.0.1:8080/api/v1/data/controller/core/healthy",
+                      status=200, json= [ { "status" : "healthy"}] )
+
+        with pybsn.connect("http://127.0.0.1:8080") as client:
+            client.session.cookies.set_cookie(
+                requests.cookies.create_cookie(name="session_cookie", value="value"))
+            client.get("controller/core/healthy")
 
     @responses.activate
     def test_rpc(self):
