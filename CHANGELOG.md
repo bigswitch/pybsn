@@ -3,6 +3,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 0.3.1 - 07-01-2019
+### Added
+- `pybsn.connect` - optional parameter `session_headers` allows specifying
+request headers to be included with all requests.
+
 ## 0.3.0 - 5-20-2019
 ### Added 
 - Ability to log request/response bodies
