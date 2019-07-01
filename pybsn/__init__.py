@@ -218,9 +218,14 @@ def attempt_login(session, url, username, password):
     else:
         response.raise_for_status()
 
-def connect(host, username=None, password=None, token=None, login=None, verify_tls=False):
+
+def connect(host, username=None, password=None, token=None, login=None, verify_tls=False, session_headers=None):
     session = requests.Session()
     session.verify = verify_tls
+    if session_headers:
+        for k, v in session_headers.items():
+            session.headers[k] = v
+
     url = guess_url(session, host)
     if login is None:
         login = (token is None) and username is not None and password is not None
