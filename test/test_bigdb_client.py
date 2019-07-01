@@ -86,6 +86,22 @@ class TestBigDbClient(unittest.TestCase):
 
         pybsn.connect("http://127.0.0.1:8080", token="some_token")
 
+
+    @responses.activate
+    def test_connect_token_custom_headers(self):
+        def _aaa_cb(req):
+            self.assertEqual(req.headers["Cookie"], "session_cookie=some_token")
+            self.assertEqual(req.headers["X-Forwarded-For"], "1.2.3.4")
+            return (200, {}, json.dumps([ {  "auth-context-type" : "session-token",  "user-info" :
+                              {   "full-name" : "Default admin",
+                             "group" : [ "admin" ],    "user-name" : "admin"  } } ])
+                    )
+
+        responses.add_callback(responses.GET, "http://127.0.0.1:8080/api/v1/data/controller/core/aaa/auth-context",
+                               callback=_aaa_cb, content_type="application/json")
+
+        pybsn.connect("http://127.0.0.1:8080", token="some_token", session_headers={"X-Forwarded-For": "1.2.3.4"})
+
     @responses.activate
     def test_connect_token_wrong(self):
         def _aaa_cb(req):
