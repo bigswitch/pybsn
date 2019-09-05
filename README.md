@@ -1,9 +1,9 @@
 # pybsn
-pybsn is a python interface to [Big Switch Network's](http://bigswitch.com) products
+pybsn is a python interface to [Big Switch Network](http://bigswitch.com) products
 
-[![Build Status](https://travis-ci.org/floodlight/pybsn.svg)](https://travis-ci.org/floodlight/pybsn)
+[![Build Status](https://travis-ci.org/bigswitch/pybsn.svg)](https://travis-ci.org/bigswitch/pybsn)
 [![PyPI version](https://badge.fury.io/py/pybsn.svg)](https://pypi.python.org/pypi/pybsn/)
-[![Coverage Status](https://coveralls.io/repos/floodlight/pybsn/badge.svg)](https://coveralls.io/r/floodlight/pybsn)
+[![Coverage Status](https://coveralls.io/repos/bigswitch/bigswitch/badge.svg)](https://coveralls.io/r/bigswitch/pybsn)
 ## Installation
 
 ```bash
