@@ -3,7 +3,11 @@ from pybsn.bcf.switch import Switch
 
 
 class Api(object):
-    """A python interface into the Big Switch Networks Big Cloud Fabric API
+    """
+    Prototype BCF Specific "Porcelain" API.
+
+    Note this API layer is currently quite incomplete. It is recommended using the generic
+    Node API (e.g. client.root) to access BigDB.
 
     Example usage:
   
