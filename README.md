@@ -107,6 +107,21 @@ Out[11]:
   'shutdown': False}]
 ```
 
+* call HTTP methods on the node to mutate data:
+   * `node.post(data)` - inserts data at the node
+   * `node.put(data)` - replaces the node entirely with the new data
+   * `node.patch(data)` - selectively updates the node with the given data, leaving unspecified values untouched
+   * `node.delete()` - delete the node
+
+In these examples, `data` is a JSON serializable object, often a dictionary. Node that the dictionary keys must be in schema format at present (i.e., with hyphens, `some-long-property` not `some_long_property`).
+
+* call `node.rpc(input_data)` to make an RPC call to the RPC specified in the node.
+
+`input_data` is a JSON serializable object, often a dictionary. Node that the dictionary keys must be in schema format at present (i.e., with hyphens, `some-long-property` not `some_long_property`).
+
+The output/result of the RPC returned as a dictionary.
+
+
 #### More Examples:
 
 ```python
