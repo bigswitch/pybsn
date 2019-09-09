@@ -155,7 +155,7 @@ class Node(object):
         Here,
         segment.filter("member-vlan<$max", max=1000)
         translates into the BigDB path:
-        [...]/segment[member-vlan<1000]
+        .../segment[member-vlan<1000]
         """
 
         # TODO escape values better than repr()
