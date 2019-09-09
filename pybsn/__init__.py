@@ -135,7 +135,7 @@ class Node(object):
         node.match(mac_address="01:02:03:04:05:05:06")
         translates into the BigDB Path
 
-        [...]/node[mac-address="14:18:77:96:8b:d6"]
+        .../node[mac-address="14:18:77:96:8b:d6"]
         """
         for k, v in kwargs.items():
             self = self.filter("%s=$x" % k.replace('_', '-'), x=v)
@@ -372,7 +372,8 @@ def guess_url(session, host, validate_path="/api/v1/auth/healthy"):
                 logger.debug("Could connect to URL %s: %s", url, response)
     raise Exception("Could not find available BigDB service on {}".format(host))
 
-def attempt_login(session, url, username, password):
+
+def _attempt_login(session, url, username, password):
     """ Attempts to create an interactive BigDB session by calling the login endpoint
         with user and password.
 
@@ -428,7 +429,7 @@ def connect(host, username=None, password=None, token=None, login=None, verify_t
         login = (token is None) and username is not None and password is not None
 
     if login:
-        attempt_login(session=session, url=url, username=username, password=password)
+        _attempt_login(session=session, url=url, username=username, password=password)
     elif token:
         cookie = requests.cookies.create_cookie(name="session_cookie", value=token)
         session.cookies.set_cookie(cookie)
