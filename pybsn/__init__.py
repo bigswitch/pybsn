@@ -2,6 +2,7 @@ import json
 import logging
 import re
 from string import Template
+import urllib
 
 import requests
 
@@ -380,6 +381,14 @@ def _attempt_login(session, url, username, password):
         If successful, stores the resulting cookie in the provided requests objects.
         Raises a requests exception (e.g., requests.exceptions.HTTPError) on error.
     """
+    request = requests.Request(method="HEAD", url = url + "/api/v2/schema/controller/root/core/aaa/session/login" )
+    response = logged_request(session, request)
+    if response.status_code == 200:
+        return _attempt_modern_login(session, url, username, password)
+    else:
+        return _attempt_legacy_login(session, url, username, password)
+
+def _attempt_legacy_login(session, url, username, password):
     auth_data = json.dumps({ 'user': username, 'password': password })
     path = "/api/v1/auth/login"
     request = requests.Request(method="POST", url=url + path, data=auth_data)
@@ -389,6 +398,19 @@ def _attempt_login(session, url, username, password):
         for cookie in session.cookies:
             if cookie.path == "/auth":
                 cookie.path = "/api"
+        return url
+    else:
+        response.raise_for_status()
+
+def _attempt_modern_login(session, url, username, password):
+    auth_data = json.dumps({ 'user': username, 'password': password })
+    path = "/api/v1/rpc/controller/core/aaa/session/login"
+    request = requests.Request(method="POST", url=url + path, data=auth_data)
+    response = logged_request(session, request)
+    if response.status_code == 200:
+        json_ = response.json()
+        session_cookie = requests.cookies.create_cookie(name="session_cookie", value=json_["session-cookie"], domain=urllib.parse.urlparse(url).hostname, path="/api")
+        session.cookies.set_cookie(session_cookie)
         return url
     else:
         response.raise_for_status()
