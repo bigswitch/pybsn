@@ -2,7 +2,10 @@ import json
 import logging
 import re
 from string import Template
-import urllib
+try:
+    from urlparse import urlparse  # python2
+except:
+    from urllib.parse import urlparse  # python3
 
 import requests
 
@@ -411,7 +414,7 @@ def _attempt_modern_login(session, url, username, password):
     response = logged_request(session, request)
     if response.status_code == 200:
         json_ = response.json()
-        session_cookie = requests.cookies.create_cookie(name="session_cookie", value=json_["session-cookie"], domain=urllib.parse.urlparse(url).hostname, path="/api")
+        session_cookie = requests.cookies.create_cookie(name="session_cookie", value=json_["session-cookie"], domain=urlparse(url).hostname, path="/api")
         session.cookies.set_cookie(session_cookie)
         return url
     else:
