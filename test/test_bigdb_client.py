@@ -16,22 +16,29 @@ class TestBigDbClient(unittest.TestCase):
     def setUp(self):
         self.client = pybsn.connect("http://127.0.0.1:8080")
 
-    @responses.activate
-    def test_connect_login(self):
-        def _login_cb(req):
-            self.assertEqual(json.loads(req.body), {'user': 'admin', 'password': 'somepassword'})
-            headers = {
-                "Set-Cookie": "session_cookie=v_8yOI7FI-WKr-5QU6nxoJkVtAu5rKI-; Path=/api/;"
-            }
-            return (200, headers, json.dumps(
-                {"success": True,
-                 "session_cookie": "UPhNWlmDN0re8cg9xsqe9QT1QvQTznji",
-                 "error_message": "",
-                 "past_login_info":
-                     {"failed_login_count": 0,
-                      "last_success_login_info": {"host": "127.0.0.1", "timestamp": "2019-05-19T19:16:22.328Z"}}}))
+    def _login_cb(self, req):
+        self.assertEqual(json.loads(req.body), {'user': 'admin', 'password': 'somepassword'})
+        headers = {
+            "Set-Cookie": "session_cookie=v_8yOI7FI-WKr-5QU6nxoJkVtAu5rKI-; Path=/api/;"
+        }
+        return (200, headers, json.dumps(
+            {"success": True,
+             "session-cookie": "UPhNWlmDN0re8cg9xsqe9QT1QvQTznji",
+             "error-message": "",
+             "past-login-info":
+                 {"failed-login-count": 0,
+                  "last-success-login-info": {"host": "127.0.0.1", "timestamp": "2019-05-19T19:16:22.328Z"}}}))
 
-        responses.add_callback(responses.POST, "http://127.0.0.1:8080/api/v1/auth/login", callback=_login_cb,
+    @responses.activate
+    def test_connect_legacy_login(self):
+        responses.add_callback(responses.HEAD,
+                               "http://127.0.0.1:8080/api/v2/schema/controller/root/core/aaa/session/login",
+                               callback=lambda req: (401, {}, ""),
+                               content_type="application/json")
+
+        responses.add_callback(responses.POST,
+                               "http://127.0.0.1:8080/api/v1/auth/login",
+                               callback=self._login_cb,
                                content_type="application/json")
 
         client = pybsn.connect("http://127.0.0.1:8080", "admin", "somepassword")
@@ -50,6 +57,20 @@ class TestBigDbClient(unittest.TestCase):
         # client.get("controller/test")
 
     @responses.activate
+    def test_connect_modern_login(self):
+        responses.add_callback(responses.HEAD,
+                               "http://127.0.0.1:8080/api/v2/schema/controller/root/core/aaa/session/login",
+                               callback=lambda req: (200, {}, ""),
+                               content_type="application/json")
+
+        responses.add_callback(responses.POST,
+                               "http://127.0.0.1:8080/api/v1/rpc/controller/core/aaa/session/login",
+                               callback=self._login_cb,
+                               content_type="application/json")
+
+        client = pybsn.connect("http://127.0.0.1:8080", "admin", "somepassword")
+
+    @responses.activate
     def test_close_no_auth(self):
         self.client.close
 
@@ -65,6 +86,11 @@ class TestBigDbClient(unittest.TestCase):
                  "session_cookie":None,
                  "error_message":"Invalid user/password combination.",
                  "past_login_info":None}))
+
+        responses.add_callback(responses.HEAD,
+                               "http://127.0.0.1:8080/api/v2/schema/controller/root/core/aaa/session/login",
+                               callback=lambda req: (401, {}, ""),
+                               content_type="application/json")
 
         responses.add_callback(responses.POST, "http://127.0.0.1:8080/api/v1/auth/login", callback=_login_cb,
                                content_type="application/json")
