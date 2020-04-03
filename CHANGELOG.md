@@ -3,6 +3,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 0.3.2 - 04-01-2020
+### Added
+- `pybsn-repl` - optional parameter `env-token` allows specifying
+the name of an environment variable to read the session token from.
+
 ## 0.3.1 - 07-01-2019
 ### Added
 - `pybsn.connect` - optional parameter `session_headers` allows specifying
