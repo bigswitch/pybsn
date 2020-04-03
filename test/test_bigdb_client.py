@@ -11,6 +11,7 @@ import responses
 
 my_dir = os.path.dirname(__file__)
 
+
 class TestBigDbClient(unittest.TestCase):
     def setUp(self):
         self.client = pybsn.connect("http://127.0.0.1:8080")
