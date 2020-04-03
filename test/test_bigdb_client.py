@@ -72,7 +72,7 @@ class TestBigDbClient(unittest.TestCase):
 
     @responses.activate
     def test_close_no_auth(self):
-        self.client.close
+        self.client.close()
 
     @responses.activate
     def test_connect_wrong_pw(self):
