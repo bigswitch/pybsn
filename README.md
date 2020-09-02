@@ -158,7 +158,7 @@ switch_configs = client.get("core/switch-config")
 ## get config of a particular switch
 particular_config = client.get('core/switch-config[name="leaf-1a"]')
 ## insert a new switch config
-client.post("core/switch-config", data={ "name": "leaf-1a", "mac-address": "01:02:03:04:05:06 } )
+client.post("core/switch-config", data={ "name": "leaf-1a", "mac-address": "01:02:03:04:05:06" } )
 ## disconnect a switch (RPC)
 client.rpc('core/switch[name="leaf-1a"]/disconnect')
 
@@ -171,7 +171,7 @@ switch_configs = root.core.switch_config()
 ## get config of a particular switch
 particular_config = root.core.switch_config.match(name="leaf-1a")
 ## insert a new switch config
-root.core.switch_config.post({ "name": "leaf-1a", "mac-address": "01:02:03:04:05:06 })
+root.core.switch_config.post({ "name": "leaf-1a", "mac-address": "01:02:03:04:05:06" })
 ## disconnect a switch (RPC)
 root.core.switch.match(name="leaf-1a").disconnect.rpc()
 ```
