@@ -68,36 +68,46 @@ class Node(object):
         return Node(self._path + "/" + name, self._connection)
 
     def get(self, params=None):
-        """ Retrieve the data stored in BigDB at the path identified by this node. """
+        """ Retrieve the data stored in BigDB at the path identified by this node. 
+
+        :params params: Optional hash of parameters that will be appended to the query
+            e.g., {'state-type': 'global-config'} would restrict the state to global config.
+        """
         return self._connection.get(self._path, params)
 
-    def post(self, data):
+    def post(self, data, params=None):
         """ Inserts (POST) the given data to BigDB at the path identified by this node.
 
         :param data: JSON serializable data to post, often a dictionary.
             Note that the data provided here is passed to BigDB as-is; i.e., use hyphens.
+        :params params: Optional hash of parameters that will be appended to the query
+            e.g., {'state-type': 'global-config'} would restrict the state to global config.
         """
-        return self._connection.post(self._path, data)
+        return self._connection.post(self._path, data, params)
 
-    def put(self, data):
+    def put(self, data, params=None):
         """ Replaces (PUT) the given data in BigDB at the path identified by this node.
 
         :param data: JSON serializable data to post, often a dictionary.
             Note that the data provided here is passed to BigDB as-is; i.e., use hyphens.
+        :params params: Optional hash of parameters that will be appended to the query
+            e.g., {'state-type': 'global-config'} would restrict the state to global config.
         """
-        return self._connection.put(self._path, data)
+        return self._connection.put(self._path, data, params)
 
-    def patch(self, data):
+    def patch(self, data, params=None):
         """ Updates (PATCH) the given data in BigDB at the path identified by this node.
 
         :param data: JSON serializable data to post, often a dictionary.
             Note that the data provided here is passed to BigDB as-is; i.e., use hyphens.
+        :params params: Optional hash of parameters that will be appended to the query
+            e.g., {'state-type': 'global-config'} would restrict the state to global config.
         """
-        return self._connection.patch(self._path, data)
+        return self._connection.patch(self._path, data, params)
 
-    def delete(self):
+    def delete(self, params=None):
         """ Delete the data stored in BigDB at the path identified by this node. """
-        return self._connection.delete(self._path)
+        return self._connection.delete(self._path, params=params)
 
     def schema(self):
         """ Retrieve the schema for BigDB at the path identified by this node. """
@@ -201,6 +211,7 @@ class BigDbClient(object):
         :param path: the path path of the RPC to invoke. Does not include the prefix.
               (/api/v1/rpc).
         :param data: JSON serializable input data for the RPC.
+        :param params: request parameters to attach
         :return: the deserialized RPC output (for most RPCs, a dict).
         """
         response = self._request("POST", path, data=self._dump_if_present(data), rpc=True)
@@ -209,43 +220,47 @@ class BigDbClient(object):
         else:
             return response.json()
 
-    def post(self, path, data):
+    def post(self, path, data, params=None):
         """ Inserts new data to the BigDB REST API via the POST method.
 
         :param path: the path at which to insert data. Does not include the prefix.
               (/api/v1/data).
         :param data: JSON serializable data to insert
+        :param params: request parameters to attach
         :return: None on success
         """
-        return self._request("POST", path, data=self._dump_if_present(data))
+        return self._request("POST", path, data=self._dump_if_present(data), params=params)
 
-    def put(self, path, data):
+    def put(self, path, data, params=None):
         """ Replaces data in the BigDB REST API via the PUT method.
 
         :param path: the path at which to insert data. Does not include the prefix.
               (/api/v1/data).
         :param data: JSON serializable to replace.
+        :param params: request parameters to attach
         :return: None on success
         """
-        return self._request("PUT", path, data=self._dump_if_present(data))
+        return self._request("PUT", path, data=self._dump_if_present(data), params=params)
 
-    def patch(self, path, data):
+    def patch(self, path, data, params=None):
         """ Updates data in the BigDB REST API via the PATCH method.
 
         :param path: the path at which to update data. Does not include the prefix.
               (/api/v1/data).
         :param data: JSON serializable of the data to update.
+        :param params: request parameters to attach
         :return: None on success
         """
-        return self._request("PATCH", path, data=self._dump_if_present(data))
+        return self._request("PATCH", path, data=self._dump_if_present(data), params=params)
 
-    def delete(self, path):
+    def delete(self, path, params=None):
         """  Deletes data from the BigDB REST API via the DELETE method.
 
             :param path: the path from which to delete data. Does not include the prefix.
               (/api/v1/data).
+            :param params: request parameters to attach
         """
-        return self._request("DELETE", path)
+        return self._request("DELETE", path, params=params)
 
     def schema(self, path=""):
         """  Retrieves the schema for a given path from BigDB.
