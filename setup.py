@@ -1,11 +1,11 @@
 from setuptools import setup
 
 setup(name='pybsn',
-    version='0.3.2',
+    version='0.3.3',
     description="pybsn is a python interface to Big Switch Networks' products",
     url='https://github.com/floodlight/pybsn',
-    author='Jason Parraga, Rich Lane, Andreas Wundsam, Andre Kutzleb',
-    author_email='Sovietaced@gmail.com, Rich.Lane@bigswitch.com, Andreas.Wundsam@arista.com, Andre.Kutzleb@arista.com',
+    author='Andreas Wundsam, Andre Kutzleb, Jason Parraga, Rich Lane',
+    author_email='Andreas.Wundsam@arista.com, Andre.Kutzleb@arista.com',
     license='ECLIPSE',
     packages=['pybsn'],
     zip_safe=False,
