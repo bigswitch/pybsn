@@ -49,6 +49,7 @@ token_source.add_argument('--env-token', '-e', type=env_var, dest='token',
 parser.add_argument('--user', '-u', type=str, default="admin", help="Username")
 parser.add_argument('--password', '-p', type=str, default="adminadmin", help="Password")
 parser.add_argument('--verbose', '-v', action="count", default=0, help="Debug output")
+parser.add_argument('--command', '-c', help="Command to execute")
 
 args = parser.parse_args()
 logging.basicConfig(level=logging.DEBUG if args.verbose > 0 else logging.INFO)
@@ -146,8 +147,11 @@ config.TerminalInteractiveShell.confirm_exit = False
 user_ns = dict(ctrl=ctrl, root=ctrl.root, show_schema=show_schema)
 
 app = TerminalIPythonApp(config=config)
-app.initialize(argv=[])
+app.interact = not args.command
+app.initialize(argv = [])
 app.shell.push(user_ns, interactive=False)
 app.shell.input_transformers_cleanup.append(line_transform)
 app.shell.register_magics(BsnMagics(app.shell))
+if args.command:
+    app.shell.run_cell(args.command)
 app.start()
