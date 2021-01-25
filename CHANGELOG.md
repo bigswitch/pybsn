@@ -7,6 +7,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 ### Removed
 - `pybsn.bcf`. Pybsn contained a a very partial "Porcelain" API layer called pybsn.bcf. It
   has been removed since it was unused and very incomplete.
+### Added
+- `pybsn-repl` - optional parameter `-c` allows specifying a non-interactive command to run
+  (like ipython).
 
 ## 0.3.2 - 04-01-2020
 ### Added
