@@ -1,0 +1,37 @@
+name: Release on PyPi
+on:
+  workflow_dispatch: # Allows this workflow to be manually triggered
+    inputs:
+      twineRepo: # User input can override default pypi repo, e.g. using 'testpypi'
+        description: 'Target Twine Repository for Release'
+        required: true
+        default: 'pypi'
+  push:
+    tags:
+      - '*' # Trigger when any tag is pushed
+jobs:
+  deploy:
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install setuptools wheel twine
+
+    - run: |
+        echo "${{ github.event.inputs.twineRepo }}"
+
+    - name: Build and publish
+      env:
+        TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
+        TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+      run: |
+        python setup.py sdist bdist_wheel
+        twine upload --repository "${{ github.event.inputs.twineRepo }}" dist/*
