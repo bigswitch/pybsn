@@ -1,0 +1,33 @@
+name: Run Tests
+on:
+  workflow_dispatch: # Allows this workflow to be manually triggered
+  push:  # Run for every push to and PR filed against master
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+  schedule:
+    - cron: "0 0 * * *" # At the end of every day
+jobs:
+  build:
+    runs-on: ${{ matrix.os-version }}
+    strategy:
+      matrix:
+        os-version: [ubuntu-16.04, ubuntu-18.04, ubuntu-20.04, ubuntu-latest]
+        python-version: [2.7, 3.5, 3.6, 3.7, 3.8, 3.9] # remove 2.7 once the support is dropped
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install coverage
+        python -m pip install -r requirements.txt
+
+    - name: Run tests with Coverage
+      run: |
+        cd test && nosetests --with-coverage
