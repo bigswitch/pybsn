@@ -1,0 +1,30 @@
+name: Release on Github
+on:
+  workflow_dispatch: # Allows this workflow to be manually triggered
+  push:
+    # Sequence of patterns matched against refs/tags
+    tags:
+      - '*' # Trigger when any tag is pushed
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Get release version from setup.py
+        id: get_version
+        # extract the version value string from the setup.py file (tag value does not matter)
+        run: echo RELEASE_VERSION=$(cat setup.py | grep version | grep -o "'.*'" | sed "s/'//g") >> $GITHUB_ENV
+
+      - name: Create Github Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+        with:
+          tag_name: ${{ env.RELEASE_VERSION }}
+          release_name: ${{ env.RELEASE_VERSION }}
+          body: ${{ github.event.head_commit.message }}
+          draft: false
+          prerelease: false
