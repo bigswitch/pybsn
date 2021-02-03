@@ -25,8 +25,13 @@ jobs:
         python -m pip install --upgrade pip
         pip install setuptools wheel twine
 
-    - run: |
-        echo "${{ github.event.inputs.twineRepo }}"
+    - name: Choose Twine Repository
+      run: |
+        if [ -z "${{ github.event.inputs.twineRepo }}" ]; then
+            echo TWINE_REPO=pypi >> $GITHUB_ENV
+        else
+            echo TWINE_REPO="${{ github.event.inputs.twineRepo }}" >> $GITHUB_ENV
+        fi
 
     - name: Build and publish
       env:
@@ -34,4 +39,4 @@ jobs:
         TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
       run: |
         python setup.py sdist bdist_wheel
-        twine upload --repository "${{ github.event.inputs.twineRepo }}" dist/*
+        twine upload --repository "${{ env.TWINE_REPO }}" dist/*
