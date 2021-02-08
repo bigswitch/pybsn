@@ -3,25 +3,30 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## 0.3.3 - 2020-01-17
+## 0.3.3 - 2021-02-03
 ### Removed
 - `pybsn.bcf`. Pybsn contained a a very partial "Porcelain" API layer called pybsn.bcf. It
   has been removed since it was unused and very incomplete.
+
 ### Added
 - `pybsn-repl` - optional parameter `-c` allows specifying a non-interactive command to run
   (like ipython).
 
-## 0.3.2 - 04-01-2020
+### Deprecated
+- Note: this is the last pybsn version to support python 2. Please upgrade to python 3 if
+you want to consume newer pybsn versions.
+
+## 0.3.2 - 2020-04-01
 ### Added
 - `pybsn-repl` - optional parameter `env-token` allows specifying
 the name of an environment variable to read the session token from.
 
-## 0.3.1 - 07-01-2019
+## 0.3.1 - 2019-07-01
 ### Added
 - `pybsn.connect` - optional parameter `session_headers` allows specifying
 request headers to be included with all requests.
 
-## 0.3.0 - 5-20-2019
+## 0.3.0 - 2019-05-20
 ### Added 
 - Ability to log request/response bodies
 
@@ -33,7 +38,7 @@ request headers to be included with all requests.
 - Python 2 bug with unicode strings in predicates
 - Issue where full schema of RPC was not displayed 
 
-## 0.2.0 - 1-24-2019
+## 0.2.0 - 2019-01-24
 ### Added
 - Support for API tokens
 
