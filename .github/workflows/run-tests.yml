@@ -13,7 +13,7 @@ jobs:
     strategy:
       matrix:
         os-version: [ubuntu-16.04, ubuntu-18.04, ubuntu-20.04, ubuntu-latest]
-        python-version: [2.7, 3.5, 3.6, 3.7, 3.8, 3.9] # remove 2.7 once the support is dropped
+        python-version: [3.5, 3.6, 3.7, 3.8, 3.9]
     steps:
     - uses: actions/checkout@v2
 
