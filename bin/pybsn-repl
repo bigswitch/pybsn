@@ -60,6 +60,7 @@ if args.token:
 else:
     ctrl = pybsn.connect(host=args.host, username=args.user, password=args.password)
 
+
 def line_transform(lines):
     def convert(line):
         if line.endswith('#'):
@@ -67,7 +68,8 @@ def line_transform(lines):
         else:
             return line
 
-    return [ convert(l.strip()) + "\n" for l in lines ]
+    return [convert(li.strip()) + "\n" for li in lines]
+
 
 @magics_class
 class BsnMagics(Magics):
@@ -75,9 +77,10 @@ class BsnMagics(Magics):
     def help(self, s):
         print(__doc__.strip())
 
+
 def show_schema(root, max_depth=1, verbose=True):
     def pretty_type(node):
-        if not 'typeSchemaNode' in node:
+        if 'typeSchemaNode' not in node:
             return node['leafType'].lower()
 
         t = node['typeSchemaNode']
@@ -130,7 +133,7 @@ def show_schema(root, max_depth=1, verbose=True):
         elif node['nodeType'] == 'RPC':
             output(name, "(rpc)", description)
             if max_depth is not None and depth < max_depth:
-                for name, item in ( ("in", "inputSchemaNode"), ("out", "outputSchemaNode")):
+                for name, item in (("in", "inputSchemaNode"), ("out", "outputSchemaNode")):
                     if item in node:
                         traverse(node[item], depth+1, name, max_depth=None)
                     else:
@@ -140,6 +143,7 @@ def show_schema(root, max_depth=1, verbose=True):
 
     traverse(root.schema(), name=root._path, max_depth=max_depth)
 
+
 config = Config()
 config.TerminalInteractiveShell.banner1 = "pybsn REPL - Run %help for help"
 config.TerminalInteractiveShell.confirm_exit = False
@@ -148,7 +152,7 @@ user_ns = dict(ctrl=ctrl, root=ctrl.root, show_schema=show_schema)
 
 app = TerminalIPythonApp(config=config)
 app.interact = not args.command
-app.initialize(argv = [])
+app.initialize(argv=[])
 app.shell.push(user_ns, interactive=False)
 app.shell.input_transformers_cleanup.append(line_transform)
 app.shell.register_magics(BsnMagics(app.shell))

@@ -2,11 +2,7 @@ import json
 import logging
 import re
 from string import Template
-try:
-    from urlparse import urlparse  # python2
-except:
-    from urllib.parse import urlparse  # python3
-
+from urllib.parse import urlparse
 import requests
 
 try:
@@ -28,6 +24,7 @@ try:
     UNICODE_TYPE = unicode
 except NameError:
     UNICODE_TYPE = None
+
 
 class Node(object):
     """ Higher level "Node" abstraction for PyBSN.
@@ -171,7 +168,7 @@ class Node(object):
             else:
                 return repr(v)
 
-        kwargs = { k: _convert(v) for k, v in kwargs.items() }
+        kwargs = {k: _convert(v) for k, v in kwargs.items()}
         predicate = '[' + Template(template).substitute(**kwargs) + ']'
         return Node(self._path + predicate, self._connection)
 
@@ -334,15 +331,15 @@ def logged_request(session, request):
     marker = "-" * 30
     if logger.isEnabledFor(logging.DEBUG):
         logger.debug("%s Request: %s\n%s\n%s\n\n%s", marker, marker, prepared.method + ' ' + prepared.url,
-                  '\n'.join('{}: {}'.format(k, v) for k, v in prepared.headers.items()),
-                  prepared.body)
+                     '\n'.join('{}: {}'.format(k, v) for k, v in prepared.headers.items()),
+                     prepared.body)
 
     response = session.send(prepared)
 
     if logger.isEnabledFor(logging.DEBUG):
         logger.debug("%s Response: %s\n%s\n%s\n\n%s", marker, marker, response.status_code,
-                  '\n'.join('{}: {}'.format(k, v) for k, v in response.headers.items()),
-                  response.content)
+                     '\n'.join('{}: {}'.format(k, v) for k, v in response.headers.items()),
+                     response.content)
 
     return response
 
@@ -370,7 +367,7 @@ def guess_url(session, host, validate_path="/api/v1/auth/healthy"):
             except requests.exceptions.ConnectionError as e:
                 logger.debug("Error connecting to %s: %s", url, str(e))
                 continue
-            if response.status_code == 200: # OK
+            if response.status_code == 200:  # OK
                 return url
             else:
                 logger.debug("Could connect to URL %s: %s", url, response)
@@ -393,7 +390,7 @@ def _attempt_login(session, url, username, password):
 
 
 def _attempt_legacy_login(session, url, username, password):
-    auth_data = json.dumps({ 'user': username, 'password': password})
+    auth_data = json.dumps({'user': username, 'password': password})
     path = "/api/v1/auth/login"
     request = requests.Request(method="POST", url=url + path, data=auth_data)
     response = logged_request(session, request)
@@ -408,13 +405,15 @@ def _attempt_legacy_login(session, url, username, password):
 
 
 def _attempt_modern_login(session, url, username, password):
-    auth_data = json.dumps({ 'user': username, 'password': password })
+    auth_data = json.dumps({'user': username, 'password': password})
     path = "/api/v1/rpc/controller/core/aaa/session/login"
     request = requests.Request(method="POST", url=url + path, data=auth_data)
     response = logged_request(session, request)
     if response.status_code == 200:
         json_ = response.json()
-        session_cookie = requests.cookies.create_cookie(name="session_cookie", value=json_["session-cookie"], domain=urlparse(url).hostname, path="/api")
+        session_cookie = requests.cookies.create_cookie(
+            name="session_cookie", value=json_["session-cookie"],
+            domain=urlparse(url).hostname, path="/api")
         session.cookies.set_cookie(session_cookie)
         return url
     else:
