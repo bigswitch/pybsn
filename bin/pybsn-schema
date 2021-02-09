@@ -15,8 +15,6 @@ easily, you'll want to use the 'path' and '--max-depth' options. For example:
 
 This shows 2 levels of schema starting from the path "controller.core.switch".
 """
-from __future__ import print_function
-
 import pybsn
 import argparse
 import json

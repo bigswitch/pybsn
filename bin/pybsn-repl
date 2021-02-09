@@ -19,8 +19,6 @@ Examples:
     # Get info for a specific switch
     root.core.switch.match(name="leaf0a").get()
 """
-from __future__ import print_function
-
 import pybsn
 import argparse
 import logging
@@ -29,9 +27,7 @@ import re
 import os
 from traitlets.config.loader import Config
 from IPython.terminal.ipapp import TerminalIPythonApp
-from IPython.core.inputtransformer import StatelessInputTransformer
 from IPython.core.magic import Magics, magics_class, line_magic
-
 
 def env_var(value):
     if value not in os.environ:
