@@ -383,6 +383,7 @@ def _attempt_legacy_login(session, url, username, password):
     else:
         response.raise_for_status()
 
+
 def _attempt_modern_login(session, url, username, password):
     auth_data = json.dumps({'user': username, 'password': password})
     path = "/api/v1/rpc/controller/core/aaa/session/login"
@@ -397,6 +398,7 @@ def _attempt_modern_login(session, url, username, password):
         return url
     else:
         response.raise_for_status()
+
 
 def connect(host, username=None, password=None, token=None, login=None, verify_tls=False, session_headers=None):
     """ Creates a connected BigDb client.
