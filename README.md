@@ -1,26 +1,23 @@
 # pybsn
 pybsn is a python interface to [Big Switch Network](http://bigswitch.com) products
 
-[![Build Status](https://travis-ci.org/bigswitch/pybsn.svg)](https://travis-ci.org/bigswitch/pybsn)
 [![PyPI version](https://badge.fury.io/py/pybsn.svg)](https://pypi.python.org/pypi/pybsn/)
 
 ## Installation
 
 ```bash
-pip install pybsn
-# ... or ...
 pip3 install pybsn
 ```
-pybsn is compatible with python 2.7+ and python 3.
+As of version 0.4.0, pybsn is only compatible with python 3.5 or newer.
 
 ---
 ## PyBSN Repl - Interactive Shell
 
-`pybsn-repl` is a powerful, interactive shell for the REST API. It is based on and requires python3 and ipython 7.0. (**Note**: The pybsn library works with python 2.7 and python 3, the repl program requires python 3!)
+`pybsn-repl` is a powerful, interactive shell for the REST API. It is based on and requires python3.5 or newer and ipython 7.9 or newer.
 
 ### Installing Python3 on Mac
 
-[Homebrew](https://brew.sh/) is a recommended option to install python3 on mac
+[Homebrew](https://brew.sh/) is a recommended option to install python3 on mac.
 
 After you install homebrew, install python3 with
 
@@ -32,13 +29,12 @@ brew install python
 ```bash
 pip3 install ipython
 ```
-* Note: make sure you use the `pip` module associated with `python3`. Often, it is available as `pip3`; otherwise you may want to try `python3 -m pip install ...` instead.
 
 ### Running pybsn-repl
 ```bash
 ./bin/pybsn-repl -H <controller_host> -u <user> -p <passwd>
 ```
-**Note:** `pybsn-repl` requires `pybsn` to be available; you can either install it from `pip` (see above); or use it directly from the source by prefixing the
+**Note:** `pybsn-repl` requires `pybsn` to be available; you can either install it from `pip3` (see above); or use it directly from the source by prefixing the
 command with `PYTHONPATH=<dir>`, e.g.,
 
 ```bash

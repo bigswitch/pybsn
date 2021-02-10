@@ -15,8 +15,6 @@ easily, you'll want to use the 'path' and '--max-depth' options. For example:
 
 This shows 2 levels of schema starting from the path "controller.core.switch".
 """
-from __future__ import print_function
-
 import pybsn
 import argparse
 import json
@@ -40,7 +38,7 @@ args = parser.parse_args()
 
 
 def pretty_type(node):
-    if not 'typeSchemaNode' in node:
+    if 'typeSchemaNode' not in node:
         return node['leafType'].lower()
 
     t = node['typeSchemaNode']
@@ -55,6 +53,7 @@ def pretty_type(node):
         return "union { %s }" % ', '.join(names)
     else:
         return t['leafType'].lower()
+
 
 def traverse(node, depth=0, name="root"):
     def output(*s, **kw):
@@ -94,13 +93,14 @@ def traverse(node, depth=0, name="root"):
         output(name, ":", "list of", pretty_type(node['leafSchemaNode']), config, description)
     elif node['nodeType'] == 'RPC':
         output(name, description, "(RPC)")
-        for name, item in ( ("in", "inputSchemaNode"), ("out", "outputSchemaNode")):
+        for name, item in (("in", "inputSchemaNode"), ("out", "outputSchemaNode")):
             if item in node:
                 traverse(node[item], depth+1, name)
             else:
                 output(name, "(NONE)", depth=depth+1)
     else:
         assert False, "unknown node type %s" % node['nodeType']
+
 
 path = args.path.replace('.', '/').replace('_', '-')
 
@@ -113,6 +113,6 @@ else:
     schema = bcf.schema(path)
 
 if args.raw:
-    print(json.dumps(schema, indent=4, cls=pybcf.BCFJSONEncoder))
+    print(json.dumps(schema, indent=4))
 else:
     traverse(schema, name=path)

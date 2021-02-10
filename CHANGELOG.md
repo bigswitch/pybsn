@@ -3,6 +3,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 0.4.0 - UNRELEASED
+### Removed
+- python 2 support has been removed.
+- nosetest has been removed as dependency.
+
 ## 0.3.3 - 2021-02-03
 ### Removed
 - `pybsn.bcf`. Pybsn contained a a very partial "Porcelain" API layer called pybsn.bcf. It
