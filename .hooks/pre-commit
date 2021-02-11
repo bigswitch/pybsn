@@ -82,7 +82,7 @@ else
     fi
 fi
 
-if ! git diff --cached --name-only | grep -q -E '\.(java|c|h|yaml|yang|json|sh|xsl)$'; then
+if ! git diff --cached --name-only | grep -q -E '\.(c|h|java|json|py|sh|xsl|yaml|yang)$'; then
     echo "No source files found in commit - skipping whitespace check"
     check_whitespace=false
 fi
