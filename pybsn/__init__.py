@@ -68,7 +68,7 @@ class Node(object):
         return Node(self._path + "/" + name, self._connection)
 
     def get(self, params=None):
-        """ Retrieve the data stored in BigDB at the path identified by this node. 
+        """ Retrieve the data stored in BigDB at the path identified by this node.
 
         :params params: Optional hash of parameters that will be appended to the query
             e.g., {'state-type': 'global-config'} would restrict the state to global config.
