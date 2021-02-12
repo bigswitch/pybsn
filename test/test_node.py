@@ -21,20 +21,20 @@ class TestNode(unittest.TestCase):
 
     def test_getattr(self):
         node = self.root.core.switch_config
-        self.assertEquals(node._path, "controller/core/switch-config")
+        self.assertEqual(node._path, "controller/core/switch-config")
 
     def test_getitem(self):
         node = self.root["core"]["switch-config"]
-        self.assertEquals(node._path, "controller/core/switch-config")
+        self.assertEqual(node._path, "controller/core/switch-config")
 
     def test_root_get(self):
         self.client.get.return_value = dict(foo="bar")
-        self.assertEquals(self.root.get(), dict(foo="bar"))
+        self.assertEqual(self.root.get(), dict(foo="bar"))
         self.client.get.assert_called_with("controller", None)
 
     def test_root_get_with_params(self):
         self.client.get.return_value = dict(foo="bar")
-        self.assertEquals(self.root.get(params=PARAMS), dict(foo="bar"))
+        self.assertEqual(self.root.get(params=PARAMS), dict(foo="bar"))
         self.client.get.assert_called_with("controller", PARAMS)
 
     def test_root_post(self):
@@ -72,22 +72,22 @@ class TestNode(unittest.TestCase):
     def test_root_schema(self):
         self.client.schema.return_value = dict(foo="bar")
         ret = self.root.schema()
-        self.assertEquals(ret, dict(foo="bar"))
+        self.assertEqual(ret, dict(foo="bar"))
         self.client.schema.assert_called_with("controller")
 
     def test_rpc(self):
         self.client.rpc.return_value = dict(foo="bar")
         ret = self.root.core.aaa.test.rpc(dict(input="foo"))
 
-        self.assertEquals(ret, dict(foo="bar"))
-        self.client.rpc.assert_called_with("controller/core/aaa/test", 
+        self.assertEqual(ret, dict(foo="bar"))
+        self.client.rpc.assert_called_with("controller/core/aaa/test",
             dict(input="foo"))
 
     def test_match(self):
         self.client.rpc.return_value = dict(foo="bar")
         node = self.root.node
-        self.assertEquals(node.match()._path, "controller/node")
-        self.assertEquals(node.match(a="foo")._path, "controller/node[a='foo']")
+        self.assertEqual(node.match()._path, "controller/node")
+        self.assertEqual(node.match(a="foo")._path, "controller/node[a='foo']")
         self.assertIn(
             node.match(a="foo", b=2)._path,
              ("controller/node[a='foo'][b=2]",
@@ -98,12 +98,11 @@ class TestNode(unittest.TestCase):
     def test_filter(self):
         self.client.rpc.return_value = dict(foo="bar")
         node = self.root.node
-        self.assertEquals(node.filter("a='foo'")._path, "controller/node[a='foo']")
-        self.assertEquals(node.filter("a=$x", x="foo")._path, "controller/node[a='foo']")
-        self.assertEquals(node.filter("b=$x", x=1)._path, "controller/node[b=1]")
+        self.assertEqual(node.filter("a='foo'")._path, "controller/node[a='foo']")
+        self.assertEqual(node.filter("a=$x", x="foo")._path, "controller/node[a='foo']")
+        self.assertEqual(node.filter("b=$x", x=1)._path, "controller/node[b=1]")
 
     def test_root_call(self):
         self.client.get.return_value = dict(foo="bar")
-        self.assertEquals(self.root(), dict(foo="bar"))
+        self.assertEqual(self.root(), dict(foo="bar"))
         self.client.get.assert_called_with("controller", None)
-
