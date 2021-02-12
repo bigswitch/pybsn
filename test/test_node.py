@@ -88,8 +88,12 @@ class TestNode(unittest.TestCase):
         node = self.root.node
         self.assertEquals(node.match()._path, "controller/node")
         self.assertEquals(node.match(a="foo")._path, "controller/node[a='foo']")
-        self.assertEquals(node.match(a="foo", b=2)._path, 
-            "controller/node[a='foo'][b=2]")
+        self.assertIn(
+            node.match(a="foo", b=2)._path,
+             ("controller/node[a='foo'][b=2]",
+              # in py<3.7 dictionaries are not yet ordered; can remove when requiring py3.7
+              "controller/node[b=2][a='foo']" )
+        )
 
     def test_filter(self):
         self.client.rpc.return_value = dict(foo="bar")
