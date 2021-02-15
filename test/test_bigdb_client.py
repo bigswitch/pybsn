@@ -12,7 +12,7 @@ import responses
 my_dir = os.path.dirname(__file__)
 
 
-class TestBigDbClient(unittest.TestCase):
+class TestBigDBClient(unittest.TestCase):
     def setUp(self):
         self.client = pybsn.connect("http://127.0.0.1:8080")
 
@@ -182,6 +182,59 @@ class TestBigDbClient(unittest.TestCase):
             client.session.cookies.set_cookie(
                 requests.cookies.create_cookie(name="session_cookie", value="value"))
             client.get("controller/core/healthy")
+
+    @responses.activate
+    def test_get(self):
+        responses.add(responses.GET, "http://127.0.0.1:8080/api/v1/data/controller/test",
+                      json={'state': "ok" }, status=200)
+        result = self.client.get(path="controller/test")
+        self.assertEqual(result, {'state':"ok"})
+
+    @responses.activate
+    def test_get_with_param(self):
+        responses.add(responses.GET, "http://127.0.0.1:8080/api/v1/data/controller/test?state-type=global-config",
+                      json={'state': "ok" }, status=200)
+        result = self.client.get(path="controller/test", params={'state-type': 'global-config'})
+        self.assertEqual(result, {'state':"ok"})
+
+    @responses.activate
+    def _mutate_test(self, response_type, method_name, add_params=False):
+        def _cb(req):
+            self.assertEqual(json.loads(req.body), {"foo": "bar"})
+            return (204, {}, None)
+
+        expected_url = "http://127.0.0.1:8080/api/v1/data/controller/test"
+        path = "controller/test"
+
+        if add_params:
+            expected_url += "?state-type=global-config"
+
+        responses.add_callback(response_type, expected_url, callback=_cb)
+        method = getattr(self.client, method_name)
+        if add_params:
+            method(path="controller/test", data={"foo": "bar"}, params={'state-type': 'global-config'})
+        else:
+            method(path="controller/test", data={"foo": "bar"})
+
+    def test_mutations(self):
+        self._mutate_test(response_type=responses.POST, method_name="post", add_params=False)
+        self._mutate_test(response_type=responses.POST, method_name="post", add_params=True)
+        self._mutate_test(response_type=responses.PUT, method_name="put", add_params=False)
+        self._mutate_test(response_type=responses.PUT, method_name="put", add_params=True)
+        self._mutate_test(response_type=responses.PATCH, method_name="patch", add_params=False)
+        self._mutate_test(response_type=responses.PATCH, method_name="patch", add_params=True)
+
+    @responses.activate
+    def test_delete(self):
+        responses.add(responses.DELETE, "http://127.0.0.1:8080/api/v1/data/controller/test",
+                      status=204)
+        self.client.delete(path="controller/test")
+
+    @responses.activate
+    def test_delete_with_param(self):
+        responses.add(responses.DELETE, "http://127.0.0.1:8080/api/v1/data/controller/test?state-type=global-config",
+                    status=204)
+        self.client.delete(path="controller/test", params={'state-type': 'global-config'})
 
     @responses.activate
     def test_rpc(self):

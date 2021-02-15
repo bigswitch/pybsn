@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## 0.4.0 - UNRELEASED
+### Added
+ - added optional parameter `params` to all BigDbClient and Node request methods. It allows
+   specifying additional query paramters for the BigDB request (e.g., `transaction` or
+   `state-type` parameters).
 ### Removed
 - python 2 support has been removed.
 - nosetest has been removed as dependency.
