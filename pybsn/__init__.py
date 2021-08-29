@@ -113,14 +113,14 @@ class Node(object):
         """ Retrieve the schema for BigDB at the path identified by this node. """
         return self._connection.schema(self._path)
 
-    def rpc(self, data=None):
+    def rpc(self, data=None, params=None):
         """ Invoke the BigDB RPC endpoint identified by this node.
 
          :param data to provide as RPC input to BigDB.
             Note that the data provided here is passed to BigDB as-is; i.e., use hyphens.
          :return the output data returned by the RPC endpoint.
         """
-        return self._connection.rpc(self._path, data)
+        return self._connection.rpc(self._path, data, params)
 
     def match(self, **kwargs):
         """ Adds exact match predicates to the path represented by the current Node. Returns
@@ -205,7 +205,7 @@ class BigDbClient(object):
         """
         return self._request("GET", path, params=params).json()
 
-    def rpc(self, path, data):
+    def rpc(self, path, data, params=None):
         """ Invokes an RPC endpoint on the REST API.
 
         :param path: the path path of the RPC to invoke. Does not include the prefix.
@@ -214,11 +214,11 @@ class BigDbClient(object):
         :param params: request parameters to attach
         :return: the deserialized RPC output (for most RPCs, a dict).
         """
-        response = self._request("POST", path, data=self._dump_if_present(data), rpc=True)
-        if response.status_code == requests.codes.no_content:
-            return None
-        else:
+        response = self._request("POST", path, data=self._dump_if_present(data), rpc=True, params=params)
+        try:
             return response.json()
+        except ValueError:
+            return None
 
     def post(self, path, data, params=None):
         """ Inserts new data to the BigDB REST API via the POST method.
