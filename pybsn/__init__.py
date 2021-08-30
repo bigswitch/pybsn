@@ -118,6 +118,8 @@ class Node(object):
 
          :param data to provide as RPC input to BigDB.
             Note that the data provided here is passed to BigDB as-is; i.e., use hyphens.
+         :params params: Optional hash of parameters that will be appended to the query
+e.g., {'initiate-async-id': '(async-id-here)'} would initiate RPC call asynchronously.
          :return the output data returned by the RPC endpoint.
         """
         return self._connection.rpc(self._path, data, params)
