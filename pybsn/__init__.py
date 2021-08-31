@@ -217,10 +217,15 @@ class BigDbClient(object):
         :return: the deserialized RPC output (for most RPCs, a dict).
         """
         response = self._request("POST", path, data=self._dump_if_present(data), rpc=True, params=params)
-        try:
-            return response.json()
-        except ValueError:
+        if response.status_code == requests.codes.no_content:
             return None
+        elif response.status_code == requests.codes.accepted:
+            try:
+                return response.json()
+            except (json.JSONDecodeError, ValueError):
+                return None
+        else:
+            return response.json()
 
     def post(self, path, data, params=None):
         """ Inserts new data to the BigDB REST API via the POST method.
