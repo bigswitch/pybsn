@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
  - added optional parameter `params` to all BigDbClient and Node request methods. It allows
    specifying additional query paramters for the BigDB request (e.g., `transaction` or
    `state-type` parameters).
+ - added optional parameter `params` to RPC to manually initiate async RPC calls.
+   e.g., `initiate-async-id`, `async-id`
 ### Removed
 - python 2 support has been removed.
 - nosetest has been removed as dependency.

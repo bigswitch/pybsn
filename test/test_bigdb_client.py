@@ -245,6 +245,15 @@ class TestBigDBClient(unittest.TestCase):
         self.assertEqual(result, {'id': 1234})
 
     @responses.activate
+    def test_rpc_async_accepted(self):
+        responses.add(responses.POST, "http://127.0.0.1:8080/api/v1/rpc/controller/rpc",
+                      status=202)
+        result = self.client.rpc(path="controller/rpc",
+                                 data={"description": "desc"},
+                                 params={'initiate-async': 'asyncId'})
+        self.assertEqual(result, None)
+
+    @responses.activate
     def test_no_response(self):
         responses.add(responses.POST, "http://127.0.0.1:8080/api/v1/rpc/controller/rpc",
                       status=204)

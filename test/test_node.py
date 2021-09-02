@@ -81,7 +81,15 @@ class TestNode(unittest.TestCase):
 
         self.assertEqual(ret, dict(foo="bar"))
         self.client.rpc.assert_called_with("controller/core/aaa/test",
-            dict(input="foo"))
+            dict(input="foo"), None)
+
+    def test_rpc_params(self):
+        self.client.rpc.return_value = dict(foo="bar")
+        ret = self.root.core.aaa.test.rpc(dict(input="foo"), params={'initiate-async-id': 'asyncId'})
+
+        self.assertEqual(ret, dict(foo="bar"))
+        self.client.rpc.assert_called_with("controller/core/aaa/test",
+            dict(input="foo"), {'initiate-async-id': 'asyncId'})
 
     def test_match(self):
         self.client.rpc.return_value = dict(foo="bar")
