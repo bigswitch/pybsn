@@ -43,7 +43,7 @@ command with `PYTHONPATH=<dir>`, e.g.,
 
 ### Using pybsn-repl
 
-PyBSN-reply presents an IPython shell to interact with the REST API.
+PyBSN-repl presents an IPython shell to interact with the REST API.
 
 It accepts any python expressions, and exposes the following variables as primary
 entry points:
@@ -109,11 +109,11 @@ Out[11]:
    * `node.patch(data)` - selectively updates the node with the given data, leaving unspecified values untouched
    * `node.delete()` - delete the node
 
-In these examples, `data` is a JSON serializable object, often a dictionary. Node that the dictionary keys must be in schema format at present (i.e., with hyphens, `some-long-property` not `some_long_property`).
+In these examples, `data` is a JSON serializable object, often a dictionary. Note that the dictionary keys must be in schema format at present (i.e., with hyphens, `some-long-property` not `some_long_property`).
 
 * call `node.rpc(input_data)` to make an RPC call to the RPC specified in the node.
 
-`input_data` is a JSON serializable object, often a dictionary. Node that the dictionary keys must be in schema format at present (i.e., with hyphens, `some-long-property` not `some_long_property`).
+`input_data` is a JSON serializable object, often a dictionary. Note that the dictionary keys must be in schema format at present (i.e., with hyphens, `some-long-property` not `some_long_property`).
 
 The output/result of the RPC returned as a dictionary.
 
