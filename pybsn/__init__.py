@@ -2,7 +2,7 @@ import json
 import logging
 import re
 from string import Template
-from typing import Optional, Union
+from typing import Union
 from urllib.parse import urlparse
 import requests
 from requests import Response
@@ -26,36 +26,41 @@ class _ClientTimeout:
 """Use the timeout that has been specified by the client."""
 CLIENT_TIMEOUT = _ClientTimeout()
 
-TimeoutOverride = Union[type(None), TimeoutSauce, type(CLIENT_TIMEOUT)]
+TimeoutOverride = Union[type(None), type(CLIENT_TIMEOUT), TimeoutSauce, float]
 """Type of argument to pass in requests, that indicates the time out behaviour
-   for waiting for a response.  None indicates to wait forever, TimeoutSauce
-   is the specified number of seconds, and CLIENT_TIMEOUT uses the default
-   value for the client.
+   for waiting for a response.  None indicates to wait forever.
+   CLIENT_TIMEOUT uses the default value for the BigDbClient.  Otherwise
+   the value specified is the number of seconds.
 """
 
+TimeoutDefault = Union[type(None), TimeoutSauce, float]
+"""Type of argument to use to indicate the default value for
+   BigDbClient requests timing out. None indicates to wait forever.
+   Otherwise the value specified is the number of seconds.
+"""
 
 class TimeoutSession(requests.Session):
     """Have a configurable value for timing out requests."""
 
     """How long to wait for a request to timeout.
         None is used to indicate to wait forever."""
-    timeout: Optional[TimeoutSauce] = None
+    timeout: TimeoutDefault = None
 
     def _effective_timeout(self, timeout: TimeoutOverride) -> \
-            Optional[TimeoutSauce]:
+            TimeoutDefault:
         """Calculate the timeout value for a request.
 
         :param timeout: Override for this request.  None indicates there is no
         timeout, and CLIENT_DEFAULT indicates use the default value for this
         session.
 
-        :return: None or the TimeoutSauce to use to limit the waiting time.
+        :return: None or the value to use to limit the waiting time.
         """
         if timeout == CLIENT_TIMEOUT:
             return self.timeout
         return timeout
 
-    def __init__(self, timeout: Optional[TimeoutSauce] = None) -> None:
+    def __init__(self, timeout: TimeoutDefault = None) -> None:
         """
         :param timeout: Amount of time to wait for a response.  None
         indicates to wait forever.
@@ -69,8 +74,7 @@ class TimeoutSession(requests.Session):
 
         :rtype: requests.Response
         """
-        effective_timeout: Optional[TimeoutSauce] = self._effective_timeout(timeout)
-        kwargs['timeout'] = effective_timeout
+        kwargs['timeout'] = self._effective_timeout(timeout)
         return super().send(request, **kwargs)
 
     def request(
@@ -335,7 +339,7 @@ class BigDbClient(object):
         self.session = session
         self.root = Node("controller", self)
 
-    def set_default_timeout(self, timeout: Optional[TimeoutSauce]):
+    def set_default_timeout(self, timeout: TimeoutDefault):
         """ Change the default timeout for operational responses.
 
         Parameters:
@@ -344,7 +348,7 @@ class BigDbClient(object):
         """
         self.session.timeout = timeout
 
-    def get_default_timeout(self) -> Optional[TimeoutSauce]:
+    def get_default_timeout(self) -> TimeoutDefault:
         return self.session.timeout
 
     def get(self, path, params=None,
@@ -437,6 +441,8 @@ class BigDbClient(object):
     def delete(self, path, params=None,
                timeout: TimeoutOverride = CLIENT_TIMEOUT):
         """  Deletes data from the BigDB REST API via the DELETE method.
+
+        Parameters:
 
             :param path: the path from which to delete data. Does not include the prefix.
               (/api/v1/data).
@@ -608,7 +614,7 @@ def _attempt_modern_login(session, url, username, password):
 
 def connect(host, username=None, password=None, token=None, login=None,
             verify_tls=False, session_headers=None,
-            timeout: Optional[TimeoutSauce] = None,
+            timeout: TimeoutDefault = None,
             *args, **kwargs) -> BigDbClient:
     """ Creates a connected BigDb client.
 

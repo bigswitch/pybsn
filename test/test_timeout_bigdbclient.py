@@ -12,7 +12,8 @@ sys.path.append("test")
 from fakeserver import FOREVER_BLOCKING_TIME
 
 MIDDLE_BLOCKING_TIME = FOREVER_BLOCKING_TIME / 2.0
-short_timeout = pybsn.TimeoutSauce(connect=MIDDLE_BLOCKING_TIME / 2.0, read=MIDDLE_BLOCKING_TIME / 2.0)
+SHORT_BLOCKING_TIME = MIDDLE_BLOCKING_TIME / 2.0
+short_timeout = pybsn.TimeoutSauce(connect=SHORT_BLOCKING_TIME, read=SHORT_BLOCKING_TIME)
 middle_timeout = pybsn.TimeoutSauce(connect=MIDDLE_BLOCKING_TIME, read=MIDDLE_BLOCKING_TIME)
 long_timeout = pybsn.TimeoutSauce(connect=MIDDLE_BLOCKING_TIME * 2.0, read=MIDDLE_BLOCKING_TIME * 2.0)
 
@@ -84,6 +85,21 @@ class TestTimeoutBigDbClient(unittest.TestCase):
             self.assertEqual(short_timeout, mock_send.mock_calls[0].kwargs['timeout'])
 
     @responses.activate
+    def test_get_timeout_uses_client_default_float(self):
+        """The timeout that is used when creating the client is used for
+           GET when no override is specified.  Client default may be a float.
+        """
+        self._add_login_responses()
+
+        client = pybsn.connect("http://127.0.0.1:8080", "admin", "somepassword",
+                               timeout=SHORT_BLOCKING_TIME)
+
+        with patch.object(requests.Session, 'send') as mock_send:
+            client.get(self.url)
+            self.assertEqual(SHORT_BLOCKING_TIME,
+                             mock_send.mock_calls[0].kwargs['timeout'])
+
+    @responses.activate
     def test_get_timeout_arg(self):
         """GET specified timeout is used."""
         self._add_login_responses()
@@ -100,6 +116,17 @@ class TestTimeoutBigDbClient(unittest.TestCase):
         with patch.object(requests.Session, 'send') as mock_send:
             client.get(self.url, timeout=None)
             self.assertIsNone(mock_send.mock_calls[0].kwargs['timeout'])
+
+    @responses.activate
+    def test_get_timeout_arg_float(self):
+        """GET timeout argument can be a float to indicate number
+           of seconds."""
+        timeout_arg = 42.1
+        self._add_login_responses()
+        client = pybsn.connect("http://127.0.0.1:8080", "admin", "somepassword", timeout=short_timeout.read_timeout)
+        with patch.object(requests.Session, 'send') as mock_send:
+            client.get(self.url, timeout=timeout_arg)
+            self.assertEqual(timeout_arg, mock_send.mock_calls[0].kwargs['timeout'])
 
     @responses.activate
     def test_get_timeout_arg_client_timeout(self):

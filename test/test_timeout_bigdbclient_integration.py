@@ -1,17 +1,7 @@
-import http.server
-import http.server
-import json
-import os
 import sys
-import threading
-import time
 import unittest
-from http.server import HTTPServer
-from itertools import cycle, repeat
-import requests
+from itertools import repeat
 from requests.exceptions import ReadTimeout
-from urllib3.exceptions import ReadTimeoutError
-from unittest.mock import patch
 
 import pybsn
 
@@ -19,7 +9,8 @@ sys.path.append("test")
 from fakeserver import FakeServer, FOREVER_BLOCKING_TIME
 
 MIDDLE_BLOCKING_TIME = FOREVER_BLOCKING_TIME / 2.0
-short_timeout = pybsn.TimeoutSauce(connect=MIDDLE_BLOCKING_TIME / 2.0, read=MIDDLE_BLOCKING_TIME / 2.0)
+SHORT_BLOCKING_TIME = MIDDLE_BLOCKING_TIME / 2.0
+short_timeout = pybsn.TimeoutSauce(connect=SHORT_BLOCKING_TIME, read=SHORT_BLOCKING_TIME)
 long_timeout = pybsn.TimeoutSauce(connect=MIDDLE_BLOCKING_TIME * 2.0, read=MIDDLE_BLOCKING_TIME * 2.0)
 
 
@@ -59,6 +50,16 @@ class TestTimeoutBigDbClientIntegration(unittest.TestCase):
             self.server.get_blocking(repeat(long_timeout.read_timeout, times=1))
             client.get(self.url, timeout=short_timeout)
 
+    def test_float_arg_causes_timeout(self):
+        """Verify that request.Session.Send will time out when
+           passed a float to indicate number of seconds to wait.
+        """
+        self.server.start()
+        client: pybsn.BigDbClient = pybsn.connect(self.url, "admin", "a_password")
+        with self.assertRaises(ReadTimeout):
+            self.server.get_blocking(repeat(long_timeout.read_timeout, times=1))
+            client.get(self.url, timeout=SHORT_BLOCKING_TIME)
+
     def test_none_waits_for_response(self):
         """Verify that request.Session.Send will wait for a response when
            timeout is none.
@@ -67,15 +68,6 @@ class TestTimeoutBigDbClientIntegration(unittest.TestCase):
         client: pybsn.BigDbClient = pybsn.connect(self.url, "admin", "a_password")
         self.server.get_blocking(repeat(long_timeout.read_timeout, times=1))
         client.get(self.url)
-
-    def test_quick_response(self):
-        """Verify that request.Session.Send will wait process the response
-           if it arrives prior to the timeout.
-        """
-        self.server.start()
-        client: pybsn.BigDbClient = pybsn.connect(self.url, "admin", "a_password")
-        self.server.get_blocking(repeat(short_timeout.read_timeout, times=1))
-        client.get(self.url, timeout=long_timeout)
 
     def test_quick_response(self):
         """Verify that request.Session.Send will wait process the response
