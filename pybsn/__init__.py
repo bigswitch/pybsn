@@ -39,6 +39,7 @@ TimeoutDefault = Union[type(None), TimeoutSauce, float]
    Otherwise the value specified is the number of seconds.
 """
 
+
 class TimeoutSession(requests.Session):
     """Have a configurable value for timing out requests."""
 
@@ -209,53 +210,75 @@ class Node(object):
         """
         return Node(self._path + "/" + name, self._connection)
 
-    def get(self, params=None):
+    def get(self, params=None, timeout: TimeoutOverride = CLIENT_TIMEOUT):
         """ Retrieve the data stored in BigDB at the path identified by this node.
 
         :params params: Optional hash of parameters that will be appended to the query
             e.g., {'state-type': 'global-config'} would restrict the state to global config.
+        :param timeout: Amount of time to wait for response.  None indicates
+            to wait forever.  CLIENT_TIMEOUT indicates to use the default value
+            from BigDbClient
         """
-        return self._connection.get(self._path, params)
+        return self._connection.get(self._path, params, timeout=timeout)
 
-    def post(self, data, params=None):
+    def post(self, data, params=None, timeout: TimeoutOverride = CLIENT_TIMEOUT):
         """ Inserts (POST) the given data to BigDB at the path identified by this node.
 
         :param data: JSON serializable data to post, often a dictionary.
             Note that the data provided here is passed to BigDB as-is; i.e., use hyphens.
         :params params: Optional hash of parameters that will be appended to the query
             e.g., {'state-type': 'global-config'} would restrict the state to global config.
+        :param timeout: Amount of time to wait for response.  None indicates
+            to wait forever.  CLIENT_TIMEOUT indicates to use the default value
+            from BigDbClient
         """
-        return self._connection.post(self._path, data, params)
+        return self._connection.post(self._path, data, params, timeout=timeout)
 
-    def put(self, data, params=None):
+    def put(self, data, params=None, timeout: TimeoutOverride = CLIENT_TIMEOUT):
         """ Replaces (PUT) the given data in BigDB at the path identified by this node.
 
         :param data: JSON serializable data to post, often a dictionary.
             Note that the data provided here is passed to BigDB as-is; i.e., use hyphens.
         :params params: Optional hash of parameters that will be appended to the query
             e.g., {'state-type': 'global-config'} would restrict the state to global config.
+        :param timeout: Amount of time to wait for response.  None indicates
+            to wait forever.  CLIENT_TIMEOUT indicates to use the default value
+            from BigDbClient
         """
-        return self._connection.put(self._path, data, params)
+        return self._connection.put(self._path, data, params, timeout=timeout)
 
-    def patch(self, data, params=None):
+    def patch(self, data, params=None, timeout: TimeoutOverride = CLIENT_TIMEOUT):
         """ Updates (PATCH) the given data in BigDB at the path identified by this node.
 
         :param data: JSON serializable data to post, often a dictionary.
             Note that the data provided here is passed to BigDB as-is; i.e., use hyphens.
         :params params: Optional hash of parameters that will be appended to the query
             e.g., {'state-type': 'global-config'} would restrict the state to global config.
+        :param timeout: Amount of time to wait for response.  None indicates
+            to wait forever.  CLIENT_TIMEOUT indicates to use the default value
+            from BigDbClient
         """
-        return self._connection.patch(self._path, data, params)
+        return self._connection.patch(self._path, data, params, timeout=timeout)
 
-    def delete(self, params=None):
-        """ Delete the data stored in BigDB at the path identified by this node. """
-        return self._connection.delete(self._path, params=params)
+    def delete(self, params=None, timeout: TimeoutOverride = CLIENT_TIMEOUT):
+        """ Delete the data stored in BigDB at the path identified by this node.
+        :params params: Optional hash of parameters that will be appended to the query
+            e.g., {'state-type': 'global-config'} would restrict the state to global config.
+        :param timeout: Amount of time to wait for response.  None indicates
+            to wait forever.  CLIENT_TIMEOUT indicates to use the default value
+            from BigDbClient
+        """
+        return self._connection.delete(self._path, params=params, timeout=timeout)
 
-    def schema(self):
-        """ Retrieve the schema for BigDB at the path identified by this node. """
-        return self._connection.schema(self._path)
+    def schema(self, timeout: TimeoutOverride = CLIENT_TIMEOUT):
+        """ Retrieve the schema for BigDB at the path identified by this node.
+        :param timeout: Amount of time to wait for response.  None indicates
+            to wait forever.  CLIENT_TIMEOUT indicates to use the default value
+            from BigDbClient
+        """
+        return self._connection.schema(self._path, timeout=timeout)
 
-    def rpc(self, data=None, params=None):
+    def rpc(self, data=None, params=None, timeout: TimeoutOverride = CLIENT_TIMEOUT):
         """ Invoke the BigDB RPC endpoint identified by this node.
 
          :param data to provide as RPC input to BigDB.
@@ -263,8 +286,11 @@ class Node(object):
          :params params: Optional hash of parameters that will be appended to the query
 e.g., {'initiate-async-id': '(async-id-here)'} would initiate RPC call asynchronously.
          :return the output data returned by the RPC endpoint.
+        :param timeout: Amount of time to wait for response.  None indicates
+            to wait forever.  CLIENT_TIMEOUT indicates to use the default value
+            from BigDbClient
         """
-        return self._connection.rpc(self._path, data, params)
+        return self._connection.rpc(self._path, data, params, timeout=timeout)
 
     def match(self, **kwargs):
         """ Adds exact match predicates to the path represented by the current Node. Returns
@@ -306,8 +332,13 @@ e.g., {'initiate-async-id': '(async-id-here)'} would initiate RPC call asynchron
         predicate = '[' + Template(template).substitute(**kwargs) + ']'
         return Node(self._path + predicate, self._connection)
 
-    def __call__(self):
-        return self.get()
+    def __call__(self, timeout: TimeoutOverride = CLIENT_TIMEOUT):
+        """ Execute get method.
+        :param timeout: Amount of time to wait for response.  None indicates
+            to wait forever.  CLIENT_TIMEOUT indicates to use the default value
+            from BigDbClient
+        """
+        return self.get(timeout=timeout)
 
     def __enter__(self):
         return self
