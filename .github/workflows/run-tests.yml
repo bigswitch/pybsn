@@ -12,8 +12,20 @@ jobs:
     runs-on: ${{ matrix.os-version }}
     strategy:
       matrix:
-        os-version: [ubuntu-16.04, ubuntu-18.04, ubuntu-20.04, ubuntu-latest]
-        python-version: [3.5, 3.6, 3.7, 3.8, 3.9]
+        os-version: [ubuntu-18.04, ubuntu-20.04, ubuntu-latest]
+        python-version:
+          - "3.5"
+          - "3.6"
+          - "3.7"
+          - "3.8"
+          - "3.9"
+          - "3.10"
+          - "3.11"
+        exclude:
+          - os-version: ubuntu-latest
+            python-version: "3.5"
+          - os-version: ubuntu-latest
+            python-version: "3.6"
     steps:
     - uses: actions/checkout@v2
 
