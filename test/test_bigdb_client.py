@@ -260,3 +260,17 @@ class TestBigDBClient(unittest.TestCase):
         result = self.client.rpc(path="controller/rpc",
                                  data={"description": "desc"})
         self.assertIsNone(result)
+
+    @responses.activate
+    def test_schema(self):
+        responses.add(responses.GET, "http://127.0.0.1:8080/api/v1/schema/",
+                      json={'state': "ok" }, status=200)
+        result = self.client.schema()
+        self.assertEqual(result, {'state':"ok"})
+
+    @responses.activate
+    def test_schema_with_path(self):
+        responses.add(responses.GET, "http://127.0.0.1:8080/api/v1/schema/foo",
+                      json={'state': "ok" }, status=200)
+        result = self.client.schema(path="foo")
+        self.assertEqual(result, {'state':"ok"})
