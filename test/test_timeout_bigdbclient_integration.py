@@ -2,6 +2,7 @@ import sys
 import unittest
 from itertools import repeat
 from requests.exceptions import ReadTimeout
+import urllib3
 
 import pybsn
 
@@ -10,8 +11,8 @@ from fakeserver import FakeServer, FOREVER_BLOCKING_TIME
 
 MIDDLE_BLOCKING_TIME = FOREVER_BLOCKING_TIME / 2.0
 SHORT_BLOCKING_TIME = MIDDLE_BLOCKING_TIME / 2.0
-short_timeout = pybsn.TimeoutSauce(connect=SHORT_BLOCKING_TIME, read=SHORT_BLOCKING_TIME)
-long_timeout = pybsn.TimeoutSauce(connect=MIDDLE_BLOCKING_TIME * 2.0, read=MIDDLE_BLOCKING_TIME * 2.0)
+short_timeout = urllib3.util.Timeout(connect=SHORT_BLOCKING_TIME, read=SHORT_BLOCKING_TIME)
+long_timeout = urllib3.util.Timeout(connect=MIDDLE_BLOCKING_TIME * 2.0, read=MIDDLE_BLOCKING_TIME * 2.0)
 
 
 class SuccessfulResponse:
@@ -32,12 +33,12 @@ class TestTimeoutBigDbClientIntegration(unittest.TestCase):
     """
     server: FakeServer = None
 
-    def setUp(self) -> None:
+    def setUp(self):
         self.server = FakeServer()
         self.server.server._testMethodName = self._testMethodName
         self.url = f"http://127.0.0.1:{self.server.port()}"
 
-    def tearDown(self) -> None:
+    def tearDown(self):
         self.server.stop()
 
     def test_timeout_sauce_arg_causes_timeout(self):

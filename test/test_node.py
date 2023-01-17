@@ -1,22 +1,18 @@
-import json
 import os
-import logging
-import re
 import unittest
 from unittest.mock import Mock
-
-import requests
+import urllib3
 
 import pybsn
-from pybsn import BigDbClient, CLIENT_TIMEOUT
-import responses
+from pybsn import CLIENT_TIMEOUT
 
 my_dir = os.path.dirname(__file__)
 
 PARAMS = {'state-type': 'global-config'}
 
 SHORT_BLOCKING_TIME = 5.0
-short_timeout = pybsn.TimeoutSauce(connect=SHORT_BLOCKING_TIME, read=SHORT_BLOCKING_TIME)
+short_timeout = urllib3.util.Timeout(connect=SHORT_BLOCKING_TIME, read=SHORT_BLOCKING_TIME)
+
 
 class TestNode(unittest.TestCase):
     def setUp(self):
@@ -45,7 +41,6 @@ class TestNode(unittest.TestCase):
         self.client.get.return_value = dict(foo="bar")
         self.root.get(timeout=short_timeout)
         self.client.get.assert_called_with('controller', None, timeout=short_timeout)
-
 
     def test_root_post(self):
         self.root.post(data=dict(foo="bar"))
@@ -89,7 +84,7 @@ class TestNode(unittest.TestCase):
 
     def test_root_delete_with_params(self):
         self.root.delete(params=PARAMS)
-        self.client.delete.assert_called_with("controller", params=PARAMS,timeout=CLIENT_TIMEOUT)
+        self.client.delete.assert_called_with("controller", params=PARAMS, timeout=CLIENT_TIMEOUT)
 
     def test_root_delete_with_timeout(self):
         self.root.delete(timeout=short_timeout)
@@ -99,13 +94,13 @@ class TestNode(unittest.TestCase):
         self.client.schema.return_value = dict(foo="bar")
         ret = self.root.schema()
         self.assertEqual(ret, dict(foo="bar"))
-        self.client.schema.assert_called_with("controller",timeout=CLIENT_TIMEOUT)
+        self.client.schema.assert_called_with("controller", timeout=CLIENT_TIMEOUT)
 
     def test_root_schema_with_timeout(self):
         self.client.schema.return_value = dict(foo="bar")
         ret = self.root.schema(timeout=short_timeout)
         self.assertEqual(ret, dict(foo="bar"))
-        self.client.schema.assert_called_with("controller",timeout=short_timeout)
+        self.client.schema.assert_called_with("controller", timeout=short_timeout)
 
     def test_rpc(self):
         self.client.rpc.return_value = dict(foo="bar")
@@ -113,7 +108,7 @@ class TestNode(unittest.TestCase):
 
         self.assertEqual(ret, dict(foo="bar"))
         self.client.rpc.assert_called_with("controller/core/aaa/test",
-            dict(input="foo"), None,timeout=CLIENT_TIMEOUT)
+                                           dict(input="foo"), None, timeout=CLIENT_TIMEOUT)
 
     def test_rpc_params(self):
         self.client.rpc.return_value = dict(foo="bar")
@@ -121,15 +116,15 @@ class TestNode(unittest.TestCase):
 
         self.assertEqual(ret, dict(foo="bar"))
         self.client.rpc.assert_called_with("controller/core/aaa/test",
-            dict(input="foo"), {'initiate-async-id': 'asyncId'},timeout=CLIENT_TIMEOUT)
+                                           dict(input="foo"), {'initiate-async-id': 'asyncId'}, timeout=CLIENT_TIMEOUT)
 
     def test_rpc_with_timeout(self):
         self.client.rpc.return_value = dict(foo="bar")
-        ret = self.root.core.aaa.test.rpc(dict(input="foo"),timeout=short_timeout)
+        ret = self.root.core.aaa.test.rpc(dict(input="foo"), timeout=short_timeout)
 
         self.assertEqual(ret, dict(foo="bar"))
         self.client.rpc.assert_called_with("controller/core/aaa/test",
-            dict(input="foo"), None,timeout=short_timeout)
+                                           dict(input="foo"), None, timeout=short_timeout)
 
     def test_match(self):
         self.client.rpc.return_value = dict(foo="bar")
@@ -138,9 +133,9 @@ class TestNode(unittest.TestCase):
         self.assertEqual(node.match(a="foo")._path, "controller/node[a='foo']")
         self.assertIn(
             node.match(a="foo", b=2)._path,
-             ("controller/node[a='foo'][b=2]",
-              # in py<3.7 dictionaries are not yet ordered; can remove when requiring py3.7
-              "controller/node[b=2][a='foo']" )
+            ("controller/node[a='foo'][b=2]",
+             # in py<3.7 dictionaries are not yet ordered; can remove when requiring py3.7
+             "controller/node[b=2][a='foo']")
         )
 
     def test_filter(self):

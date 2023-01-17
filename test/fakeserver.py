@@ -24,11 +24,14 @@ class BlockingServer(HTTPServer):
     def __init__(self, server_address, RequestHandlerClass):
         super().__init__(server_address, RequestHandlerClass)
 
-    def is_stopped(self) -> bool:
+    def is_stopped(self) :
+        """
+        :returns: boolean
+        """
         with self._lock:
             return self._stopped
 
-    def shutdown(self) -> None:
+    def shutdown(self):
         super().shutdown()
         with self._lock:
             self._stopped = True
@@ -37,17 +40,19 @@ class BlockingServer(HTTPServer):
 class FakeHandler(BaseHTTPRequestHandler):
     """Override the server type from BaseServer."""
 
-    def _server(self) -> BlockingServer:
-        """Casting self.server for Python checking."""
+    def _server(self) :
+        """Casting self.server for Python checking.
+        :return: BlockingServer
+        """
         # noinspection PyTypeChecker
         return self.server
 
-    def _block(self, delay_list: Iterable) -> None:
+    def _block(self, delay_list) :
         """Delay for a period of time.
 
         Attributes:
-            delay_list: Top value will be removed and used as the number
-            of seconds to wait.
+            delay_list: Iterable. Top value will be removed and used as the minimum number
+            of seconds to wait.  The actual delay may be longer.
         """
         delay = delay_list.__next__()
         if delay == StopIteration:
@@ -55,12 +60,12 @@ class FakeHandler(BaseHTTPRequestHandler):
             msg = f"delay_list is empty: {self._server()._testMethodName}"
             raise Exception(msg)
 
-        while delay > 0 and not self._server().is_stopped():
+        end_time = time.monotonic() + delay
+        while time.monotonic() < end_time and not self._server().is_stopped():
             time.sleep(0.5)
-            delay -= 0.5
 
     # noinspection PyPep8Naming
-    def do_HEAD(self) -> None:
+    def do_HEAD(self):
         if self._server().is_stopped():
             self.send_error(500, "server is _stopped")
             return
@@ -70,7 +75,7 @@ class FakeHandler(BaseHTTPRequestHandler):
         self.close_connection = True
 
     # noinspection PyPep8Naming
-    def do_GET(self) -> None:
+    def do_GET(self):
         self._block(self._server().get_blocking)
         if self._server().is_stopped():
             self.send_error(500, "server is _stopped")
@@ -88,7 +93,7 @@ class FakeHandler(BaseHTTPRequestHandler):
         self.close_connection = True
 
     # noinspection PyPep8Naming
-    def do_OPTIONS(self) -> None:
+    def do_OPTIONS(self):
         if self._server().is_stopped():
             self.send_error(500, "server is _stopped")
             return
@@ -103,7 +108,7 @@ class FakeHandler(BaseHTTPRequestHandler):
         self.close_connection = True
 
     # noinspection PyPep8Naming
-    def do_POST(self) -> None:
+    def do_POST(self):
         if self._server().is_stopped():
             self.send_error(500, "server is _stopped")
             return

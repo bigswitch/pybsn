@@ -2,12 +2,9 @@ import json
 import logging
 import re
 from string import Template
-from typing import Union
 from urllib.parse import urlparse
 import requests
-from requests import Response
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
-from urllib3.util import Timeout as TimeoutSauce
 import warnings
 
 warnings.simplefilter("ignore", InsecureRequestWarning)
@@ -25,136 +22,6 @@ class _ClientTimeout:
 
 """Use the timeout that has been specified by the client."""
 CLIENT_TIMEOUT = _ClientTimeout()
-
-TimeoutOverride = Union[type(None), type(CLIENT_TIMEOUT), TimeoutSauce, float]
-"""Type of argument to pass in requests, that indicates the time out behaviour
-   for waiting for a response.  None indicates to wait forever.
-   CLIENT_TIMEOUT uses the default value for the BigDbClient.  Otherwise
-   the value specified is the number of seconds.
-"""
-
-TimeoutDefault = Union[type(None), TimeoutSauce, float]
-"""Type of argument to use to indicate the default value for
-   BigDbClient requests timing out. None indicates to wait forever.
-   Otherwise the value specified is the number of seconds.
-"""
-
-
-class TimeoutSession(requests.Session):
-    """Have a configurable value for timing out requests."""
-
-    """How long to wait for a request to timeout.
-        None is used to indicate to wait forever."""
-    timeout: TimeoutDefault = None
-
-    def _effective_timeout(self, timeout: TimeoutOverride) -> \
-            TimeoutDefault:
-        """Calculate the timeout value for a request.
-
-        :param timeout: Override for this request.  None indicates there is no
-        timeout, and CLIENT_DEFAULT indicates use the default value for this
-        session.
-
-        :return: None or the value to use to limit the waiting time.
-        """
-        if timeout == CLIENT_TIMEOUT:
-            return self.timeout
-        return timeout
-
-    def __init__(self, timeout: TimeoutDefault = None) -> None:
-        """
-        :param timeout: Amount of time to wait for a response.  None
-        indicates to wait forever.
-        """
-        super().__init__()
-        self.timeout = timeout
-
-    def send(self, request, timeout: TimeoutOverride = CLIENT_TIMEOUT,
-             **kwargs) -> Response:
-        """Send a given PreparedRequest.
-
-        :rtype: requests.Response
-        """
-        kwargs['timeout'] = self._effective_timeout(timeout)
-        return super().send(request, **kwargs)
-
-    def request(
-            self,
-            method,
-            url,
-            params=None,
-            data=None,
-            headers=None,
-            cookies=None,
-            files=None,
-            auth=None,
-            timeout=None,
-            allow_redirects=True,
-            proxies=None,
-            hooks=None,
-            stream=None,
-            verify=None,
-            cert=None,
-            json=None,
-    ) -> requests.Response:
-        """Constructs a :class:`Request <Request>`, prepares it and sends it.
-        Returns :class:`Response <Response>` object.
-
-        :param method: method for the new :class:`Request` object.
-        :param url: URL for the new :class:`Request` object.
-        :param params: (optional) Dictionary or bytes to be sent in the query
-            string for the :class:`Request`.
-        :param data: (optional) Dictionary, list of tuples, bytes, or file-like
-            object to send in the body of the :class:`Request`.
-        :param json: (optional) json to send in the body of the
-            :class:`Request`.
-        :param headers: (optional) Dictionary of HTTP Headers to send with the
-            :class:`Request`.
-        :param cookies: (optional) Dict or CookieJar object to send with the
-            :class:`Request`.
-        :param files: (optional) Dictionary of ``'filename': file-like-objects``
-            for multipart encoding upload.
-        :param auth: (optional) Auth tuple or callable to enable
-            Basic/Digest/Custom HTTP Auth.
-        :param timeout: (optional) How long to wait for the server to send
-            data before giving up, as a float, or a :ref:`(connect timeout,
-            read timeout) <timeouts>` tuple.
-        :type timeout: float or tuple
-        :param allow_redirects: (optional) Set to True by default.
-        :type allow_redirects: bool
-        :param proxies: (optional) Dictionary mapping protocol or protocol and
-            hostname to the URL of the proxy.
-        :param stream: (optional) whether to immediately download the response
-            content. Defaults to ``False``.
-        :param verify: (optional) Either a boolean, in which case it controls whether we verify
-            the server's TLS certificate, or a string, in which case it must be a path
-            to a CA bundle to use. Defaults to ``True``. When set to
-            ``False``, requests will accept any TLS certificate presented by
-            the server, and will ignore hostname mismatches and/or expired
-            certificates, which will make your application vulnerable to
-            man-in-the-middle (MitM) attacks. Setting verify to ``False``
-            may be useful during local development or testing.
-        :param cert: (optional) if String, path to ssl client cert file (.pem).
-            If Tuple, ('cert', 'key') pair.
-        :rtype: requests.Response
-        """
-        return super().request(
-            method=method,
-            url=url,
-            params=params,
-            data=data,
-            headers=headers,
-            cookies=cookies,
-            files=files,
-            auth=auth,
-            timeout=timeout,
-            allow_redirects=allow_redirects,
-            proxies=proxies,
-            hooks=hooks,
-            stream=stream,
-            verify=verify,
-            cert=cert,
-            json=json)
 
 
 class Node(object):
@@ -210,75 +77,87 @@ class Node(object):
         """
         return Node(self._path + "/" + name, self._connection)
 
-    def get(self, params=None, timeout: TimeoutOverride = CLIENT_TIMEOUT):
+    def get(self, params=None, timeout=CLIENT_TIMEOUT):
         """ Retrieve the data stored in BigDB at the path identified by this node.
 
         :params params: Optional hash of parameters that will be appended to the query
             e.g., {'state-type': 'global-config'} would restrict the state to global config.
-        :param timeout: Amount of time to wait for response.  None indicates
-            to wait forever.  CLIENT_TIMEOUT indicates to use the default value
-            from BigDbClient
+        :param timeout: Amount of time to wait for response before timing out.
+            None indicates to wait forever.
+            CLIENT_TIMEOUT indicates to use the default value from BigDbClient.
+            A float is the number of seconds.
+            Otherwise a urllib3.util.Timeout strategy can be used.
         """
         return self._connection.get(self._path, params, timeout=timeout)
 
-    def post(self, data, params=None, timeout: TimeoutOverride = CLIENT_TIMEOUT):
+    def post(self, data, params=None, timeout=CLIENT_TIMEOUT):
         """ Inserts (POST) the given data to BigDB at the path identified by this node.
 
         :param data: JSON serializable data to post, often a dictionary.
             Note that the data provided here is passed to BigDB as-is; i.e., use hyphens.
         :params params: Optional hash of parameters that will be appended to the query
             e.g., {'state-type': 'global-config'} would restrict the state to global config.
-        :param timeout: Amount of time to wait for response.  None indicates
-            to wait forever.  CLIENT_TIMEOUT indicates to use the default value
-            from BigDbClient
+        :param timeout: Amount of time to wait for response before timing out.
+            None indicates to wait forever.
+            CLIENT_TIMEOUT indicates to use the default value from BigDbClient.
+            A float is the number of seconds.
+            Otherwise a urllib3.util.Timeout strategy can be used.
         """
         return self._connection.post(self._path, data, params, timeout=timeout)
 
-    def put(self, data, params=None, timeout: TimeoutOverride = CLIENT_TIMEOUT):
+    def put(self, data, params=None, timeout=CLIENT_TIMEOUT):
         """ Replaces (PUT) the given data in BigDB at the path identified by this node.
 
         :param data: JSON serializable data to post, often a dictionary.
             Note that the data provided here is passed to BigDB as-is; i.e., use hyphens.
         :params params: Optional hash of parameters that will be appended to the query
             e.g., {'state-type': 'global-config'} would restrict the state to global config.
-        :param timeout: Amount of time to wait for response.  None indicates
-            to wait forever.  CLIENT_TIMEOUT indicates to use the default value
-            from BigDbClient
+        :param timeout: Amount of time to wait for response before timing out.
+            None indicates to wait forever.
+            CLIENT_TIMEOUT indicates to use the default value from BigDbClient.
+            A float is the number of seconds.
+            Otherwise a urllib3.util.Timeout strategy can be used.
         """
         return self._connection.put(self._path, data, params, timeout=timeout)
 
-    def patch(self, data, params=None, timeout: TimeoutOverride = CLIENT_TIMEOUT):
+    def patch(self, data, params=None, timeout=CLIENT_TIMEOUT):
         """ Updates (PATCH) the given data in BigDB at the path identified by this node.
 
         :param data: JSON serializable data to post, often a dictionary.
             Note that the data provided here is passed to BigDB as-is; i.e., use hyphens.
         :params params: Optional hash of parameters that will be appended to the query
             e.g., {'state-type': 'global-config'} would restrict the state to global config.
-        :param timeout: Amount of time to wait for response.  None indicates
-            to wait forever.  CLIENT_TIMEOUT indicates to use the default value
-            from BigDbClient
+        :param timeout: Amount of time to wait for response before timing out.
+            None indicates to wait forever.
+            CLIENT_TIMEOUT indicates to use the default value from BigDbClient.
+            A float is the number of seconds.
+            Otherwise a urllib3.util.Timeout strategy can be used.
         """
         return self._connection.patch(self._path, data, params, timeout=timeout)
 
-    def delete(self, params=None, timeout: TimeoutOverride = CLIENT_TIMEOUT):
+    def delete(self, params=None, timeout=CLIENT_TIMEOUT):
         """ Delete the data stored in BigDB at the path identified by this node.
         :params params: Optional hash of parameters that will be appended to the query
             e.g., {'state-type': 'global-config'} would restrict the state to global config.
-        :param timeout: Amount of time to wait for response.  None indicates
-            to wait forever.  CLIENT_TIMEOUT indicates to use the default value
-            from BigDbClient
+        :param timeout: Amount of time to wait for response before timing out.
+            None indicates to wait forever.
+            CLIENT_TIMEOUT indicates to use the default value from BigDbClient.
+            A float is the number of seconds.
+            Otherwise a urllib3.util.Timeout strategy can be used.
         """
         return self._connection.delete(self._path, params=params, timeout=timeout)
 
-    def schema(self, timeout: TimeoutOverride = CLIENT_TIMEOUT):
+    def schema(self, timeout=CLIENT_TIMEOUT):
         """ Retrieve the schema for BigDB at the path identified by this node.
-        :param timeout: Amount of time to wait for response.  None indicates
-            to wait forever.  CLIENT_TIMEOUT indicates to use the default value
-            from BigDbClient
+        :param timeout: Amount of time to wait for response before timing out.
+            None indicates to wait forever.
+            CLIENT_TIMEOUT indicates to use the default value from BigDbClient.
+            A float is the number of seconds.
+            Otherwise a urllib3.util.Timeout strategy can be used.
         """
         return self._connection.schema(self._path, timeout=timeout)
 
-    def rpc(self, data=None, params=None, timeout: TimeoutOverride = CLIENT_TIMEOUT):
+    def rpc(self, data=None, params=None, timeout=CLIENT_TIMEOUT):
         """ Invoke the BigDB RPC endpoint identified by this node.
 
          :param data to provide as RPC input to BigDB.
@@ -286,9 +165,11 @@ class Node(object):
          :params params: Optional hash of parameters that will be appended to the query
 e.g., {'initiate-async-id': '(async-id-here)'} would initiate RPC call asynchronously.
          :return the output data returned by the RPC endpoint.
-        :param timeout: Amount of time to wait for response.  None indicates
-            to wait forever.  CLIENT_TIMEOUT indicates to use the default value
-            from BigDbClient
+        :param timeout: Amount of time to wait for response before timing out.
+            None indicates to wait forever.
+            CLIENT_TIMEOUT indicates to use the default value from BigDbClient.
+            A float is the number of seconds.
+            Otherwise a urllib3.util.Timeout strategy can be used.
         """
         return self._connection.rpc(self._path, data, params, timeout=timeout)
 
@@ -332,11 +213,13 @@ e.g., {'initiate-async-id': '(async-id-here)'} would initiate RPC call asynchron
         predicate = '[' + Template(template).substitute(**kwargs) + ']'
         return Node(self._path + predicate, self._connection)
 
-    def __call__(self, timeout: TimeoutOverride = CLIENT_TIMEOUT):
+    def __call__(self, timeout=CLIENT_TIMEOUT):
         """ Execute get method.
-        :param timeout: Amount of time to wait for response.  None indicates
-            to wait forever.  CLIENT_TIMEOUT indicates to use the default value
-            from BigDbClient
+        :param timeout: Amount of time to wait for response before timing out.
+            None indicates to wait forever.
+            CLIENT_TIMEOUT indicates to use the default value from BigDbClient.
+            A float is the number of seconds.
+            Otherwise a urllib3.util.Timeout strategy can be used.
         """
         return self.get(timeout=timeout)
 
@@ -359,53 +242,76 @@ class BigDbClient(object):
     client.root
     """
 
-    def __init__(self, url, session):
+    """How long to wait for a request to timeout.
+        None is used to indicate to wait forever.
+        A float is the number of seconds.
+        Otherwise a urllib3.util.Timeout strategy can be used.
+    """
+    default_timeout = None
+
+    def __init__(self, url, session, timeout=None):
         """ Create a new BigDBClient. Generally, you should use pybsn.connect() to get an instance.
 
         Parameters:
             :param url: the base URL/origin of the BigDB server. Usually, https://<ip>:8443/
             :param session: requests session to use; set by connect
+        :param timeout: Amount of time to wait for response before timing out.
+            None indicates to wait forever.
+            A float is the number of seconds.
+            Otherwise a urllib3.util.Timeout strategy can be used.
+
+            The timeout value will be used by any following calls of
+            the BigDbClient unless it is modified, or the timeout is
+            overridden.
         """
         self.url = url
         self.session = session
         self.root = Node("controller", self)
+        self.default_timeout = timeout
 
-    def set_default_timeout(self, timeout: TimeoutDefault):
-        """ Change the default timeout for operational responses.
+    def _effective_timeout(self, timeout):
+        """Calculate the timeout value for a request.
 
-        Parameters:
-            :param timeout: New time out value.  None indicates to wait
-            until the response arrives, without timing out.
+        :param timeout: Override for this request.
+            None indicates to wait forever.
+            CLIENT_TIMEOUT indicates to use the default value from BigDbClient.
+            A float is the number of seconds.
+            Otherwise a urllib3.util.Timeout strategy can be used.
+
+        :return: None or the value to use to limit the waiting time.
         """
-        self.session.timeout = timeout
-
-    def get_default_timeout(self) -> TimeoutDefault:
-        return self.session.timeout
+        if timeout == CLIENT_TIMEOUT:
+            return self.default_timeout
+        return timeout
 
     def get(self, path, params=None,
-            timeout: TimeoutOverride = CLIENT_TIMEOUT):
+            timeout=CLIENT_TIMEOUT):
         """ Retrieves information from the REST API using the GET method.
 
         :param path: the URL path to retrieve the data from; does not include the prefix
               (/api/v1/data).
         :param params: request parameters to attach
-        :param timeout: Amount of time to wait for response.  None indicates
-            to wait forever.  CLIENT_TIMEOUT indicates to use the default value
-            from BigDbClient
+        :param timeout: Amount of time to wait for response before timing out.
+            None indicates to wait forever.
+            CLIENT_TIMEOUT indicates to use the default value from BigDbClient.
+            A float is the number of seconds.
+            Otherwise a urllib3.util.Timeout strategy can be used.
         :return: the deserialized result as list.
         """
         return self._request("GET", path, params=params, timeout=timeout).json()
 
-    def rpc(self, path, data, params=None, timeout: TimeoutOverride = CLIENT_TIMEOUT):
+    def rpc(self, path, data, params=None, timeout=CLIENT_TIMEOUT):
         """ Invokes an RPC endpoint on the REST API.
 
         :param path: the path path of the RPC to invoke. Does not include the prefix.
               (/api/v1/rpc).
         :param data: JSON serializable input data for the RPC.
         :param params: request parameters to attach
-        :param timeout: Amount of time to wait for a response.  None indicates
-            to wait forever.  CLIENT_DEFAULT uses the strategy as specified by
-            the BigDBClient.
+        :param timeout: Amount of time to wait for response before timing out.
+            None indicates to wait forever.
+            CLIENT_TIMEOUT indicates to use the default value from BigDbClient.
+            A float is the number of seconds.
+            Otherwise a urllib3.util.Timeout strategy can be used.
         :return: the deserialized RPC output (for most RPCs, a dict).
         """
         response = self._request("POST", path, data=self._dump_if_present(data),
@@ -422,55 +328,61 @@ class BigDbClient(object):
             return response.json()
 
     def post(self, path, data, params=None,
-             timeout: TimeoutOverride = CLIENT_TIMEOUT):
+             timeout=CLIENT_TIMEOUT):
         """ Inserts new data to the BigDB REST API via the POST method.
 
         :param path: the path at which to insert data. Does not include the prefix.
               (/api/v1/data).
         :param data: JSON serializable data to insert
         :param params: request parameters to attach
-        :param timeout: Amount of time to wait for a response.  None indicates
-          to wait forever.  CLIENT_DEFAULT uses the strategy as specified by the
-          BigDBClient.
+        :param timeout: Amount of time to wait for response before timing out.
+            None indicates to wait forever.
+            CLIENT_TIMEOUT indicates to use the default value from BigDbClient.
+            A float is the number of seconds.
+            Otherwise a urllib3.util.Timeout strategy can be used.
         :return: None on success
         """
         return self._request("POST", path, data=self._dump_if_present(data),
                              params=params, timeout=timeout)
 
     def put(self, path, data, params=None,
-            timeout: TimeoutOverride = CLIENT_TIMEOUT):
+            timeout=CLIENT_TIMEOUT):
         """ Replaces data in the BigDB REST API via the PUT method.
 
         :param path: the path at which to insert data. Does not include the prefix.
               (/api/v1/data).
         :param data: JSON serializable to replace.
         :param params: request parameters to attach
-        :param timeout: Amount of time to wait for a response.  None indicates
-            to wait forever.  CLIENT_DEFAULT uses the strategy as specified by
-            the BigDBClient.
+        :param timeout: Amount of time to wait for response before timing out.
+            None indicates to wait forever.
+            CLIENT_TIMEOUT indicates to use the default value from BigDbClient.
+            A float is the number of seconds.
+            Otherwise a urllib3.util.Timeout strategy can be used.
         :return: None on success
         """
         return self._request("PUT", path, data=self._dump_if_present(data),
                              params=params, timeout=timeout)
 
     def patch(self, path, data, params=None,
-              timeout: TimeoutOverride = CLIENT_TIMEOUT):
+              timeout=CLIENT_TIMEOUT):
         """ Updates data in the BigDB REST API via the PATCH method.
 
         :param path: the path at which to update data. Does not include the prefix.
               (/api/v1/data).
         :param data: JSON serializable of the data to update.
         :param params: request parameters to attach
-        :param timeout: Amount of time to wait for a response.  None indicates
-            to wait forever.  CLIENT_DEFAULT uses the strategy as specified by
-            the BigDBClient.
+        :param timeout: Amount of time to wait for response before timing out.
+            None indicates to wait forever.
+            CLIENT_TIMEOUT indicates to use the default value from BigDbClient.
+            A float is the number of seconds.
+            Otherwise a urllib3.util.Timeout strategy can be used.
         :return: None on success
         """
         return self._request("PATCH", path, data=self._dump_if_present(data),
                              params=params, timeout=timeout)
 
     def delete(self, path, params=None,
-               timeout: TimeoutOverride = CLIENT_TIMEOUT):
+               timeout=CLIENT_TIMEOUT):
         """  Deletes data from the BigDB REST API via the DELETE method.
 
         Parameters:
@@ -478,26 +390,29 @@ class BigDbClient(object):
             :param path: the path from which to delete data. Does not include the prefix.
               (/api/v1/data).
             :param params: request parameters to attach
-        :param timeout: Amount of time to wait for a response.  None indicates
-            to wait forever.  CLIENT_DEFAULT uses the strategy as specified by
-            the BigDBClient.
+        :param timeout: Amount of time to wait for response before timing out.
+            None indicates to wait forever.
+            CLIENT_TIMEOUT indicates to use the default value from BigDbClient.
+            A float is the number of seconds.
+            Otherwise a urllib3.util.Timeout strategy can be used.
         """
         return self._request("DELETE", path, params=params, timeout=timeout)
 
     def schema(self, path="",
-               timeout: TimeoutOverride = CLIENT_TIMEOUT):
+               timeout=CLIENT_TIMEOUT):
         """  Retrieves the schema for a given path from BigDB.
 
             :param path: the path for which to retrieve the schema. Does not include the prefix
               (/api/v1/schema).
-            :param timeout: Amount of time to wait for a response.  None indicates
-               to wait forever.  CLIENT_DEFAULT uses the strategy as specified
-               by the BigDBClient.
+        :param timeout: Amount of time to wait for response before timing out.
+            None indicates to wait forever.
+            CLIENT_TIMEOUT indicates to use the default value from BigDbClient.
+            A float is the number of seconds.
+            Otherwise, a urllib3.util.Timeout strategy can be used.
         """
         url = self.url + SCHEMA_PREFIX + path
         request = requests.Request(method="GET", url=url)
-        response = logged_request(self.session, request)
-        response.raise_for_status()
+        response = self._logged_request(request, timeout)
         return json.loads(response.text)
 
     def close(self):
@@ -511,12 +426,17 @@ class BigDbClient(object):
             self.root.core.aaa.session.match(auth_token=token).delete()
 
     def _request(self, method, path, data=None, params=None, rpc=False,
-                 timeout: TimeoutOverride = CLIENT_TIMEOUT):
+                 timeout=CLIENT_TIMEOUT):
         """ Low level request method; generally, use the specialized methods below. """
         url = self.url + (RPC_PREFIX if rpc else DATA_PREFIX) + path
 
         request = requests.Request(method=method, url=url, data=data, params=params)
-        response = logged_request(self.session, request, timeout=timeout)
+        return self._logged_request(request, timeout=timeout)
+
+    def _logged_request(self, request, timeout):
+        effective_timeout = self._effective_timeout(timeout)
+        response = logged_request(session=self.session, request=request,
+                                  timeout=effective_timeout)
 
         try:
             # Raise an HTTPError for 4xx/5xx codes
@@ -547,7 +467,7 @@ class BigDbClient(object):
         return "BigDbClient(%s)" % self.url
 
 
-def logged_request(session, request, timeout: TimeoutOverride = CLIENT_TIMEOUT):
+def logged_request(session, request, timeout):
     """ Helper method that logs HTTP requests made by this library, if configured. """
     prepared = session.prepare_request(request)
 
@@ -597,7 +517,7 @@ def guess_url(session, host, validate_path="/api/v1/auth/healthy"):
     raise Exception("Could not find available BigDB service on {}".format(host))
 
 
-def _attempt_login(session, url, username, password):
+def _attempt_login(session, url, username, password, timeout=None):
     """ Attempts to create an interactive BigDB session by calling the login endpoint
         with user and password.
 
@@ -605,18 +525,20 @@ def _attempt_login(session, url, username, password):
         Raises a requests exception (e.g., requests.exceptions.HTTPError) on error.
     """
     request = requests.Request(method="HEAD", url=url + "/api/v2/schema/controller/root/core/aaa/session/login")
-    response = logged_request(session, request)
+    response = logged_request(session, request, timeout=timeout)
     if response.status_code == 200:
-        return _attempt_modern_login(session, url, username, password)
+        return _attempt_modern_login(session, url, username, password,
+                                     timeout=timeout)
     else:
-        return _attempt_legacy_login(session, url, username, password)
+        return _attempt_legacy_login(session, url, username, password,
+                                     timeout=timeout)
 
 
-def _attempt_legacy_login(session, url, username, password):
+def _attempt_legacy_login(session, url, username, password, timeout):
     auth_data = json.dumps({'user': username, 'password': password})
     path = "/api/v1/auth/login"
     request = requests.Request(method="POST", url=url + path, data=auth_data)
-    response = logged_request(session, request)
+    response = logged_request(session, request, timeout=timeout)
     if response.status_code == 200:  # OK
         # Fix up cookie path
         for cookie in session.cookies:
@@ -627,11 +549,11 @@ def _attempt_legacy_login(session, url, username, password):
         response.raise_for_status()
 
 
-def _attempt_modern_login(session, url, username, password):
+def _attempt_modern_login(session, url, username, password, timeout):
     auth_data = json.dumps({'user': username, 'password': password})
     path = "/api/v1/rpc/controller/core/aaa/session/login"
     request = requests.Request(method="POST", url=url + path, data=auth_data)
-    response = logged_request(session, request)
+    response = logged_request(session, request, timeout=timeout)
     if response.status_code == 200:
         json_ = response.json()
         session_cookie = requests.cookies.create_cookie(
@@ -645,7 +567,7 @@ def _attempt_modern_login(session, url, username, password):
 
 def connect(host, username=None, password=None, token=None, login=None,
             verify_tls=False, session_headers=None,
-            timeout: TimeoutDefault = None,
+            timeout=None,
             *args, **kwargs) -> BigDbClient:
     """ Creates a connected BigDb client.
 
@@ -674,7 +596,7 @@ def connect(host, username=None, password=None, token=None, login=None,
     :return A connected BigDBClient instance
     :raises Exception on error
     """
-    session = TimeoutSession(timeout=timeout)
+    session = requests.Session()
     session.verify = verify_tls
     if session_headers:
         for k, v in session_headers.items():
@@ -685,13 +607,13 @@ def connect(host, username=None, password=None, token=None, login=None,
         login = (token is None) and username is not None and password is not None
 
     if login:
-        _attempt_login(session=session, url=url, username=username, password=password)
+        _attempt_login(session=session, url=url, username=username, password=password, timeout=timeout)
     elif token:
         cookie = requests.cookies.create_cookie(name="session_cookie", value=token)
         session.cookies.set_cookie(cookie)
         request = requests.Request(method="GET", url=url + "/api/v1/data/controller/core/aaa/auth-context")
-        response = logged_request(session, request)
+        response = logged_request(session, request, timeout=timeout)
         if response.status_code != 200:
             response.raise_for_status()
 
-    return BigDbClient(url, session)
+    return BigDbClient(url, session, timeout=timeout)
