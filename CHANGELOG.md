@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
    e.g., `initiate-async-id`, `async-id`
 ### Removed
 - python 2 support has been removed.
+- python 3.5 support has been removed.
 - nosetest has been removed as dependency.
 
 ## 0.3.3 - 2021-02-03

@@ -8,7 +8,7 @@ pybsn is a python interface to [Big Switch Network](http://bigswitch.com) produc
 ```bash
 pip3 install pybsn
 ```
-As of version 0.4.0, pybsn is only compatible with python 3.5 or newer.
+As of version 0.4.0, pybsn is only compatible with python 3.6 or newer.
 
 ---
 ## PyBSN Repl - Interactive Shell

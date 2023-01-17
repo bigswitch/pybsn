@@ -14,7 +14,6 @@ jobs:
       matrix:
         os-version: [ubuntu-18.04, ubuntu-20.04, ubuntu-latest]
         python-version:
-          - "3.5"
           - "3.6"
           - "3.7"
           - "3.8"
