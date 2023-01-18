@@ -3,7 +3,6 @@ import os
 import logging
 import re
 import unittest
-import urllib.error
 from unittest.mock import patch
 import requests
 
