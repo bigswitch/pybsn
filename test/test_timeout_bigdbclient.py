@@ -10,6 +10,7 @@ import pybsn
 
 sys.path.append("test")
 from fakeserver import FOREVER_BLOCKING_TIME
+from mockutils import get_mockcall_attribute
 
 MIDDLE_BLOCKING_TIME = FOREVER_BLOCKING_TIME / 2.0
 SHORT_BLOCKING_TIME = MIDDLE_BLOCKING_TIME / 2.0
@@ -25,6 +26,7 @@ class SuccessfulResponse:
         pass
 
 
+
 class TestTimeoutBigDbClient(unittest.TestCase):
     # noinspection GrazieInspection
     """Check that the timeout value passed to Session.send is correct.
@@ -34,6 +36,12 @@ class TestTimeoutBigDbClient(unittest.TestCase):
 
     # def setUp(self):
     #     self.client = pybsn.connect("http://127.0.0.1:8080")
+
+
+    def _assertTimeoutValue(self, expected_value, mock_call):
+        actual = get_mockcall_attribute(mock_call, "timeout")
+        self.assertEqual(expected_value, actual)
+        return True
 
     def _login_cb(self, req):
         self.assertEqual(json.loads(req.body), {'user': 'admin', 'password': 'somepassword'})
@@ -68,7 +76,7 @@ class TestTimeoutBigDbClient(unittest.TestCase):
         client = pybsn.connect("http://127.0.0.1:8080", "admin", "somepassword")
         with patch.object(requests.Session, 'send') as mock_send:
             client.get(self.url)
-            self.assertIsNone(mock_send.mock_calls[0].kwargs['timeout'])
+            self._assertTimeoutValue(None, mock_send.mock_calls[0])
 
     @responses.activate
     def test_get_timeout_uses_client_default(self):
@@ -82,7 +90,7 @@ class TestTimeoutBigDbClient(unittest.TestCase):
 
         with patch.object(requests.Session, 'send') as mock_send:
             client.get(self.url)
-            self.assertEqual(short_timeout, mock_send.mock_calls[0].kwargs['timeout'])
+            self._assertTimeoutValue(short_timeout, mock_send.mock_calls[0])
 
     @responses.activate
     def test_get_timeout_uses_client_default_float(self):
@@ -96,8 +104,7 @@ class TestTimeoutBigDbClient(unittest.TestCase):
 
         with patch.object(requests.Session, 'send') as mock_send:
             client.get(self.url)
-            self.assertEqual(SHORT_BLOCKING_TIME,
-                             mock_send.mock_calls[0].kwargs['timeout'])
+            self._assertTimeoutValue(SHORT_BLOCKING_TIME, mock_send.mock_calls[0])
 
     @responses.activate
     def test_get_timeout_arg(self):
@@ -106,7 +113,7 @@ class TestTimeoutBigDbClient(unittest.TestCase):
         client = pybsn.connect("http://127.0.0.1:8080", "admin", "somepassword")
         with patch.object(requests.Session, 'send') as mock_send:
             client.get(self.url, timeout=short_timeout)
-            self.assertEqual(short_timeout, mock_send.mock_calls[0].kwargs['timeout'])
+            self._assertTimeoutValue(short_timeout, mock_send.mock_calls[0])
 
     @responses.activate
     def test_get_timeout_arg_none(self):
@@ -115,7 +122,7 @@ class TestTimeoutBigDbClient(unittest.TestCase):
         client = pybsn.connect("http://127.0.0.1:8080", "admin", "somepassword", timeout=short_timeout.read_timeout)
         with patch.object(requests.Session, 'send') as mock_send:
             client.get(self.url, timeout=None)
-            self.assertIsNone(mock_send.mock_calls[0].kwargs['timeout'])
+            self._assertTimeoutValue(None, mock_send.mock_calls[0])
 
     @responses.activate
     def test_get_timeout_arg_float(self):
@@ -126,7 +133,7 @@ class TestTimeoutBigDbClient(unittest.TestCase):
         client = pybsn.connect("http://127.0.0.1:8080", "admin", "somepassword", timeout=short_timeout.read_timeout)
         with patch.object(requests.Session, 'send') as mock_send:
             client.get(self.url, timeout=timeout_arg)
-            self.assertEqual(timeout_arg, mock_send.mock_calls[0].kwargs['timeout'])
+            self._assertTimeoutValue(timeout_arg, mock_send.mock_calls[0])
 
     @responses.activate
     def test_get_timeout_arg_client_timeout(self):
@@ -138,7 +145,7 @@ class TestTimeoutBigDbClient(unittest.TestCase):
                                                   timeout=middle_timeout.read_timeout)
         with patch.object(requests.Session, 'send') as mock_send:
             client.get(self.url, timeout=pybsn.CLIENT_TIMEOUT)
-            self.assertEqual(middle_timeout.read_timeout, mock_send.mock_calls[0].kwargs['timeout'])
+            self._assertTimeoutValue(middle_timeout.read_timeout, mock_send.mock_calls[0])
 
     @responses.activate
     def test_rpc_no_timeout(self):
@@ -147,7 +154,7 @@ class TestTimeoutBigDbClient(unittest.TestCase):
         client = pybsn.connect(self.url, "admin", "somepassword")
         with patch.object(requests.Session, 'send') as mock_send:
             client.rpc(self.url, data={})
-            self.assertIsNone(mock_send.mock_calls[0].kwargs['timeout'])
+            self._assertTimeoutValue(None, mock_send.mock_calls[0])
 
     @responses.activate
     def test_rpc_timeout(self):
@@ -158,7 +165,7 @@ class TestTimeoutBigDbClient(unittest.TestCase):
                                                   timeout=short_timeout)
         with patch.object(requests.Session, 'send') as mock_send:
             client.rpc(self.url, data={})
-            self.assertEqual(short_timeout, mock_send.mock_calls[0].kwargs['timeout'])
+            self._assertTimeoutValue(short_timeout, mock_send.mock_calls[0])
 
     @responses.activate
     def test_rpc_timeout_arg(self):
@@ -168,7 +175,7 @@ class TestTimeoutBigDbClient(unittest.TestCase):
         client = pybsn.connect(self.url, "admin", "somepassword")
         with patch.object(requests.Session, 'send') as mock_send:
             client.rpc(self.url, data={}, timeout=short_timeout)
-            self.assertEqual(short_timeout, mock_send.mock_calls[0].kwargs['timeout'])
+            self._assertTimeoutValue(short_timeout, mock_send.mock_calls[0])
 
     @responses.activate
     def test_post_no_timeout(self):
@@ -177,7 +184,7 @@ class TestTimeoutBigDbClient(unittest.TestCase):
         client = pybsn.connect(self.url, "admin", "somepassword")
         with patch.object(requests.Session, 'send') as mock_send:
             client.post(self.url, data={})
-            self.assertIsNone(mock_send.mock_calls[0].kwargs['timeout'])
+            self._assertTimeoutValue(None, mock_send.mock_calls[0])
 
     @responses.activate
     def test_post_timeout(self):
@@ -188,7 +195,7 @@ class TestTimeoutBigDbClient(unittest.TestCase):
                                                   timeout=short_timeout)
         with patch.object(requests.Session, 'send') as mock_send:
             client.post(self.url, data={})
-            self.assertEqual(short_timeout, mock_send.mock_calls[0].kwargs['timeout'])
+            self._assertTimeoutValue(short_timeout, mock_send.mock_calls[0])
 
     @responses.activate
     def test_post_timeout_arg(self):
@@ -198,7 +205,7 @@ class TestTimeoutBigDbClient(unittest.TestCase):
         client = pybsn.connect(self.url, "admin", "somepassword")
         with patch.object(requests.Session, 'send') as mock_send:
             client.post(self.url, data={}, timeout=short_timeout)
-            self.assertEqual(short_timeout, mock_send.mock_calls[0].kwargs['timeout'])
+            self._assertTimeoutValue(short_timeout, mock_send.mock_calls[0])
 
     @responses.activate
     def test_put_no_timeout(self):
@@ -207,7 +214,7 @@ class TestTimeoutBigDbClient(unittest.TestCase):
         client = pybsn.connect(self.url, "admin", "somepassword")
         with patch.object(requests.Session, 'send') as mock_send:
             client.put(self.url, data={})
-            self.assertIsNone(mock_send.mock_calls[0].kwargs['timeout'])
+            self._assertTimeoutValue(None, mock_send.mock_calls[0])
 
     @responses.activate
     def test_put_timeout(self):
@@ -218,7 +225,7 @@ class TestTimeoutBigDbClient(unittest.TestCase):
                                                   timeout=short_timeout)
         with patch.object(requests.Session, 'send') as mock_send:
             client.put(self.url, data={})
-            self.assertEqual(short_timeout, mock_send.mock_calls[0].kwargs['timeout'])
+            self._assertTimeoutValue(short_timeout, mock_send.mock_calls[0])
 
     @responses.activate
     def test_put_timeout_arg(self):
@@ -228,7 +235,7 @@ class TestTimeoutBigDbClient(unittest.TestCase):
         client = pybsn.connect(self.url, "admin", "somepassword")
         with patch.object(requests.Session, 'send') as mock_send:
             client.put(self.url, data={}, timeout=short_timeout)
-            self.assertEqual(short_timeout, mock_send.mock_calls[0].kwargs['timeout'])
+            self._assertTimeoutValue(short_timeout, mock_send.mock_calls[0])
 
     @responses.activate
     def test_patch_no_timeout(self):
@@ -237,7 +244,7 @@ class TestTimeoutBigDbClient(unittest.TestCase):
         client = pybsn.connect(self.url, "admin", "somepassword")
         with patch.object(requests.Session, 'send') as mock_send:
             client.patch(self.url, data={})
-            self.assertIsNone(mock_send.mock_calls[0].kwargs['timeout'])
+            self._assertTimeoutValue(None, mock_send.mock_calls[0])
 
     @responses.activate
     def test_patch_timeout(self):
@@ -248,7 +255,7 @@ class TestTimeoutBigDbClient(unittest.TestCase):
                                                   timeout=short_timeout)
         with patch.object(requests.Session, 'send') as mock_send:
             client.patch(self.url, data={})
-            self.assertEqual(short_timeout, mock_send.mock_calls[0].kwargs['timeout'])
+            self._assertTimeoutValue(short_timeout, mock_send.mock_calls[0])
 
     @responses.activate
     def test_patch_timeout_arg(self):
@@ -258,7 +265,7 @@ class TestTimeoutBigDbClient(unittest.TestCase):
         client = pybsn.connect(self.url, "admin", "somepassword")
         with patch.object(requests.Session, 'send') as mock_send:
             client.patch(self.url, data={}, timeout=short_timeout)
-            self.assertEqual(short_timeout, mock_send.mock_calls[0].kwargs['timeout'])
+            self._assertTimeoutValue(short_timeout, mock_send.mock_calls[0])
 
     @responses.activate
     def test_delete_no_timeout(self):
@@ -267,7 +274,7 @@ class TestTimeoutBigDbClient(unittest.TestCase):
         client = pybsn.connect(self.url, "admin", "somepassword")
         with patch.object(requests.Session, 'send') as mock_send:
             client.delete(self.url)
-            self.assertIsNone(mock_send.mock_calls[0].kwargs['timeout'])
+            self._assertTimeoutValue(None, mock_send.mock_calls[0])
 
     @responses.activate
     def test_delete_timeout(self):
@@ -278,7 +285,7 @@ class TestTimeoutBigDbClient(unittest.TestCase):
                                                   timeout=short_timeout)
         with patch.object(requests.Session, 'send') as mock_send:
             client.delete(self.url)
-            self.assertEqual(short_timeout, mock_send.mock_calls[0].kwargs['timeout'])
+            self._assertTimeoutValue(short_timeout, mock_send.mock_calls[0])
 
     @responses.activate
     def test_delete_timeout_arg(self):
@@ -288,7 +295,7 @@ class TestTimeoutBigDbClient(unittest.TestCase):
         client = pybsn.connect(self.url, "admin", "somepassword")
         with patch.object(requests.Session, 'send') as mock_send:
             client.delete(self.url, timeout=short_timeout)
-            self.assertEqual(short_timeout, mock_send.mock_calls[0].kwargs['timeout'])
+            self._assertTimeoutValue(short_timeout, mock_send.mock_calls[0])
 
     @responses.activate
     def test_schema_no_timeout(self):
@@ -298,7 +305,7 @@ class TestTimeoutBigDbClient(unittest.TestCase):
         with patch.object(requests.Session, 'send') as mock_send:
             mock_send.return_value = SuccessfulResponse()
             client.schema(self.url)
-            self.assertIsNone(mock_send.mock_calls[0].kwargs['timeout'])
+            self._assertTimeoutValue(None, mock_send.mock_calls[0])
 
     @responses.activate
     def test_schema_timeout(self):
@@ -310,8 +317,7 @@ class TestTimeoutBigDbClient(unittest.TestCase):
         with patch.object(requests.Session, 'send') as mock_send:
             mock_send.return_value = SuccessfulResponse()
             client.schema(self.url)
-            actual_timeout = mock_send.mock_calls[0].kwargs['timeout']
-            self.assertEqual(short_timeout, actual_timeout)
+            self._assertTimeoutValue(short_timeout, mock_send.mock_calls[0])
 
     @responses.activate
     def test_schema_timeout_arg(self):
@@ -322,7 +328,7 @@ class TestTimeoutBigDbClient(unittest.TestCase):
         with patch.object(requests.Session, 'send') as mock_send:
             mock_send.return_value = SuccessfulResponse()
             client.schema(self.url, timeout=short_timeout)
-            self.assertEqual(short_timeout, mock_send.mock_calls[0].kwargs['timeout'])
+            self._assertTimeoutValue(short_timeout, mock_send.mock_calls[0])
 
     @responses.activate
     def test_default_argument_can_be_changed(self):
@@ -332,7 +338,8 @@ class TestTimeoutBigDbClient(unittest.TestCase):
         client.default_timeout = middle_timeout
 
         def has_new_timeout(mock_call):
-            return mock_call.kwargs['timeout'] == middle_timeout
+            self._assertTimeoutValue(middle_timeout, mock_call)
+            return True
 
         with patch.object(requests.Session, 'send') as mock_get:
             mock_get.return_value = SuccessfulResponse()

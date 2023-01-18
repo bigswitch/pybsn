@@ -9,12 +9,13 @@ import unittest
 from http.server import HTTPServer
 from itertools import cycle, repeat
 import requests
+from requests import exceptions as request_exception
 import pybsn
 import urllib3
 from unittest.mock import patch
 sys.path.append("test")
 from fakeserver import FOREVER_BLOCKING_TIME, FakeServer
-from requests import exceptions as request_exception
+from mockutils import get_mockcall_attribute
 
 class TestTimeoutConnect(unittest.TestCase):
     """
@@ -23,10 +24,15 @@ class TestTimeoutConnect(unittest.TestCase):
     for future REST operations on the session.
     """
 
+    def _assertTimeoutValue(self, expected_value, mock_call):
+        actual = get_mockcall_attribute(mock_call, "timeout")
+        self.assertEqual(expected_value, actual)
+        return True
+
     def test_connect_default_timeout(self):
         with patch.object(requests.Session, 'send') as mock_send:
             client = pybsn.connect("http://127.0.0.1:8080", "admin", "somepassword")
-            self.assertIsNone(mock_send.mock_calls[0].kwargs['timeout'])
+            self._assertTimeoutValue(None, mock_send.mock_calls[0])
             self.assertIsNone(client.default_timeout)
 
     def test_connect_timeout(self):
@@ -35,14 +41,14 @@ class TestTimeoutConnect(unittest.TestCase):
             client = pybsn.connect("http://127.0.0.1:8080",
                                    "admin", "somepassword",
                                    timeout=timeout)
-            self.assertEqual(timeout, mock_send.mock_calls[0].kwargs['timeout'])
+            self._assertTimeoutValue(timeout, mock_send.mock_calls[0])
             self.assertEqual(timeout, client.default_timeout)
 
     def test_connect_token_default_timeout(self):
         with patch.object(requests.Session, 'send') as mock_send:
             client = pybsn.connect("http://127.0.0.1:8080", "admin",
                                    token="sometoken")
-            self.assertIsNone(mock_send.mock_calls[0].kwargs['timeout'])
+            self._assertTimeoutValue(None, mock_send.mock_calls[0])
             self.assertIsNone(client.default_timeout)
 
     def test_connect_token_timeout(self):
@@ -51,14 +57,15 @@ class TestTimeoutConnect(unittest.TestCase):
             client = pybsn.connect("http://127.0.0.1:8080", "admin",
                                    token="sometoken",
                                    timeout=timeout)
-            self.assertEqual(timeout, mock_send.mock_calls[0].kwargs['timeout'])
+            self._assertTimeoutValue(timeout, mock_send.mock_calls[0])
             self.assertEqual(timeout, client.default_timeout)
 
     def test_connect_timeout_legacy_login(self):
         timeout = urllib3.util.Timeout(10, 10)
 
         def has_timeout(mock_call):
-            return mock_call.kwargs['timeout'] == timeout
+            self._assertTimeoutValue(timeout, mock_call)
+            return True
 
         with patch.object(requests.Session, 'send') as mock_send:
             first_response = requests.Response()
@@ -77,7 +84,8 @@ class TestTimeoutConnect(unittest.TestCase):
         timeout = urllib3.util.Timeout(10, 10)
 
         def has_timeout(mock_call):
-            return mock_call.kwargs['timeout'] == timeout
+            self._assertTimeoutValue(timeout, mock_call)
+            return True
 
         with patch.object(requests.Session, 'send') as mock_send:
             first_response = requests.Response()
