@@ -34,10 +34,6 @@ class TestTimeoutBigDbClient(unittest.TestCase):
         """
     url = "http://127.0.0.1:8080"
 
-    # def setUp(self):
-    #     self.client = pybsn.connect("http://127.0.0.1:8080")
-
-
     def _assertTimeoutValue(self, expected_value, mock_call):
         actual = get_mockcall_attribute(mock_call, "timeout")
         self.assertEqual(expected_value, actual)
