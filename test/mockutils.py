@@ -12,3 +12,4 @@ def get_mockcall_attribute(mock_call, name):
             if name in kwargs:
                 return kwargs[name]
     raise Exception("named attribute not found: " + name)
+
