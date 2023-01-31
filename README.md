@@ -5,6 +5,11 @@ pybsn is a python interface to [Big Switch Network](http://bigswitch.com) produc
 
 ## Installation
 
+pybsn supports Python versions 3.6 to 3.11. pybsn with Python 3.6
+support has been deprecated, and may be removed in the
+next release.
+
+
 ```bash
 pip3 install pybsn
 ```
