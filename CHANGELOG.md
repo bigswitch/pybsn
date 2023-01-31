@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 ### Removed
 - python 2 support has been removed.
 - python 3.5 support has been removed.
+- python 3.6 support is deprecated, and may be removed in the future.
 - nosetest has been removed as dependency.
 
 ## 0.3.3 - 2021-02-03
