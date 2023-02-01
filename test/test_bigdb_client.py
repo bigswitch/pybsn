@@ -3,7 +3,8 @@ import os
 import logging
 import re
 import unittest
-
+import urllib.error
+from unittest.mock import patch
 import requests
 
 import pybsn
@@ -260,3 +261,34 @@ class TestBigDBClient(unittest.TestCase):
         result = self.client.rpc(path="controller/rpc",
                                  data={"description": "desc"})
         self.assertIsNone(result)
+
+    @responses.activate
+    def test_schema(self):
+        responses.add(responses.GET, "http://127.0.0.1:8080/api/v1/schema/",
+                      json={'state': "ok" }, status=200)
+        result = self.client.schema()
+        self.assertEqual(result, {'state':"ok"})
+
+    @responses.activate
+    def test_schema_with_path(self):
+        responses.add(responses.GET, "http://127.0.0.1:8080/api/v1/schema/foo",
+                      json={'state': "ok" }, status=200)
+        result = self.client.schema(path="foo")
+        self.assertEqual(result, {'state':"ok"})
+
+    @responses.activate
+    def test_schema_failed(self):
+        responses.add(responses.GET, "http://127.0.0.1:8080/api/v1/schema/",
+                      json={'state': "ok" }, status=404)
+        with self.assertRaises(requests.exceptions.HTTPError):
+            self.client.schema()
+
+    @responses.activate
+    def test_schema_logged(self):
+        with patch.object(logging.Logger, 'isEnabledFor') as mock_is_enabled:
+            mock_is_enabled.return_value = True
+            with patch.object(logging.Logger, "debug") as mock_debug:
+                responses.add(responses.GET, "http://127.0.0.1:8080/api/v1/schema/",
+                      json={'state': "ok" }, status=200)
+                self.client.schema()
+                mock_debug.assert_called()

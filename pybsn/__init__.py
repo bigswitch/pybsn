@@ -276,7 +276,8 @@ class BigDbClient(object):
               (/api/v1/schema).
         """
         url = self.url + SCHEMA_PREFIX + path
-        response = self.session.get(url)
+        request = requests.Request(method="GET", url=url)
+        response = logged_request(self.session, request)
         response.raise_for_status()
         return json.loads(response.text)
 
