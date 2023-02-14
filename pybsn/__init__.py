@@ -567,8 +567,7 @@ def _attempt_modern_login(session, url, username, password, timeout):
 
 def connect(host, username=None, password=None, token=None, login=None,
             verify_tls=False, session_headers=None,
-            timeout=None,
-            *args, **kwargs) -> BigDbClient:
+            timeout=None):
     """ Creates a connected BigDb client.
 
     Main entrypoint to pybsn.

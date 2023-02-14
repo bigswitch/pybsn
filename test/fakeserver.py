@@ -165,18 +165,18 @@ class FakeServer:
     thread = None
     server = None
 
-    def __init__(self) -> None:
+    def __init__(self):
         super().__init__()
         self.server = BlockingServer(('localhost', 0), FakeHandler)
 
     def _run_server(self):
         self.server.serve_forever()
 
-    def get_blocking(self, delay: Iterable[float]):
+    def get_blocking(self, delay):
         """Set the amount of time to wait prior to responding to
            a GET request.
 
-           :parameter delay Amount of seconds to wait.
+           :parameter delay Amount of seconds to wait. Iterable[float]
         """
         self.server.get_blocking = delay
 
@@ -193,7 +193,7 @@ class FakeServer:
             print(f'unable to start server on port {self.server.server_port}')
             return False
 
-    def port(self) -> int:
+    def port(self):
         """:return port the server is listening on."""
         return self.server.server_port
 
