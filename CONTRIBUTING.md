@@ -31,10 +31,10 @@ When you're done making changes and you'd like to propose them for review, use t
 Congratulations! The pybsn community thanks you. :sparkles:
 
 ### How to release a new version of pybsn
-To help release a new version of pybsn, there are two github actions. They are triggered when a new tag is pushed to the repository. Each tag push is considered a release, and each of the two actions will attempt to create a release using the version found in [setup.py](https://github.com/bigswitch/pybsn/blob/master/setup.py). The name of the tag does not matter from a technical perspective, but should match the version in the `setup.py` file. 
-1. [release-github.yml](https://github.com/bigswitch/pybsn/blob/master/.github/workflows/release-github.yml) 
-Creates a release on github. The release description is the message of the last commit of the release branch (`master`).
-2. [release-pypi.yml](https://github.com/bigswitch/pybsn/blob/master/.github/workflows/release-pypi.yml) 
+To help release a new version of pybsn, there are two github actions. They are triggered when a new tag is pushed to the repository. Each tag push is considered a release, and each of the two actions will attempt to create a release using the version found in [setup.py](https://github.com/bigswitch/pybsn/blob/main/setup.py). The name of the tag does not matter from a technical perspective, but should match the version in the `setup.py` file.
+1. [release-github.yml](https://github.com/bigswitch/pybsn/blob/main/.github/workflows/release-github.yml)
+Creates a release on github. The release description is the message of the last commit of the release branch (`main`).
+2. [release-pypi.yml](https://github.com/bigswitch/pybsn/blob/main/.github/workflows/release-pypi.yml)
 Creates a release on [PyPi](https://pypi.org/project/pybsn/).
 
 ### Attribution
