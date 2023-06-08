@@ -1,10 +1,10 @@
 name: Run Tests
 on:
   workflow_dispatch: # Allows this workflow to be manually triggered
-  push:  # Run for every push to and PR filed against master
-    branches: [ master ]
+  push:  # Run for every push to and PR filed against main (renamed from master)
+    branches: [ main ]
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
   schedule:
     - cron: "0 0 * * *" # At the end of every day
 jobs:
@@ -12,7 +12,7 @@ jobs:
     runs-on: ${{ matrix.os-version }}
     strategy:
       matrix:
-        os-version: [ubuntu-18.04, ubuntu-20.04, ubuntu-latest]
+        os-version: [ubuntu-20.04, ubuntu-latest]
         python-version:
           - "3.6"
           - "3.7"
