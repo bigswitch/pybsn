@@ -11,7 +11,7 @@ setup(name='pybsn',
     zip_safe=False,
     install_requires=[
         "requests >= 2.3.0",
-        "IPython >= 7.9",
+        "IPython >= 7.13.0",
         "traitlets >= 4.3.3",
     ],
     tests_require=[
