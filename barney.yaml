@@ -1,0 +1,13 @@
+images:
+  build-floor:
+    units:
+      - image: barney.ci/alpine%pkg/alpine-base
+      - image: barney.ci/alpine%network
+      - image: barney.ci/alpine%pkg/busybox
+      - image: barney.ci/alpine%pkg/coreutils
+  minimal-source:
+    units:
+      - floor: .%build-floor
+        build: |
+          mkdir -p /dest/usr/lib/python3.11/site-packages/pybsn/
+          cp pybsn/__init__.py /dest/usr/lib/python3.11/site-packages/pybsn/
