@@ -5,6 +5,7 @@ images:
       - image: barney.ci/alpine%network
       - image: barney.ci/alpine%pkg/busybox
       - image: barney.ci/alpine%pkg/coreutils
+
   minimal-source:
     units:
       - floor: .%build-floor
