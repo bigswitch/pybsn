@@ -1,0 +1,11 @@
+reponame: code.arista.io/atlas/pybsn
+description: |
+  Atlas repo
+users:
+  maintainers:
+    - andi@arista.com
+x-bar:
+  version: beta
+epoch: 1
+ObsoleteNames:
+  - github.com/bigswitch/pybsn
