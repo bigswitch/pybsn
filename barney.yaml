@@ -1,5 +1,5 @@
 images:
-  build-floor:
+  build-floor-alpine:
     units:
       - image: barney.ci/alpine%pkg/alpine-base
       - image: barney.ci/alpine%network
@@ -8,7 +8,22 @@ images:
 
   minimal-source:
     units:
-      - floor: .%build-floor
+      - floor: .%build-floor-alpine
         build: |
           mkdir -p /dest/usr/lib/python3.11/site-packages/pybsn/
           cp pybsn/__init__.py /dest/usr/lib/python3.11/site-packages/pybsn/
+
+  pybsn-install-floor:
+    units:
+      - floor:
+        build: |
+          mkdir -p /dest/pybsn/
+          cp pybsn/__init__.py /dest/pybsn/
+          echo '#!/bin/sh
+                DEST_PYTHON_SITE_PKGS=`python3 -c "import site; print(site.getsitepackages()[0])"`
+                DEST_PYTHON_SITE_PKGS=/dest${DEST_PYTHON_SITE_PKGS}
+                mkdir -p ${DEST_PYTHON_SITE_PKGS}/pybsn/
+                cp /pybsn/__init__.py ${DEST_PYTHON_SITE_PKGS}
+          ' > /dest/pybsn/install_pybsn
+          chmod 777 /dest/pybsn/install_pybsn
+
