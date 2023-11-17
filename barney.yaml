@@ -23,7 +23,7 @@ images:
                 DEST_PYTHON_SITE_PKGS=`python3 -c "import site; print(site.getsitepackages()[0])"`
                 DEST_PYTHON_SITE_PKGS=/dest${DEST_PYTHON_SITE_PKGS}
                 mkdir -p ${DEST_PYTHON_SITE_PKGS}/pybsn/
-                cp /pybsn/__init__.py ${DEST_PYTHON_SITE_PKGS}
+                cp /pybsn/__init__.py ${DEST_PYTHON_SITE_PKGS}/pybsn/
           ' > /dest/pybsn/install_pybsn
           chmod 777 /dest/pybsn/install_pybsn
 
