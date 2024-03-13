@@ -1,0 +1,39 @@
+{
+  "": {
+    "commit": "35724f01a93fce96af7e5fd4e19d9ff0dbc4be99",
+    "url": "https://github.com/bigswitch/pybsn.git"
+  },
+  "barney.ci/alpine": {
+    "commit": "fb1ae6f324425a5f9260d60d7cc113146bb97913"
+  },
+  "barney.ci/barney": {
+    "commit": "da1a843c5f07133bb8d9b235544e002c9206a852"
+  },
+  "barney.ci/barneyfile": {
+    "commit": "1ce29c1de75b378a39e39d49e2b31e7ff103858d"
+  },
+  "barney.ci/bst": {
+    "commit": "9251114336d6f8b5327df00e8e03548c4708cee3"
+  },
+  "barney.ci/client": {
+    "commit": "a03ab9c4ed5ca2a1cc8918bad8b9bcb4c0f50391"
+  },
+  "barney.ci/docker": {
+    "commit": "170de1870a07a3ff5343bc55158265cefa45060c"
+  },
+  "barney.ci/golang": {
+    "commit": "8ddeed6bfa8ad35eefa2840ca790275e8a8ce50b"
+  },
+  "barney.ci/model": {
+    "commit": "e3779c8cf557a4fb108f07910304b8a1e5e43699"
+  },
+  "barney.ci/scdoc": {
+    "commit": "98217b1e9dd1484ca6ae055684d2e4955b6bb7a3"
+  },
+  "github.com/aristanetworks/bst": {
+    "commit": "b79ab6f98f226bfa80ba0a00e3fc8af9f70be018"
+  },
+  "github.com/golang/go": {
+    "commit": "f29208030ab80769ce61dedb5a419821abf92113"
+  }
+}
