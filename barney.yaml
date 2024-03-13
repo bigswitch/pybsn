@@ -7,11 +7,18 @@ images:
       - image: barney.ci/alpine%pkg/coreutils
 
   minimal-source:
+    no-create-mountpoints: true
     units:
-      - floor: .%build-floor-alpine
-        build: |
+      - build: |
           mkdir -p /dest/usr/lib/python3.11/site-packages/pybsn/
           cp pybsn/__init__.py /dest/usr/lib/python3.11/site-packages/pybsn/
+
+  minimal-source-py39:
+    no-create-mountpoints: true
+    units:
+      - build: |
+          mkdir -p /dest/usr/lib/python3.9/site-packages/pybsn/
+          cp pybsn/__init__.py /dest/usr/lib/python3.9/site-packages/pybsn/
 
   pybsn-install-floor:
     units:
