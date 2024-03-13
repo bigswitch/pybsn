@@ -6,6 +6,11 @@ users:
     - andi@arista.com
 x-bar:
   version: beta
+x-github-bridge:
+  reviews:
+    - image: test
+      events:
+        - type: pull_request
 epoch: 1
 ObsoleteNames:
   - github.com/bigswitch/pybsn

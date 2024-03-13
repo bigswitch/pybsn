@@ -13,6 +13,23 @@ images:
           mkdir -p /dest/usr/lib/python3.11/site-packages/pybsn/
           cp pybsn/__init__.py /dest/usr/lib/python3.11/site-packages/pybsn/
 
+  package:
+    units:
+      - floor: .%build-floor-alpine
+        build: |
+          mkdir -p /dest/pybsn
+          cp pybsn/__init__.py /dest/pybsn/
+
+  test/package:
+    units:
+      - floor:
+        sources: []
+        mappings:
+          /src/package: .%package
+        build: |
+          ls /src/package/pybsn/__init__.py
+
+
   pybsn-install-floor:
     units:
       - floor:
@@ -27,4 +44,5 @@ images:
                 cp ${SRC_DIR}/__init__.py ${DEST_PYTHON_SITE_PKGS}/pybsn/
           ' > /dest/pybsn/install_pybsn
           chmod 777 /dest/pybsn/install_pybsn
+
 
