@@ -1,39 +1,32 @@
 images:
-  build-floor-alpine:
-    units:
-      - image: barney.ci/alpine%pkg/alpine-base
-      - image: barney.ci/alpine%network
-      - image: barney.ci/alpine%pkg/busybox
-      - image: barney.ci/alpine%pkg/coreutils
-
+  # Deprecated ref
   minimal-source:
+    no-create-mountpoints: true
     units:
-      - floor: .%build-floor-alpine
-        build: |
+      - build: |
           mkdir -p /dest/usr/lib/python3.11/site-packages/pybsn/
           cp pybsn/__init__.py /dest/usr/lib/python3.11/site-packages/pybsn/
 
   package:
+    no-create-mountpoints: true
     units:
-      - floor: .%build-floor-alpine
-        build: |
+      - build: |
           mkdir -p /dest/pybsn
           cp pybsn/__init__.py /dest/pybsn/
 
   test/package:
     units:
-      - floor:
-        sources: []
+      - sources: []
         mappings:
           /src/package: .%package
         build: |
           ls /src/package/pybsn/__init__.py
 
 
+  # Deprecated ref
   pybsn-install-floor:
     units:
-      - floor:
-        build: |
+      - build: |
           mkdir -p /dest/pybsn/
           cp pybsn/__init__.py /dest/pybsn/
           echo '#!/bin/sh
