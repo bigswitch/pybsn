@@ -5,25 +5,25 @@
 			"commit": "fb1ae6f324425a5f9260d60d7cc113146bb97913"
 		},
 		"barney.ci/barney": {
-			"commit": "da1a843c5f07133bb8d9b235544e002c9206a852"
+			"commit": "8ba3cbaf1cb7beca935312d1265edc02ed469955"
 		},
 		"barney.ci/barneyfile": {
-			"commit": "1ce29c1de75b378a39e39d49e2b31e7ff103858d"
+			"commit": "dd176b8fa16eccfa8fa53443c5df5fd5f2e61354"
 		},
 		"barney.ci/bst": {
 			"commit": "9251114336d6f8b5327df00e8e03548c4708cee3"
 		},
 		"barney.ci/client": {
-			"commit": "774ac6d16a78cf253e6a5c35dde2d89c9586a338"
+			"commit": "f9b41a2afe017751595cda78b5001e669ce0c276"
 		},
 		"barney.ci/docker": {
 			"commit": "170de1870a07a3ff5343bc55158265cefa45060c"
 		},
 		"barney.ci/golang": {
-			"commit": "bf32fdc86fc2e5706e65c4cafc7fe3a8f70b940a"
+			"commit": "f3714b98b2fc112906b22d64049e682470153986"
 		},
 		"barney.ci/model": {
-			"commit": "c247d05e6c04c65b9db05ce92269edacde9de373"
+			"commit": "a73972f2660e029059bfae7f5d1b1920a237ff0a"
 		},
 		"barney.ci/scdoc": {
 			"commit": "98217b1e9dd1484ca6ae055684d2e4955b6bb7a3"
