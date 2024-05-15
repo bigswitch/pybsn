@@ -423,7 +423,7 @@ class BigDbClient(object):
         token = self.session.cookies.get_dict().get("session_cookie")
         if token:
             # This is a no-op/fine for api tokens
-            self.root.core.aaa.session.match(auth_token=token).delete()
+            self.root.core.aaa.session.logout.rpc()
 
     def _request(self, method, path, data=None, params=None, rpc=False,
                  timeout=CLIENT_TIMEOUT):
