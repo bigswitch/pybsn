@@ -189,7 +189,8 @@ e.g., {'initiate-async-id': '(async-id-here)'} would initiate RPC call asynchron
         .../node[mac-address="14:18:77:96:8b:d6"]
         """
         for k, v in kwargs.items():
-            self = self.filter("%s=$x" % k.replace('_', '-'), x=v)
+            self = self.filter("%s=$x" % k.replace('_', '-'), x=_normalize(v))
+
         return self
 
     def filter(self, template, *args, **kwargs):
@@ -209,7 +210,7 @@ e.g., {'initiate-async-id': '(async-id-here)'} would initiate RPC call asynchron
         .../segment[member-vlan<1000]
         """
 
-        kwargs = {k: repr(v) for k, v in kwargs.items()}
+        kwargs = {k: _normalize(v) for k, v in kwargs.items()}
         predicate = '[' + Template(template).substitute(**kwargs) + ']'
         return Node(self._path + predicate, self._connection)
 
@@ -466,6 +467,16 @@ class BigDbClient(object):
     def __repr__(self):
         return "BigDbClient(%s)" % self.url
 
+
+def _normalize(self, v):
+    """ Helper method to normalize query values """
+    if type(v) == bool:
+        # replace to use JSON type booleans, not Python
+        if v:
+            return "true"
+        else:
+            return "false"
+    return repr(v)
 
 def logged_request(session, request, timeout):
     """ Helper method that logs HTTP requests made by this library, if configured. """
