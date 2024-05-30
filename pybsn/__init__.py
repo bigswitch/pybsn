@@ -189,7 +189,7 @@ e.g., {'initiate-async-id': '(async-id-here)'} would initiate RPC call asynchron
         .../node[mac-address="14:18:77:96:8b:d6"]
         """
         for k, v in kwargs.items():
-            self = self.filter("%s=$x" % k.replace('_', '-'), x=_normalize(v))
+            self = self.filter("%s=$x" % k.replace('_', '-'), x=v)
 
         return self
 
@@ -468,7 +468,7 @@ class BigDbClient(object):
         return "BigDbClient(%s)" % self.url
 
 
-def _normalize(self, v):
+def _normalize(v):
     """ Helper method to normalize query values """
     if type(v) == bool:
         # replace to use JSON type booleans, not Python
