@@ -471,7 +471,7 @@ class BigDbClient(object):
 def _normalize(v):
     """ Helper method to normalize query values """
     if type(v) == bool:
-        # replace to use JSON type booleans, not Python
+        # replace to use booleans to use strings in JSON-boolean style
         if v:
             return "'true'"
         else:
