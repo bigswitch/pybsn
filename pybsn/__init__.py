@@ -473,9 +473,9 @@ def _normalize(v):
     if type(v) == bool:
         # replace to use JSON type booleans, not Python
         if v:
-            return "true"
+            return "'true'"
         else:
-            return "false"
+            return "'false'"
     return repr(v)
 
 def logged_request(session, request, timeout):
