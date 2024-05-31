@@ -131,6 +131,7 @@ class TestNode(unittest.TestCase):
         node = self.root.node
         self.assertEqual(node.match()._path, "controller/node")
         self.assertEqual(node.match(a="foo")._path, "controller/node[a='foo']")
+        self.assertEqual(node.match(a=True)._path, "controller/node[a='true']")
         self.assertIn(
             node.match(a="foo", b=2)._path,
             ("controller/node[a='foo'][b=2]",
@@ -144,6 +145,7 @@ class TestNode(unittest.TestCase):
         self.assertEqual(node.filter("a='foo'")._path, "controller/node[a='foo']")
         self.assertEqual(node.filter("a=$x", x="foo")._path, "controller/node[a='foo']")
         self.assertEqual(node.filter("b=$x", x=1)._path, "controller/node[b=1]")
+        self.assertEqual(node.filter("a=$x", x=True)._path, "controller/node[a='true']")
 
     def test_root_call(self):
         self.client.get.return_value = dict(foo="bar")
