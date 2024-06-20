@@ -2,37 +2,37 @@
 	"version": 1,
 	"repomap": {
 		"barney.ci/alpine": {
-			"commit": "fb1ae6f324425a5f9260d60d7cc113146bb97913"
+			"commit": "b19857f1eec3fc3f40c151deb2074c74030f965f"
 		},
 		"barney.ci/barney": {
-			"commit": "da1a843c5f07133bb8d9b235544e002c9206a852"
+			"commit": "a93665a78f2034b759c4f66f7a9d712ef7f66952"
 		},
 		"barney.ci/barneyfile": {
-			"commit": "1ce29c1de75b378a39e39d49e2b31e7ff103858d"
+			"commit": "963a03aa0fc5f96fbe785a7505c7876667015ce0"
 		},
 		"barney.ci/bst": {
-			"commit": "9251114336d6f8b5327df00e8e03548c4708cee3"
+			"commit": "1d9a69a40137f7ed0461c1b94867f12087dbbef5"
 		},
 		"barney.ci/client": {
-			"commit": "774ac6d16a78cf253e6a5c35dde2d89c9586a338"
+			"commit": "cd8c66a5da003545e76e4386a6fcf804fcf849ff"
 		},
 		"barney.ci/docker": {
-			"commit": "170de1870a07a3ff5343bc55158265cefa45060c"
+			"commit": "d93be52a3c7e4fee7bdf5fcc0d812c9bbd2bea33"
 		},
 		"barney.ci/golang": {
-			"commit": "bf32fdc86fc2e5706e65c4cafc7fe3a8f70b940a"
+			"commit": "dd612eba506a1c084a80920c879586c5ca196f7a"
 		},
 		"barney.ci/model": {
-			"commit": "c247d05e6c04c65b9db05ce92269edacde9de373"
+			"commit": "4c9e43fdb692806bb229313eac91f52e923bde96"
 		},
 		"barney.ci/scdoc": {
 			"commit": "98217b1e9dd1484ca6ae055684d2e4955b6bb7a3"
 		},
 		"github.com/aristanetworks/bst": {
-			"commit": "b79ab6f98f226bfa80ba0a00e3fc8af9f70be018"
+			"commit": "c1efe172be500c368b5f647a768088624bcfd3b9"
 		},
 		"github.com/golang/go": {
-			"commit": "db6097f8cbaceaed02051850d2411c88b763a0c3"
+			"commit": "ace5bb40d027b718b67556afcd31bf54cff050ab"
 		}
 	}
 }
