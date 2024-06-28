@@ -29,7 +29,7 @@
 			"commit": "98217b1e9dd1484ca6ae055684d2e4955b6bb7a3"
 		},
 		"github.com/aristanetworks/bst": {
-			"commit": "c1efe172be500c368b5f647a768088624bcfd3b9"
+			"commit": "2461d3da1e86781cd6abff771ce1d9c3b0ea0197"
 		},
 		"github.com/golang/go": {
 			"commit": "ace5bb40d027b718b67556afcd31bf54cff050ab"
