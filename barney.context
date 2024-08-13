@@ -32,7 +32,7 @@
 			"commit": "2461d3da1e86781cd6abff771ce1d9c3b0ea0197"
 		},
 		"github.com/golang/go": {
-			"commit": "cb4eee693c382bea4222f20837e26501d40ed892"
+			"commit": "6885bad7dd86880be6929c02085e5c7a67ff2887"
 		}
 	}
 }
