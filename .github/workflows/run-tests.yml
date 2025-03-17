@@ -25,6 +25,8 @@ jobs:
             python-version: "3.5"
           - os-version: ubuntu-latest
             python-version: "3.6"
+          - os-version: ubuntu-latest
+            python-version: "3.7"
     steps:
     - uses: actions/checkout@v2
 
