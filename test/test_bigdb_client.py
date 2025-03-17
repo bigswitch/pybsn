@@ -152,9 +152,8 @@ class TestBigDBClient(unittest.TestCase):
 
     @responses.activate
     def test_close_session(self):
-        responses.add(method=responses.DELETE,
-                      url=re.compile(r"http://127\.0\.0\.1:8080/api/v1/data/controller/core/aaa/session"
-                                     r"(?:%5B|\[)auth-token='value'(?:%5D|\])"),
+        responses.add(method=responses.POST,
+                      url="http://127.0.0.1:8080/api/v1/rpc/controller/core/aaa/session/logout",
                       status=204)
 
         self.client.session.cookies.set_cookie(
@@ -171,9 +170,8 @@ class TestBigDBClient(unittest.TestCase):
 
     @responses.activate
     def test_client_contextmanager_with_session(self):
-        responses.add(method=responses.DELETE,
-                      url=re.compile(r"http://127\.0\.0\.1:8080/api/v1/data/controller/core/aaa/session"
-                                     r"(?:%5B|\[)auth-token='value'(?:%5D|\])"),
+        responses.add(method=responses.POST,
+                      url="http://127.0.0.1:8080/api/v1/rpc/controller/core/aaa/session/logout",
                       status=204)
         responses.add(responses.GET, "http://127.0.0.1:8080/api/v1/data/controller/core/healthy",
                       status=200, json= [ { "status" : "healthy"}] )
