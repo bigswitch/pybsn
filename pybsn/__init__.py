@@ -471,7 +471,7 @@ class BigDbClient(object):
 
 def _normalize(v):
     """ Helper method to normalize query values """
-    if type(v) == bool:
+    if isinstance(v, bool):
         # replace to use booleans to use strings in JSON-boolean style
         if v:
             return "'true'"
@@ -482,6 +482,7 @@ def _normalize(v):
         return "'" + urllib.parse.quote(repr_[1:-1]) + "'"
     else:
         return urllib.parse.quote(repr(v))
+
 
 def logged_request(session, request, timeout):
     """ Helper method that logs HTTP requests made by this library, if configured. """
