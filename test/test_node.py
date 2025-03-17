@@ -131,6 +131,10 @@ class TestNode(unittest.TestCase):
         node = self.root.node
         self.assertEqual(node.match()._path, "controller/node")
         self.assertEqual(node.match(a="foo")._path, "controller/node[a='foo']")
+        self.assertEqual(node.match(a="foo+bar")._path, "controller/node[a='foo%2Bbar']")
+        self.assertEqual(node.match(a="foo bar")._path, "controller/node[a='foo%20bar']")
+        self.assertEqual(node.match(a="foo/bar")._path, "controller/node[a='foo/bar']")
+        self.assertEqual(node.match(a=123)._path, "controller/node[a=123]")
         self.assertEqual(node.match(a=True)._path, "controller/node[a='true']")
         self.assertIn(
             node.match(a="foo", b=2)._path,

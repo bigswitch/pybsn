@@ -1,6 +1,7 @@
 import json
 import logging
 import re
+import urllib.parse
 from string import Template
 from urllib.parse import urlparse
 import requests
@@ -476,7 +477,11 @@ def _normalize(v):
             return "'true'"
         else:
             return "'false'"
-    return repr(v)
+    repr_ = repr(v)
+    if repr_.startswith("'") and repr_.endswith("'"):
+        return "'" + urllib.parse.quote(repr_[1:-1]) + "'"
+    else:
+        return urllib.parse.quote(repr(v))
 
 def logged_request(session, request, timeout):
     """ Helper method that logs HTTP requests made by this library, if configured. """
