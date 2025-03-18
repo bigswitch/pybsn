@@ -30,39 +30,7 @@ class TestBigDBClient(unittest.TestCase):
                   "last-success-login-info": {"host": "127.0.0.1", "timestamp": "2019-05-19T19:16:22.328Z"}}}))
 
     @responses.activate
-    def test_connect_legacy_login(self):
-        responses.add_callback(responses.HEAD,
-                               "http://127.0.0.1:8080/api/v2/schema/controller/root/core/aaa/session/login",
-                               callback=lambda req: (401, {}, ""),
-                               content_type="application/json")
-
-        responses.add_callback(responses.POST,
-                               "http://127.0.0.1:8080/api/v1/auth/login",
-                               callback=self._login_cb,
-                               content_type="application/json")
-
-        client = pybsn.connect("http://127.0.0.1:8080", "admin", "somepassword")
-
-        # Responses is currently broken in that it doesn't retain the session cookies...
-        # https://github.com/getsentry/responses/issues/80
-        #
-        # self.assertEqual(client.session.cookies, {"Cookie": "session_cookie=UPhNWlmDN0re8cg9xsqe9QT1QvQTznji"})
-        #
-        # def _get_cb(req):
-        #     self.assertEqual(req.headers["Cookie"], "session_cookie=UPhNWlmDN0re8cg9xsqe9QT1QvQTznji")
-        #     return (200, {}, json.dumps([ "ok" ]))
-        #
-        # responses.add_callback(responses.GET, "http://127.0.0.1:8080/api/v1/data/controller/test", callback=_get_cb,
-        #                        content_type="application/json")
-        # client.get("controller/test")
-
-    @responses.activate
     def test_connect_modern_login(self):
-        responses.add_callback(responses.HEAD,
-                               "http://127.0.0.1:8080/api/v2/schema/controller/root/core/aaa/session/login",
-                               callback=lambda req: (200, {}, ""),
-                               content_type="application/json")
-
         responses.add_callback(responses.POST,
                                "http://127.0.0.1:8080/api/v1/rpc/controller/core/aaa/session/login",
                                callback=self._login_cb,
@@ -79,20 +47,12 @@ class TestBigDBClient(unittest.TestCase):
         def _login_cb(req):
             self.assertEqual(json.loads(req.body), {'user': 'admin', 'password': 'foo'})
             headers = {
-                "Set-Cookie": "session_cookie=v_8yOI7FI-WKr-5QU6nxoJkVtAu5rKI-; Path=/api/;"
             }
-            return (401, headers, json.dumps(
-                {"success":False,
-                 "session_cookie":None,
-                 "error_message":"Invalid user/password combination.",
-                 "past_login_info":None}))
+            return (401, headers, json.dumps({"description":"Invalid user/password combination.","error-code":401}))
 
-        responses.add_callback(responses.HEAD,
-                               "http://127.0.0.1:8080/api/v2/schema/controller/root/core/aaa/session/login",
-                               callback=lambda req: (401, {}, ""),
-                               content_type="application/json")
-
-        responses.add_callback(responses.POST, "http://127.0.0.1:8080/api/v1/auth/login", callback=_login_cb,
+        responses.add_callback(responses.POST,
+                               "http://127.0.0.1:8080/api/v1/rpc/controller/core/aaa/session/login",
+                               callback=_login_cb,
                                content_type="application/json")
 
         with self.assertRaises(requests.exceptions.HTTPError) as context:

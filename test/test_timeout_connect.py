@@ -74,28 +74,13 @@ class TestTimeoutConnect(unittest.TestCase):
             self._assertAllCallsTimeoutValue(timeout, mock_send)
             self.assertEqual(timeout, client.default_timeout)
 
-    def test_connect_timeout_legacy_login(self):
-        timeout = urllib3.util.Timeout(10, 10)
-        with patch.object(requests.Session, 'send') as mock_send:
-            first_response = requests.Response()
-            first_response.status_code = 201
-            second_response = requests.Response()
-            second_response.status_code = 200
-            mock_send.side_effect =iter( [first_response, second_response])
-            client = pybsn.connect("http://127.0.0.1:8080",
-                                   "admin", "somepassword",
-                                   timeout=timeout)
-            self._assertAllCallsTimeoutValue(timeout, mock_send)
-
     def test_connect_timeout_modern_login(self):
         timeout = urllib3.util.Timeout(10, 10)
         with patch.object(requests.Session, 'send') as mock_send:
             first_response = requests.Response()
             first_response.status_code = 200
-            second_response = requests.Response()
-            second_response.status_code = 200
-            second_response.json = lambda : {'session-cookie':'chocolate-chip'}
-            mock_send.side_effect =iter( [first_response, second_response])
+            first_response.json = lambda : {'session-cookie':'chocolate-chip'}
+            mock_send.side_effect =iter( [first_response])
             client = pybsn.connect("http://127.0.0.1:8080",
                                    "admin", "somepassword",
                                    timeout=timeout)
