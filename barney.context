@@ -14,7 +14,7 @@
 			"commit": "d4525cddff45fe520e110576f064976e244cf574"
 		},
 		"barney.ci/client": {
-			"commit": "66e1dca48aedbf6897733b5f59bc626006dde865"
+			"commit": "cdc2d43e7d58862419b4e316783ef48b12d9be31"
 		},
 		"barney.ci/docker": {
 			"commit": "dcb450791c55d7ce31d648fecd7ee75ffbe92815"
