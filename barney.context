@@ -5,7 +5,7 @@
 			"commit": "5d74ffe9fe9ed4a2949ed375fc95b2eeae76a1c4"
 		},
 		"barney.ci/barney": {
-			"commit": "af8c5165726479a0391416b143190dd794d90728"
+			"commit": "e21f33d7ef69637a93c963d68d41530a1ad14d63"
 		},
 		"barney.ci/barneyfile": {
 			"commit": "75240101522d7e213601ca17fbf1aff94acfe4a3"
@@ -23,7 +23,7 @@
 			"commit": "245e3e4dce004993d826c4b9f037409df2aa1580"
 		},
 		"barney.ci/model": {
-			"commit": "5f5f2e0f0432ea582aaccf81f3a7cbf137ba59a0"
+			"commit": "38affc93f0c0a8d77a1477c4fe4084441782d1ee"
 		},
 		"barney.ci/scdoc": {
 			"commit": "98217b1e9dd1484ca6ae055684d2e4955b6bb7a3"
