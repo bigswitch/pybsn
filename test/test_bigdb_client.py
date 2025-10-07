@@ -35,7 +35,7 @@ class TestBigDBClient(unittest.TestCase):
                                callback=self._login_cb,
                                content_type="application/json")
 
-        _ = pybsn.connect("http://127.0.0.1:8080", "admin", "somepassword")
+        pybsn.connect("http://127.0.0.1:8080", "admin", "somepassword")
 
     @responses.activate
     def test_close_no_auth(self):

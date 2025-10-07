@@ -18,10 +18,11 @@ import pybsn
 import argparse
 import csv
 from collections import defaultdict
+from pathlib import Path
 
 parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
 
-parser.add_argument('path', type=str, help="CSV file")
+parser.add_argument('path', type=Path, help="CSV file")
 parser.add_argument('--host', '-H', type=str, default="127.0.0.1", help="Controller IP/Hostname to connect to")
 parser.add_argument('--user', '-u', type=str, default="admin", help="Username")
 parser.add_argument('--password', '-p', type=str, default="adminadmin", help="Password")
@@ -47,5 +48,5 @@ with open(args.path) as f:
         })
 
 for ((tenant, segment), endpoints) in sorted(endpoints_by_segment.items()):
-    print("Adding %d static endpoints to tenant %s segment %s" % (len(endpoints), tenant, segment))
+    print(f"Adding {len(endpoints)} static endpoints to tenant {tenant} segment {segment}")
     bcf.root.applications.bcf.tenant.match(name=tenant).segment.match(name=segment).endpoint.put(endpoints)

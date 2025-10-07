@@ -23,7 +23,7 @@ failed = False
 
 def traverse(node, path):
     global failed
-    name = node['name'] if 'name' in node else None
+    name = node.get('name')
     if name and name not in seen:
         seen.add(name)
         if name in blacklist or '_' in name:

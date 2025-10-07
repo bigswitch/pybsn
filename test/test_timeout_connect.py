@@ -73,7 +73,7 @@ class TestTimeoutConnect(unittest.TestCase):
             first_response.status_code = 200
             first_response.json = lambda: {'session-cookie': 'chocolate-chip'}
             mock_send.side_effect = iter([first_response])
-            _ = pybsn.connect("http://127.0.0.1:8080",
-                              "admin", "somepassword",
-                              timeout=timeout)
+            pybsn.connect("http://127.0.0.1:8080",
+                          "admin", "somepassword",
+                          timeout=timeout)
             self._assertAllCallsTimeoutValue(timeout, mock_send)
