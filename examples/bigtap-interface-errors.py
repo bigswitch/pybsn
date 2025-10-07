@@ -24,8 +24,10 @@ switches_by_dpid = {}
 for switch in bt.root.core.switch():
     switches_by_dpid[switch['dpid']] = switch
 
+
 def atoi(text):
     return int(text) if text.isdigit() else text
+
 
 def natural_keys(text):
     '''
@@ -33,19 +35,21 @@ def natural_keys(text):
     http://nedbatchelder.com/blog/200712/human_sorting.html
     (See Toothy's implementation in the comments)
     '''
-    return [ atoi(c) for c in re.split('(\d+)', text) ]
+    return [atoi(c) for c in re.split(r'(\d+)', text)]
+
 
 def sort_key(interface):
     return (interface['switch'], natural_keys(interface['interface']))
 
+
 for interface in sorted(interfaces, key=sort_key):
     if interface['count-rx-error'] > 0 or interface['count-xmit-error'] > 0:
-        direction = interface['direction'] == "rx" and "<-" or "->"
+        direction = "<-" if interface['direction'] == "rx" else "->"
         if interface['switch'] in switches_by_dpid:
             switch_name = switches_by_dpid[interface['switch']]['alias']
         else:
             switch_name = interface['switch']
-        print switch_name, interface['interface'], interface['type'], direction, interface['peer']
+        print(switch_name, interface['interface'], interface['type'], direction, interface['peer'])
         for k, v in interface.items():
             if re.match(r'count.*error', k) and v > 0:
-                print "  %s: %u" % (k, v)
+                print("  %s: %u" % (k, v))

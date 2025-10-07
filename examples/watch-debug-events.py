@@ -18,8 +18,10 @@ MAX_EVENT_RATE = 10
 ctrl = pybsn.connect(args.host, args.user, args.password)
 events = ctrl.root.core.controller.debugeventinfo.event
 
+
 def sort_key(x):
     return -x['event-instance-id']
+
 
 latest_id_by_name = {}
 
@@ -45,6 +47,6 @@ while True:
             initial_indent='  ',
             subsequent_indent='  ',
             width=78)
-        print event['timestamp'], event['mod-event-name'], description
+        print(event['timestamp'], event['mod-event-name'], description)
 
     time.sleep(0.1)

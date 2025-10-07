@@ -1,9 +1,12 @@
 #!/usr/bin/env python
-#!/usr/bin/env python
+# This program displays the debug counters exposed by all switches in
+# the fabric in real time. Counters with zero values are not shown.
+from collections import namedtuple
+import npyscreen
+import time
+import argparse
+import pybsn
 help = """
-This program displays the debug counters exposed by all switches in
-the fabric in real time. Counters with zero values are not shown.
-
 Keybindings:
 
   '?' - this message
@@ -17,11 +20,6 @@ Keybindings:
   'z' - zero counters
   'Z' - unzero counters (show absolute values)
 """
-import pybsn
-import argparse
-import time
-import npyscreen
-from collections import namedtuple
 
 parser = argparse.ArgumentParser(description='View debug counters for all switches')
 
@@ -34,9 +32,11 @@ args = parser.parse_args()
 
 bcf = pybsn.connect(args.host, args.user, args.password)
 
+
 class DebugCounter(namedtuple("DebugCounter",
-        ["name", "description", "value", "initial_value"])):
+                              ["name", "description", "value", "initial_value"])):
     pass
+
 
 class DebugCounterSource(object):
     def __init__(self, bcf):
@@ -71,12 +71,14 @@ class DebugCounterSource(object):
             if c.value != c.initial_value:
                 yield c
 
+
 class DebugCounterList(npyscreen.MultiLine):
     def __init__(self, *args, **keywords):
         super(DebugCounterList, self).__init__(*args, **keywords)
 
     def display_value(self, v):
         return "%s: %d" % (v.name, v.value - v.initial_value)
+
 
 class DebugCounterForm(npyscreen.FormBaseNew):
     FRAMED = False
@@ -148,11 +150,14 @@ class DebugCounterForm(npyscreen.FormBaseNew):
     def handle_help(self, ch):
         self.h_display_help(ch)
 
+
 class ViewDebugCountersApp(npyscreen.NPSAppManaged):
     keypress_timeout_default = 3
+
     def onStart(self):
         source = DebugCounterSource(bcf)
         self.addForm("MAIN", DebugCounterForm, source=source)
+
 
 if __name__ == "__main__":
     App = ViewDebugCountersApp()

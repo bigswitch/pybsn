@@ -1,6 +1,6 @@
 .PHONY: check
 check:
-	uv run flake8 ./pybsn/ ./bin/* --count --max-complexity=20 --max-line-length=127 --show-source --statistics
+	uv run flake8 ./pybsn/ ./bin/* ./examples/*.py ./test/*.py --count --max-complexity=20 --max-line-length=127 --show-source --statistics
 
 .PHONY: coverage
 coverage:

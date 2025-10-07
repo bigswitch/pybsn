@@ -23,7 +23,6 @@ bt = pybsn.connect(args.host, args.user, args.password)
 hosts = bt.root.applications.bigtap.tracked_host()
 
 new_data = []
-import random
 for host in hosts:
     new_data.append(Host(
         ip=host['ip-addr'],
@@ -42,21 +41,23 @@ new_set = set(new_data)
 
 deleted_hosts = []
 for host in old_data:
-    if not host in new_set:
+    if host not in new_set:
         deleted_hosts.append(host)
 
 added_hosts = []
 for host in new_data:
-    if not host in old_set:
+    if host not in old_set:
         added_hosts.append(host)
+
 
 def ip_sort_key(host):
     return socket.inet_aton(host.ip)
 
+
 diff_hosts = sorted(deleted_hosts + added_hosts, key=ip_sort_key)
 for host in diff_hosts:
-    mark = host in new_set and '+' or '-'
-    print "%s %-15s %s %s" % (mark, host.ip, host.mac, host.hostname)
+    mark = '+' if host in new_set else '-'
+    print("%s %-15s %s %s" % (mark, host.ip, host.mac, host.hostname))
 
 with open(TMP_FILENAME, "w") as f:
     pickle.dump(new_data, f)
