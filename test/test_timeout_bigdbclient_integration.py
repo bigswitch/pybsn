@@ -7,7 +7,7 @@ import urllib3
 import pybsn
 
 sys.path.append("test")
-from fakeserver import FakeServer, FOREVER_BLOCKING_TIME
+from fakeserver import FakeServer, FOREVER_BLOCKING_TIME  # noqa: E402
 
 MIDDLE_BLOCKING_TIME = FOREVER_BLOCKING_TIME / 2.0
 SHORT_BLOCKING_TIME = MIDDLE_BLOCKING_TIME / 2.0

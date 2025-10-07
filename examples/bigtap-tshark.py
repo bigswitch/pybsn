@@ -8,9 +8,13 @@ import signal
 import os
 
 finished = False
+
+
 def sigint(signal, frame):
     global finished
     finished = True
+
+
 signal.signal(signal.SIGINT, sigint)
 
 parser = argparse.ArgumentParser(description='Display captured traffic in realtime')
@@ -35,12 +39,12 @@ now = int(time.time())
 name = 'tshark-%d' % now
 policy = policies.match(name=name)
 
-print "Installing policy", name
+print("Installing policy", name)
 
 policy.put({
     'name': name,
     'action': 'capture',
-    'priority' : args.priority,
+    'priority': args.priority,
 })
 
 policy.filter_group.match(name=args.filter_interface).put({
@@ -67,7 +71,7 @@ policy.patch({
 })
 
 try:
-    print "Waiting for policy to be applied"
+    print("Waiting for policy to be applied")
 
     while not finished:
         events = policy.policy_history.match(policy_event="installation complete")()
@@ -78,7 +82,7 @@ try:
                 break
         time.sleep(0.5)
 
-    print "Capturing packets"
+    print("Capturing packets")
 
     if 'tshark' in args.tool:
         tool_args = ['-i-']
@@ -92,7 +96,7 @@ try:
     try:
         offset = 0
         while not finished:
-            r = bt.session.get(url, stream=True, headers={ 'Range': 'bytes=%d-' % offset })
+            r = bt.session.get(url, stream=True, headers={'Range': 'bytes=%d-' % offset})
             if r.status_code == 416:
                 time.sleep(1.0)
                 continue

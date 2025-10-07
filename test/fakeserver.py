@@ -3,7 +3,7 @@ import threading
 import time
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from itertools import repeat
-from typing import Iterable
+from typing import Iterable  # noqa: F401
 
 # How long to wait in seconds before sending a response in a test
 # case where we are checking that we will wait forever.
@@ -24,7 +24,7 @@ class BlockingServer(HTTPServer):
     def __init__(self, server_address, RequestHandlerClass):
         super().__init__(server_address, RequestHandlerClass)
 
-    def is_stopped(self) :
+    def is_stopped(self):
         """
         :returns: boolean
         """
@@ -40,14 +40,14 @@ class BlockingServer(HTTPServer):
 class FakeHandler(BaseHTTPRequestHandler):
     """Override the server type from BaseServer."""
 
-    def _server(self) :
+    def _server(self):
         """Casting self.server for Python checking.
         :return: BlockingServer
         """
         # noinspection PyTypeChecker
         return self.server
 
-    def _block(self, delay_list) :
+    def _block(self, delay_list):
         """Delay for a period of time.
 
         Attributes:
@@ -179,7 +179,6 @@ class FakeServer:
            :parameter delay Amount of seconds to wait. Iterable[float]
         """
         self.server.get_blocking = delay
-
 
     def start(self):
         # noinspection PyBroadException

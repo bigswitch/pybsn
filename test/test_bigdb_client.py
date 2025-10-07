@@ -1,7 +1,6 @@
 import json
 import os
 import logging
-import re
 import unittest
 from unittest.mock import patch
 import requests
@@ -36,7 +35,7 @@ class TestBigDBClient(unittest.TestCase):
                                callback=self._login_cb,
                                content_type="application/json")
 
-        client = pybsn.connect("http://127.0.0.1:8080", "admin", "somepassword")
+        pybsn.connect("http://127.0.0.1:8080", "admin", "somepassword")
 
     @responses.activate
     def test_close_no_auth(self):
@@ -48,7 +47,7 @@ class TestBigDBClient(unittest.TestCase):
             self.assertEqual(json.loads(req.body), {'user': 'admin', 'password': 'foo'})
             headers = {
             }
-            return (401, headers, json.dumps({"description":"Invalid user/password combination.","error-code":401}))
+            return (401, headers, json.dumps({"description": "Invalid user/password combination.", "error-code": 401}))
 
         responses.add_callback(responses.POST,
                                "http://127.0.0.1:8080/api/v1/rpc/controller/core/aaa/session/login",
@@ -63,9 +62,9 @@ class TestBigDBClient(unittest.TestCase):
     def test_connect_token(self):
         def _aaa_cb(req):
             self.assertEqual(req.headers["Cookie"], "session_cookie=some_token")
-            return (200, {}, json.dumps([ {  "auth-context-type" : "session-token",  "user-info" :
-                              {   "full-name" : "Default admin",
-                             "group" : [ "admin" ],    "user-name" : "admin"  } } ])
+            return (200, {}, json.dumps([{"auth-context-type": "session-token",  "user-info":
+                                          {"full-name": "Default admin",
+                                           "group": ["admin"],    "user-name": "admin"}}])
                     )
 
         responses.add_callback(responses.GET, "http://127.0.0.1:8080/api/v1/data/controller/core/aaa/auth-context",
@@ -73,15 +72,14 @@ class TestBigDBClient(unittest.TestCase):
 
         pybsn.connect("http://127.0.0.1:8080", token="some_token")
 
-
     @responses.activate
     def test_connect_token_custom_headers(self):
         def _aaa_cb(req):
             self.assertEqual(req.headers["Cookie"], "session_cookie=some_token")
             self.assertEqual(req.headers["X-Forwarded-For"], "1.2.3.4")
-            return (200, {}, json.dumps([ {  "auth-context-type" : "session-token",  "user-info" :
-                              {   "full-name" : "Default admin",
-                             "group" : [ "admin" ],    "user-name" : "admin"  } } ])
+            return (200, {}, json.dumps([{"auth-context-type": "session-token",  "user-info":
+                                          {"full-name": "Default admin",
+                                           "group": ["admin"],    "user-name": "admin"}}])
                     )
 
         responses.add_callback(responses.GET, "http://127.0.0.1:8080/api/v1/data/controller/core/aaa/auth-context",
@@ -94,8 +92,8 @@ class TestBigDBClient(unittest.TestCase):
         def _aaa_cb(req):
             self.assertEqual(req.headers["Cookie"], "session_cookie=wrong_token")
             return (401, {}, json.dumps({
-                "description":"Authorization failed: No session or token found for cookie",
-                "error-code":401
+                "description": "Authorization failed: No session or token found for cookie",
+                "error-code": 401
             }))
 
         responses.add_callback(responses.GET, "http://127.0.0.1:8080/api/v1/data/controller/core/aaa/auth-context",
@@ -106,7 +104,7 @@ class TestBigDBClient(unittest.TestCase):
         self.assertEqual(context.exception.response.status_code, 401)
 
     @responses.activate
-    def test_close_no_auth(self):
+    def test_close_no_auth_no_request(self):
         # no request
         self.client.close()
 
@@ -123,7 +121,7 @@ class TestBigDBClient(unittest.TestCase):
     @responses.activate
     def test_client_contextmanager(self):
         responses.add(responses.GET, "http://127.0.0.1:8080/api/v1/data/controller/core/healthy",
-                      status=200, json= [ { "status" : "healthy"}] )
+                      status=200, json=[{"status": "healthy"}])
 
         with pybsn.connect("http://127.0.0.1:8080") as client:
             client.get("controller/core/healthy")
@@ -134,7 +132,7 @@ class TestBigDBClient(unittest.TestCase):
                       url="http://127.0.0.1:8080/api/v1/rpc/controller/core/aaa/session/logout",
                       status=204)
         responses.add(responses.GET, "http://127.0.0.1:8080/api/v1/data/controller/core/healthy",
-                      status=200, json= [ { "status" : "healthy"}] )
+                      status=200, json=[{"status": "healthy"}])
 
         with pybsn.connect("http://127.0.0.1:8080") as client:
             client.session.cookies.set_cookie(
@@ -144,16 +142,16 @@ class TestBigDBClient(unittest.TestCase):
     @responses.activate
     def test_get(self):
         responses.add(responses.GET, "http://127.0.0.1:8080/api/v1/data/controller/test",
-                      json={'state': "ok" }, status=200)
+                      json={'state': "ok"}, status=200)
         result = self.client.get(path="controller/test")
-        self.assertEqual(result, {'state':"ok"})
+        self.assertEqual(result, {'state': "ok"})
 
     @responses.activate
     def test_get_with_param(self):
         responses.add(responses.GET, "http://127.0.0.1:8080/api/v1/data/controller/test?state-type=global-config",
-                      json={'state': "ok" }, status=200)
+                      json={'state': "ok"}, status=200)
         result = self.client.get(path="controller/test", params={'state-type': 'global-config'})
-        self.assertEqual(result, {'state':"ok"})
+        self.assertEqual(result, {'state': "ok"})
 
     @responses.activate
     def _mutate_test(self, response_type, method_name, add_params=False):
@@ -162,7 +160,6 @@ class TestBigDBClient(unittest.TestCase):
             return (204, {}, None)
 
         expected_url = "http://127.0.0.1:8080/api/v1/data/controller/test"
-        path = "controller/test"
 
         if add_params:
             expected_url += "?state-type=global-config"
@@ -191,7 +188,7 @@ class TestBigDBClient(unittest.TestCase):
     @responses.activate
     def test_delete_with_param(self):
         responses.add(responses.DELETE, "http://127.0.0.1:8080/api/v1/data/controller/test?state-type=global-config",
-                    status=204)
+                      status=204)
         self.client.delete(path="controller/test", params={'state-type': 'global-config'})
 
     @responses.activate
@@ -222,21 +219,21 @@ class TestBigDBClient(unittest.TestCase):
     @responses.activate
     def test_schema(self):
         responses.add(responses.GET, "http://127.0.0.1:8080/api/v1/schema/",
-                      json={'state': "ok" }, status=200)
+                      json={'state': "ok"}, status=200)
         result = self.client.schema()
-        self.assertEqual(result, {'state':"ok"})
+        self.assertEqual(result, {'state': "ok"})
 
     @responses.activate
     def test_schema_with_path(self):
         responses.add(responses.GET, "http://127.0.0.1:8080/api/v1/schema/foo",
-                      json={'state': "ok" }, status=200)
+                      json={'state': "ok"}, status=200)
         result = self.client.schema(path="foo")
-        self.assertEqual(result, {'state':"ok"})
+        self.assertEqual(result, {'state': "ok"})
 
     @responses.activate
     def test_schema_failed(self):
         responses.add(responses.GET, "http://127.0.0.1:8080/api/v1/schema/",
-                      json={'state': "ok" }, status=404)
+                      json={'state': "ok"}, status=404)
         with self.assertRaises(requests.exceptions.HTTPError):
             self.client.schema()
 
@@ -246,6 +243,6 @@ class TestBigDBClient(unittest.TestCase):
             mock_is_enabled.return_value = True
             with patch.object(logging.Logger, "debug") as mock_debug:
                 responses.add(responses.GET, "http://127.0.0.1:8080/api/v1/schema/",
-                      json={'state': "ok" }, status=200)
+                              json={'state': "ok"}, status=200)
                 self.client.schema()
                 mock_debug.assert_called()

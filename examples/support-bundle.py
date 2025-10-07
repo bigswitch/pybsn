@@ -14,13 +14,13 @@ args = parser.parse_args()
 
 bcf = pybsn.connect(args.host, args.user, args.password)
 
-print "Generating..."
-reply = root.support.generate_bundle.rpc()
-print "Downloading..."
+print("Generating...")
+reply = bcf.root.support.generate_bundle.rpc()
+print("Downloading...")
 name = args.output or reply['name']
-with open(name, "w") as f:
+with open(name, "wb") as f:
     r = bcf.session.get(bcf.url + reply['url-path'], stream=True)
     r.raise_for_status()
     for chunk in r.iter_content(4096):
         f.write(chunk)
-print "Support bundle left in", name
+print("Support bundle left in", name)

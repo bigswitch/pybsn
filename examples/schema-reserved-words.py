@@ -20,12 +20,14 @@ blacklist = set(dir(bcf.root) + keyword.kwlist)
 seen = set()
 failed = False
 
+
 def traverse(node, path):
-    name = 'name' in node and node['name'] or None
+    global failed
+    name = node.get('name')
     if name and name not in seen:
         seen.add(name)
         if name in blacklist or '_' in name:
-            print name, node['nodeType'], "at", path
+            print(name, node['nodeType'], "at", path)
             failed = True
 
     if node['nodeType'] == 'CONTAINER' or node['nodeType'] == 'LIST_ELEMENT':
@@ -33,6 +35,7 @@ def traverse(node, path):
             traverse(child, path + "/" + child_name)
     elif node['nodeType'] == 'LIST':
         traverse(node['listElementSchemaNode'], path)
+
 
 traverse(bcf.schema('controller'), 'controller')
 

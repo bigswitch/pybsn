@@ -17,6 +17,7 @@ bcf = pybsn.connect(args.host, args.user, args.password)
 names = []
 descriptions = []
 
+
 def traverse(node):
     if 'name' in node:
         names.append(node['name'])
@@ -29,6 +30,7 @@ def traverse(node):
             traverse(child)
     elif node['nodeType'] == 'LIST':
         traverse(node['listElementSchemaNode'])
+
 
 traverse(bcf.root.schema())
 
@@ -45,4 +47,4 @@ for err in chkr:
         description_errors.add(chkr.word)
 
 for word in sorted(description_errors):
-    print word
+    print(word)

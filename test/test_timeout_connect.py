@@ -1,21 +1,12 @@
-import http.server
-import http.server
-import json
-import os
 import sys
-import threading
-import time
 import unittest
-from http.server import HTTPServer
-from itertools import cycle, repeat
 import requests
-from requests import exceptions as request_exception
 import pybsn
 import urllib3
 from unittest.mock import patch
 sys.path.append("test")
-from fakeserver import FOREVER_BLOCKING_TIME, FakeServer
-from mockutils import get_mockcall_attribute
+from mockutils import get_mockcall_attribute  # noqa: E402
+
 
 class TestTimeoutConnect(unittest.TestCase):
     """
@@ -34,6 +25,7 @@ class TestTimeoutConnect(unittest.TestCase):
            have a timeout argument set to the expected value.
         """
         mock_function.assert_called()
+
         def compare_value(call):
             if call[0].startswith('().'):
                 # Not a REST call ignore.
@@ -79,9 +71,9 @@ class TestTimeoutConnect(unittest.TestCase):
         with patch.object(requests.Session, 'send') as mock_send:
             first_response = requests.Response()
             first_response.status_code = 200
-            first_response.json = lambda : {'session-cookie':'chocolate-chip'}
-            mock_send.side_effect =iter( [first_response])
-            client = pybsn.connect("http://127.0.0.1:8080",
-                                   "admin", "somepassword",
-                                   timeout=timeout)
+            first_response.json = lambda: {'session-cookie': 'chocolate-chip'}
+            mock_send.side_effect = iter([first_response])
+            pybsn.connect("http://127.0.0.1:8080",
+                          "admin", "somepassword",
+                          timeout=timeout)
             self._assertAllCallsTimeoutValue(timeout, mock_send)
