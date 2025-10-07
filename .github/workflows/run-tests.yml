@@ -14,16 +14,12 @@ jobs:
       matrix:
         os-version: [ubuntu-22.04, ubuntu-latest]
         python-version:
-          - "3.7"
           - "3.8"
           - "3.9"
           - "3.10"
           - "3.11"
           - "3.12"
           - "3.13"
-        exclude:
-          - os-version: ubuntu-latest
-            python-version: "3.7"
     steps:
     - uses: actions/checkout@v2
 
