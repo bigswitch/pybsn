@@ -33,38 +33,55 @@ pybsn is a Python interface to Arista Networks BigDB/Atlas based products (forme
 
 ## Development Commands
 
+This project uses `uv` for dependency management. Dependencies are pinned in `uv.lock` for reproducible builds, but the package itself specifies flexible version ranges in `pyproject.toml`.
+
 ### Install Dependencies
 ```bash
+# Install all dependencies (including dev dependencies)
+uv sync --all-extras
+
+# Or use the Makefile
 make install-deps
-# Or for development in pipenv/venv:
-python -m pip install --upgrade pip
-python -m pip install coverage flake8
-python -m pip install -r requirements.txt
 ```
 
 ### Running Tests
 ```bash
 # Run all tests
-python -m unittest discover
+uv run python -m unittest discover
 
 # Run specific test
-python -m unittest test.test_bigdb_client.TestBigDBClient.test_connect_modern_login
+uv run python -m unittest test.test_bigdb_client.TestBigDBClient.test_connect_modern_login
 
 # Run with coverage
 make coverage
 make coverage-report
+
+# Quick test without coverage
+make test
 ```
 
 ### Code Quality
 ```bash
 # Lint (flake8 with max-line-length=127, max-complexity=20)
 make check
+
+# Or directly:
+uv run flake8 ./pybsn/ ./bin/* --count --max-complexity=20 --max-line-length=127 --show-source --statistics
 ```
 
 ### Running pybsn-repl Locally
 ```bash
 # From source without installing
-PYTHONPATH=. ./bin/pybsn-repl -H <controller_host> -u <user> -p <passwd>
+uv run ./bin/pybsn-repl -H <controller_host> -u <user> -p <passwd>
+```
+
+### Updating Dependencies
+```bash
+# Update dependencies and regenerate lockfile
+uv sync --all-extras --upgrade
+
+# Update specific dependency
+uv add requests@latest --dev
 ```
 
 ## Testing Notes
@@ -77,15 +94,23 @@ PYTHONPATH=. ./bin/pybsn-repl -H <controller_host> -u <user> -p <passwd>
 ## Release Process
 
 Releases are automated via GitHub Actions when tags are pushed:
-- Version defined in `setup.py`
+- Version defined in `pyproject.toml`
 - Tag push triggers both GitHub release and PyPI upload
 - Main branch is `main` (not `master`)
+- Builds use `uv build` (creates wheel and sdist)
 
 ## Python Version Support
 
 - Supports Python 3.8+
 - CI runs on ubuntu-22.04 and ubuntu-latest
-- Uses `setuptools` with legacy build backend (see `pyproject.toml`)
+- Uses modern `setuptools` build backend with PEP 621 metadata
+
+## Dependency Management
+
+- **Package dependencies** (`pyproject.toml`): Flexible version ranges (e.g., `requests>=2.3.0`)
+- **Development dependencies** (`uv.lock`): Cryptographically pinned for reproducible builds
+- All CI/CD workflows use `uv` for fast, reliable dependency resolution
+- Package consumers get flexible dependencies; contributors get pinned lockfile
 
 ## Common Patterns
 
