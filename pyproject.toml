@@ -7,7 +7,7 @@ name = "pybsn"
 version = "0.5.0"
 description = "pybsn is a python interface to Arista Networks BigDB/Atlas based products"
 readme = "README.md"
-license = "EPL-1.0"
+license = {text = "EPL-1.0"}
 authors = [
     {name = "Andreas Wundsam", email = "Andreas.Wundsam@arista.com"},
     {name = "Andre Kutzleb"},
