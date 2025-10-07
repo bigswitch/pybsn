@@ -1,5 +1,6 @@
 # Utilities for checking mocking
 
+
 def get_mockcall_attribute(mock_call, name):
     """Get the named attribute from a mock call.
 

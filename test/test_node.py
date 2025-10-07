@@ -8,7 +8,7 @@ from pybsn import CLIENT_TIMEOUT
 
 my_dir = os.path.dirname(__file__)
 
-PARAMS = {'state-type': 'global-config'}
+PARAMS = {"state-type": "global-config"}
 
 SHORT_BLOCKING_TIME = 5.0
 short_timeout = urllib3.util.Timeout(connect=SHORT_BLOCKING_TIME, read=SHORT_BLOCKING_TIME)
@@ -40,7 +40,7 @@ class TestNode(unittest.TestCase):
     def test_root_get_with_timeout(self):
         self.client.get.return_value = dict(foo="bar")
         self.root.get(timeout=short_timeout)
-        self.client.get.assert_called_with('controller', None, timeout=short_timeout)
+        self.client.get.assert_called_with("controller", None, timeout=short_timeout)
 
     def test_root_post(self):
         self.root.post(data=dict(foo="bar"))
@@ -107,24 +107,23 @@ class TestNode(unittest.TestCase):
         ret = self.root.core.aaa.test.rpc(dict(input="foo"))
 
         self.assertEqual(ret, dict(foo="bar"))
-        self.client.rpc.assert_called_with("controller/core/aaa/test",
-                                           dict(input="foo"), None, timeout=CLIENT_TIMEOUT)
+        self.client.rpc.assert_called_with("controller/core/aaa/test", dict(input="foo"), None, timeout=CLIENT_TIMEOUT)
 
     def test_rpc_params(self):
         self.client.rpc.return_value = dict(foo="bar")
-        ret = self.root.core.aaa.test.rpc(dict(input="foo"), params={'initiate-async-id': 'asyncId'})
+        ret = self.root.core.aaa.test.rpc(dict(input="foo"), params={"initiate-async-id": "asyncId"})
 
         self.assertEqual(ret, dict(foo="bar"))
-        self.client.rpc.assert_called_with("controller/core/aaa/test",
-                                           dict(input="foo"), {'initiate-async-id': 'asyncId'}, timeout=CLIENT_TIMEOUT)
+        self.client.rpc.assert_called_with(
+            "controller/core/aaa/test", dict(input="foo"), {"initiate-async-id": "asyncId"}, timeout=CLIENT_TIMEOUT
+        )
 
     def test_rpc_with_timeout(self):
         self.client.rpc.return_value = dict(foo="bar")
         ret = self.root.core.aaa.test.rpc(dict(input="foo"), timeout=short_timeout)
 
         self.assertEqual(ret, dict(foo="bar"))
-        self.client.rpc.assert_called_with("controller/core/aaa/test",
-                                           dict(input="foo"), None, timeout=short_timeout)
+        self.client.rpc.assert_called_with("controller/core/aaa/test", dict(input="foo"), None, timeout=short_timeout)
 
     def test_match(self):
         self.client.rpc.return_value = dict(foo="bar")
@@ -138,9 +137,11 @@ class TestNode(unittest.TestCase):
         self.assertEqual(node.match(a=True)._path, "controller/node[a='true']")
         self.assertIn(
             node.match(a="foo", b=2)._path,
-            ("controller/node[a='foo'][b=2]",
-             # in py<3.7 dictionaries are not yet ordered; can remove when requiring py3.7
-             "controller/node[b=2][a='foo']")
+            (
+                "controller/node[a='foo'][b=2]",
+                # in py<3.7 dictionaries are not yet ordered; can remove when requiring py3.7
+                "controller/node[b=2][a='foo']",
+            ),
         )
 
     def test_filter(self):

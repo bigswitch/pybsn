@@ -80,9 +80,12 @@ class FakeHandler(BaseHTTPRequestHandler):
         if self._server().is_stopped():
             self.send_error(500, "server is _stopped")
             return
-        result = [{"auth-context-type": "session-token",
-                   "user-info": {"full-name": "Default admin",
-                                 "group": ["admin"], "user-name": "admin"}}]
+        result = [
+            {
+                "auth-context-type": "session-token",
+                "user-info": {"full-name": "Default admin", "group": ["admin"], "user-name": "admin"},
+            }
+        ]
         result_as_str = json.dumps(result)
         result_as_bytes = bytes(result_as_str, "utf8")
         self.send_response(200)
@@ -113,12 +116,16 @@ class FakeHandler(BaseHTTPRequestHandler):
             self.send_error(500, "server is _stopped")
             return
         result_as_str = json.dumps(
-            {"success": True,
-             "session-cookie": "UPhNWlmDN0re8cg9xsqe9QT1QvQTznji",
-             "error-message": "",
-             "past-login-info":
-                 {"failed-login-count": 0,
-                  "last-success-login-info": {"host": "127.0.0.1", "timestamp": "2019-05-19T19:16:22.328Z"}}})
+            {
+                "success": True,
+                "session-cookie": "UPhNWlmDN0re8cg9xsqe9QT1QvQTznji",
+                "error-message": "",
+                "past-login-info": {
+                    "failed-login-count": 0,
+                    "last-success-login-info": {"host": "127.0.0.1", "timestamp": "2019-05-19T19:16:22.328Z"},
+                },
+            }
+        )
         result_as_bytes = bytes(result_as_str, "utf8")
         self.send_response(200)
         self.send_header("Content-type", "application/json")
@@ -167,29 +174,27 @@ class FakeServer:
 
     def __init__(self):
         super().__init__()
-        self.server = BlockingServer(('localhost', 0), FakeHandler)
+        self.server = BlockingServer(("localhost", 0), FakeHandler)
 
     def _run_server(self):
         self.server.serve_forever()
 
     def get_blocking(self, delay):
         """Set the amount of time to wait prior to responding to
-           a GET request.
+        a GET request.
 
-           :parameter delay Amount of seconds to wait. Iterable[float]
+        :parameter delay Amount of seconds to wait. Iterable[float]
         """
         self.server.get_blocking = delay
 
     def start(self):
         # noinspection PyBroadException
         try:
-            self.thread = threading.Thread(
-                name="FakeServer",
-                target=self._run_server)
+            self.thread = threading.Thread(name="FakeServer", target=self._run_server)
             self.thread.start()
             return True
         except Exception:
-            print(f'unable to start server on port {self.server.server_port}')
+            print(f"unable to start server on port {self.server.server_port}")
             return False
 
     def port(self):
