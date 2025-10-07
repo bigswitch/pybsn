@@ -43,4 +43,8 @@ script-files = ["bin/pybsn-repl", "bin/pybsn-schema"]
 [dependency-groups]
 dev = [
     "autopep8>=2.0.0",
+    "black>=24.8.0",
 ]
+
+[tool.black]
+line-length = 127
