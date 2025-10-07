@@ -1,3 +1,0 @@
-responses
-requests
-urllib3
