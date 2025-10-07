@@ -20,4 +20,4 @@ sync:
 
 .PHONY: test
 test:
-	uv run python -m unittest discover -v
+	uv run --with .[test] python -m unittest discover -v
