@@ -11,11 +11,11 @@ Host = namedtuple("Host", ["ip", "mac", "hostname"])
 FILENAME = "/tmp/bigtap-hostdiff.data"
 TMP_FILENAME = FILENAME + ".tmp"
 
-parser = argparse.ArgumentParser(description='Show difference between previous and current set of tracked hosts')
+parser = argparse.ArgumentParser(description="Show difference between previous and current set of tracked hosts")
 
-parser.add_argument('--host', '-H', type=str, default="127.0.0.1", help="Controller IP/Hostname to connect to")
-parser.add_argument('--user', '-u', type=str, default="admin", help="Username")
-parser.add_argument('--password', '-p', type=str, default="adminadmin", help="Password")
+parser.add_argument("--host", "-H", type=str, default="127.0.0.1", help="Controller IP/Hostname to connect to")
+parser.add_argument("--user", "-u", type=str, default="admin", help="Username")
+parser.add_argument("--password", "-p", type=str, default="adminadmin", help="Password")
 
 args = parser.parse_args()
 
@@ -24,10 +24,7 @@ hosts = bt.root.applications.bigtap.tracked_host()
 
 new_data = []
 for host in hosts:
-    new_data.append(Host(
-        ip=host['ip-addr'],
-        mac=host['mac-addr'],
-        hostname=host['host-name']))
+    new_data.append(Host(ip=host["ip-addr"], mac=host["mac-addr"], hostname=host["host-name"]))
 new_data.sort()
 
 if os.path.exists(FILENAME):
@@ -56,7 +53,7 @@ def ip_sort_key(host):
 
 diff_hosts = sorted(deleted_hosts + added_hosts, key=ip_sort_key)
 for host in diff_hosts:
-    mark = '+' if host in new_set else '-'
+    mark = "+" if host in new_set else "-"
     print("%s %-15s %s %s" % (mark, host.ip, host.mac, host.hostname))
 
 with open(TMP_FILENAME, "w") as f:

@@ -6,6 +6,7 @@ import npyscreen
 import time
 import argparse
 import pybsn
+
 help = """
 Keybindings:
 
@@ -21,20 +22,19 @@ Keybindings:
   'Z' - unzero counters (show absolute values)
 """
 
-parser = argparse.ArgumentParser(description='View debug counters for all switches')
+parser = argparse.ArgumentParser(description="View debug counters for all switches")
 
-parser.add_argument('--host', '-H', type=str, default="127.0.0.1", help="Controller IP/Hostname to connect to")
-parser.add_argument('--user', '-u', type=str, default="admin", help="Username")
-parser.add_argument('--password', '-p', type=str, default="adminadmin", help="Password")
-parser.add_argument('filter', nargs='*', help="Limit counters to those containing this string")
+parser.add_argument("--host", "-H", type=str, default="127.0.0.1", help="Controller IP/Hostname to connect to")
+parser.add_argument("--user", "-u", type=str, default="admin", help="Username")
+parser.add_argument("--password", "-p", type=str, default="adminadmin", help="Password")
+parser.add_argument("filter", nargs="*", help="Limit counters to those containing this string")
 
 args = parser.parse_args()
 
 bcf = pybsn.connect(args.host, args.user, args.password)
 
 
-class DebugCounter(namedtuple("DebugCounter",
-                              ["name", "description", "value", "initial_value"])):
+class DebugCounter(namedtuple("DebugCounter", ["name", "description", "value", "initial_value"])):
     pass
 
 
@@ -46,22 +46,23 @@ class DebugCounterSource(object):
     def get_debug_counters(self):
         switch_counters = self.bcf.root.applications.bcf.info.statistic.switch_counter()
         for switch_counter in switch_counters:
-            for counter in switch_counter['counter']:
-                name = switch_counter['switch-name'] + ':' + counter['name']
+            for counter in switch_counter["counter"]:
+                name = switch_counter["switch-name"] + ":" + counter["name"]
                 if not all(x in name for x in args.filter):
                     continue
                 yield DebugCounter(
                     name=name,
-                    description=counter['description'],
-                    value=counter['value'],
-                    initial_value=self.initial_values.get(name, 0))
+                    description=counter["description"],
+                    value=counter["value"],
+                    initial_value=self.initial_values.get(name, 0),
+                )
 
     def zero(self):
         switch_counters = self.bcf.root.applications.bcf.info.statistic.switch_counter()
         for switch_counter in switch_counters:
-            for counter in switch_counter['counter']:
-                name = switch_counter['switch-name'] + ':' + counter['name']
-                self.initial_values[name] = counter['value']
+            for counter in switch_counter["counter"]:
+                name = switch_counter["switch-name"] + ":" + counter["name"]
+                self.initial_values[name] = counter["value"]
 
     def unzero(self):
         self.initial_values = {}
@@ -87,20 +88,20 @@ class DebugCounterForm(npyscreen.FormBaseNew):
         super(DebugCounterForm, self).__init__(*args, help=help, **keywords)
         self.source = source
         self.zero_time = None
-        self.add_handlers({
-            ord('q'): self.handle_quit,
-            ord('z'): self.handle_zero,
-            ord('Z'): self.handle_unzero,
-            ord('/'): self.handle_search,
-            ord('?'): self.handle_help,
-        })
+        self.add_handlers(
+            {
+                ord("q"): self.handle_quit,
+                ord("z"): self.handle_zero,
+                ord("Z"): self.handle_unzero,
+                ord("/"): self.handle_search,
+                ord("?"): self.handle_help,
+            }
+        )
 
     def create(self):
-        self.wStatus1 = self.add(npyscreen.Textfield, editable=False,
-                                 rely=0, relx=0, color="CAUTION")
+        self.wStatus1 = self.add(npyscreen.Textfield, editable=False, rely=0, relx=0, color="CAUTION")
         self.wMain = self.add(DebugCounterList, rely=2, relx=0, max_height=-2)
-        self.wDescription = self.add(npyscreen.Textfield, editable=False,
-                                     rely=self.lines-3, relx=0)
+        self.wDescription = self.add(npyscreen.Textfield, editable=False, rely=self.lines - 3, relx=0)
 
     def beforeEditing(self):
         self.update_list()
