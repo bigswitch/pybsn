@@ -1,10 +1,11 @@
 #!/usr/bin/env python
-import pybsn
 import argparse
 import os
 import pickle
 import socket
 from collections import namedtuple
+
+import pybsn
 
 Host = namedtuple("Host", ["ip", "mac", "hostname"])
 

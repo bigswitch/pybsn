@@ -1,13 +1,14 @@
 import sys
 import unittest
 from itertools import repeat
-from requests.exceptions import ReadTimeout
+
 import urllib3
+from requests.exceptions import ReadTimeout
 
 import pybsn
 
 sys.path.append("test")
-from fakeserver import FakeServer, FOREVER_BLOCKING_TIME  # noqa: E402
+from fakeserver import FOREVER_BLOCKING_TIME, FakeServer  # noqa: E402
 
 MIDDLE_BLOCKING_TIME = FOREVER_BLOCKING_TIME / 2.0
 SHORT_BLOCKING_TIME = MIDDLE_BLOCKING_TIME / 2.0

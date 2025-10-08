@@ -19,15 +19,17 @@ Examples:
     # Get info for a specific switch
     root.core.switch.match(name="leaf0a").get()
 """
-import pybsn
 import argparse
 import logging
-import textwrap
-import re
 import os
-from traitlets.config.loader import Config
+import re
+import textwrap
+
+from IPython.core.magic import Magics, line_magic, magics_class
 from IPython.terminal.ipapp import TerminalIPythonApp
-from IPython.core.magic import Magics, magics_class, line_magic
+from traitlets.config.loader import Config
+
+import pybsn
 
 
 def env_var(value):

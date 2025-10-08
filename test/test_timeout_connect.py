@@ -1,9 +1,11 @@
 import sys
 import unittest
-import requests
-import pybsn
-import urllib3
 from unittest.mock import patch
+
+import requests
+import urllib3
+
+import pybsn
 
 sys.path.append("test")
 from mockutils import get_mockcall_attribute  # noqa: E402

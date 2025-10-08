@@ -37,7 +37,11 @@ jobs:
     - name: Install dependencies
       run: make install-deps
 
-    - name: Check syntax and enforce PEP8, 127 char Github editor width
+    - name: Lint (ruff, isort, black)
+      run: make lint
+
+    - name: Type check with mypy (Python >= 3.9)
+      if: matrix.python-version != '3.8'
       run: make check
 
     - name: Run unit tests with coverage
