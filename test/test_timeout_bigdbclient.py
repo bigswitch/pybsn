@@ -1,9 +1,10 @@
 import json
-import requests
-import responses
 import sys
 import unittest
 from unittest.mock import patch
+
+import requests
+import responses
 import urllib3
 
 import pybsn

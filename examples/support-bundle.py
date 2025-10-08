@@ -1,6 +1,7 @@
 #!/usr/bin/env python
-import pybsn
 import argparse
+
+import pybsn
 
 parser = argparse.ArgumentParser(description="Generate and download a support bundle")
 

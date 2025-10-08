@@ -1,7 +1,9 @@
 #!/usr/bin/env python
-import pybsn
 import argparse
+
 from enchant.checker import SpellChecker
+
+import pybsn
 
 parser = argparse.ArgumentParser(description="Check spelling of schema descriptions")
 

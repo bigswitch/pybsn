@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 # This program displays the debug counters exposed by all switches in
 # the fabric in real time. Counters with zero values are not shown.
-from collections import namedtuple
-import npyscreen
-import time
 import argparse
+import time
+from collections import namedtuple
+
+import npyscreen
+
 import pybsn
 
 help = """

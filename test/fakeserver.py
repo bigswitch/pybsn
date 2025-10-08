@@ -1,7 +1,7 @@
 import json
 import threading
 import time
-from http.server import HTTPServer, BaseHTTPRequestHandler
+from http.server import BaseHTTPRequestHandler, HTTPServer
 from itertools import repeat
 from typing import Iterable  # noqa: F401
 
@@ -55,7 +55,7 @@ class FakeHandler(BaseHTTPRequestHandler):
             of seconds to wait.  The actual delay may be longer.
         """
         delay = delay_list.__next__()
-        if delay == StopIteration:
+        if delay is StopIteration:
             # noinspection PyProtectedMember
             msg = f"delay_list is empty: {self._server()._testMethodName}"
             raise Exception(msg)

@@ -1,7 +1,8 @@
 #!/usr/bin/env python
-import pybsn
 import argparse
 import re
+
+import pybsn
 
 parser = argparse.ArgumentParser(description="Show interfaces with errors")
 

@@ -1,9 +1,10 @@
 #!/usr/bin/env python
-import pybsn
 import argparse
-import time
-import textwrap
 import re
+import textwrap
+import time
+
+import pybsn
 
 parser = argparse.ArgumentParser(description="Display debug events in realtime")
 

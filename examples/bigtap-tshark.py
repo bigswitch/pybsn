@@ -1,11 +1,12 @@
 #!/usr/bin/env python
-import pybsn
 import argparse
-import time
-import re
-import subprocess
-import signal
 import os
+import re
+import signal
+import subprocess
+import time
+
+import pybsn
 
 finished = False
 

@@ -2,11 +2,12 @@ import json
 import logging
 import re
 import urllib.parse
+import warnings
 from string import Template
 from urllib.parse import urlparse
+
 import requests
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
-import warnings
 
 warnings.simplefilter("ignore", InsecureRequestWarning)
 

@@ -44,7 +44,32 @@ script-files = ["bin/pybsn-repl", "bin/pybsn-schema"]
 dev = [
     "autopep8>=2.0.0",
     "black>=24.8.0",
+    "ruff>=0.8.0",
+    "isort>=5.13.0",
+    "mypy>=1.0.0",
+    "types-requests>=2.0.0",
 ]
 
 [tool.black]
 line-length = 127
+
+[tool.ruff]
+line-length = 127
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "C90"]
+ignore = []
+
+[tool.ruff.lint.mccabe]
+max-complexity = 20
+
+[tool.isort]
+profile = "black"
+line_length = 127
+
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = false
+warn_unused_configs = true
+disallow_untyped_defs = false
+ignore_missing_imports = true

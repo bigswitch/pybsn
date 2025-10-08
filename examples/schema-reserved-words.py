@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 # Check for words or syntax in schema names that collide with names used by pybcf
-import pybsn
 import argparse
-import sys
 import keyword
+import sys
+
+import pybsn
 
 parser = argparse.ArgumentParser(description="Check for use of reserved names in the schema")
 

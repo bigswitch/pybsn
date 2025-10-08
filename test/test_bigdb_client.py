@@ -1,12 +1,13 @@
 import json
-import os
 import logging
+import os
 import unittest
 from unittest.mock import patch
+
 import requests
+import responses
 
 import pybsn
-import responses
 
 my_dir = os.path.dirname(__file__)
 

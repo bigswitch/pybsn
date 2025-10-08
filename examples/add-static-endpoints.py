@@ -14,11 +14,12 @@ CSV columns:
 This example is simplistic in that it only supports specifying the attachment
 point with switch+interface+vlan.
 """
-import pybsn
 import argparse
 import csv
 from collections import defaultdict
 from pathlib import Path
+
+import pybsn
 
 parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
 

@@ -15,12 +15,12 @@ easily, you'll want to use the 'path' and '--max-depth' options. For example:
 
 This shows 2 levels of schema starting from the path "controller.core.switch".
 """
-import pybsn
 import argparse
 import json
-import textwrap
 import re
+import textwrap
 
+import pybsn
 
 parser = argparse.ArgumentParser(description=__doc__)
 

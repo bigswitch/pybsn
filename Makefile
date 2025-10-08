@@ -3,11 +3,22 @@ FLAKE8_SOURCES = ./pybsn/ ./bin/* ./examples/*.py ./test/*.py
 
 .PHONY: fast-lint
 fast-lint:
-	uv run flake8 $(FLAKE8_SOURCES) --count --max-complexity=20 --max-line-length=127 --show-source --statistics
+	uv run ruff check $(SOURCES)
+	uv run isort --check $(SOURCES)
 	uv run black --check $(SOURCES)
 
+.PHONY: lint
+lint: fast-lint
+
 .PHONY: check
-check: fast-lint
+check:
+	uv run mypy pybsn
+
+.PHONY: fix
+fix:
+	uv run ruff check --fix $(SOURCES)
+	uv run isort $(SOURCES)
+	uv run black $(SOURCES)
 
 .PHONY: coverage
 coverage:
