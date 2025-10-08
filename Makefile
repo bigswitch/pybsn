@@ -4,8 +4,7 @@ FLAKE8_SOURCES = ./pybsn/ ./bin/* ./examples/*.py ./test/*.py
 .PHONY: fast-lint
 fast-lint:
 	uv run flake8 $(FLAKE8_SOURCES) --count --max-complexity=20 --max-line-length=127 --show-source --statistics
-	# validation will be enabled after reformatting
-	# uv run black --check $(SOURCES)
+	uv run black --check $(SOURCES)
 
 .PHONY: check
 check: fast-lint
