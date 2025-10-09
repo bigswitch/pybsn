@@ -61,12 +61,46 @@ make test
 ```
 
 ### Code Quality
+
+This project uses modern Python quality tools: **ruff** (linting), **isort** (import sorting), **black** (formatting), and **mypy** (type checking).
+
+**IMPORTANT:** Before committing any code changes, you MUST run:
 ```bash
-# Lint (flake8 with max-line-length=127, max-complexity=20)
+make fix lint check test
+```
+
+This ensures code is formatted, linted, type-checked, and all tests pass.
+
+#### Available Makefile Targets
+
+```bash
+# Auto-fix code issues (ruff --fix, isort, black)
+make fix
+
+# Reformat code (black only)
+make reformat
+
+# Check code style without fixing (ruff, isort --check, black --check)
+make lint
+
+# Run type checking (mypy)
 make check
 
-# Or directly:
-uv run flake8 ./pybsn/ ./bin/* --count --max-complexity=20 --max-line-length=127 --show-source --statistics
+# Run unit tests
+make test
+
+# Run tests with coverage
+make coverage
+make coverage-report
+```
+
+#### Manual Commands (prefer Makefile targets)
+```bash
+# Individual tools
+uv run ruff check ./pybsn/ ./bin/ ./examples/ ./test/
+uv run isort --check ./pybsn/ ./bin/ ./examples/ ./test/
+uv run black --check ./pybsn/ ./bin/ ./examples/ ./test/
+uv run mypy pybsn
 ```
 
 ### Running pybsn-repl Locally
