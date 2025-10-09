@@ -9,7 +9,7 @@ from urllib.parse import urlparse
 
 import requests
 import urllib3.util
-from requests.packages.urllib3.exceptions import InsecureRequestWarning
+from urllib3.exceptions import InsecureRequestWarning
 
 warnings.simplefilter("ignore", InsecureRequestWarning)
 
