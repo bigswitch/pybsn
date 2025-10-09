@@ -9,7 +9,7 @@ from urllib.parse import urlparse
 
 import requests
 import urllib3.util
-from requests.packages.urllib3.exceptions import InsecureRequestWarning
+from urllib3.exceptions import InsecureRequestWarning
 
 warnings.simplefilter("ignore", InsecureRequestWarning)
 
@@ -600,18 +600,17 @@ def _attempt_login(
     path = "/api/v1/rpc/controller/core/aaa/session/login"
     request = requests.Request(method="POST", url=url + path, data=auth_data)
     response = logged_request(session, request, timeout=timeout)
-    if response.status_code == 200:
-        json_ = response.json()
-        session_cookie = requests.cookies.create_cookie(
-            name="session_cookie", value=json_["session-cookie"], domain=urlparse(url).hostname, path="/api"  # type: ignore[arg-type]
-        )
-        session.cookies.set_cookie(session_cookie)
-        return url
 
+    # Raise for 4xx/5xx status codes
     response.raise_for_status()
-    # mypy doesn't know raise_for_status() raises for 4xx/5xx, so we need a return for non-error codes
-    # This should be unreachable in practice since login endpoint returns 200 or 4xx
-    return url  # pragma: no cover
+
+    # If we reach here, status is 2xx (typically 200 for login endpoint)
+    json_ = response.json()
+    session_cookie = requests.cookies.create_cookie(
+        name="session_cookie", value=json_["session-cookie"], domain=urlparse(url).hostname, path="/api"  # type: ignore[arg-type]
+    )
+    session.cookies.set_cookie(session_cookie)
+    return url
 
 
 def connect(
