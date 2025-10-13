@@ -178,6 +178,63 @@ root.core.switch.match(name="leaf-1a").disconnect.rpc()
 ```
 
 ---
+## Retry Configuration
+
+pybsn supports automatic retry of failed HTTP requests to improve reliability when connecting to BigDB. You can configure retry behavior using the `retries` parameter in `pybsn.connect()`.
+
+### Simple Retry Count
+
+Pass an integer to specify the total number of retry attempts:
+
+```python
+# Retry up to 3 times on failures
+client = pybsn.connect(host="controller", token="<token>", retries=3)
+```
+
+By default, only idempotent HTTP methods (GET, HEAD, OPTIONS, TRACE) are automatically retried. Non-idempotent methods (POST, PUT, PATCH, DELETE) are not retried to prevent unintended side effects.
+
+### Advanced Retry Configuration
+
+For more control over retry behavior, use a `urllib3.util.retry.Retry` object:
+
+```python
+from urllib3.util.retry import Retry
+
+# Configure custom retry behavior
+retry_config = Retry(
+    total=5,                          # Total retry attempts
+    backoff_factor=1,                 # Exponential backoff (1s, 2s, 4s, 8s, 16s)
+    status_forcelist=[503, 504],      # Retry on specific HTTP status codes
+)
+
+client = pybsn.connect(host="controller", token="<token>", retries=retry_config)
+```
+
+### Retry Non-Idempotent Methods
+
+**Use with caution!** To retry non-idempotent methods (POST, PUT, PATCH, DELETE), explicitly configure `allowed_methods`:
+
+```python
+from urllib3.util.retry import Retry
+
+# WARNING: Only use if your operations are truly idempotent!
+retry_config = Retry(
+    total=3,
+    backoff_factor=0.5,
+    status_forcelist=[503],
+    allowed_methods=["GET", "POST", "PUT", "PATCH", "DELETE"],  # Include all methods
+)
+
+client = pybsn.connect(host="controller", token="<token>", retries=retry_config)
+```
+
+### Default Behavior
+
+By default (`retries=None`), no automatic retries are performed. Requests fail immediately on errors, preserving backward compatibility with existing code.
+
+For more examples, see `examples/retry_example.py`.
+
+---
 ## Contributing
 
 If you'd like to contribute a feature or bugfix: Thanks! To make sure your
