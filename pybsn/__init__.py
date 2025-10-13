@@ -649,12 +649,17 @@ def connect(
         for future operations unless it is changed.
 
     :parameter retries: Optional retry configuration for failed HTTP requests.
-        None (default) - No automatic retries, preserving existing behavior.
-        int - Total number of retry attempts (e.g., retries=3).
-        urllib3.util.retry.Retry - Full retry configuration object for advanced control
-            (e.g., retries=Retry(total=5, backoff_factor=1, status_forcelist=[500, 502, 503, 504])).
-        Note: By default, only idempotent methods (GET, HEAD, OPTIONS, TRACE) are retried.
-        Non-idempotent methods (POST, PUT, PATCH, DELETE) require explicit configuration.
+        None (default) - No automatic retries.
+        int - Retry count for connection-level failures only (e.g., retries=3).
+            When an integer is specified, retries GET, HEAD, OPTIONS, PUT, DELETE, TRACE requests
+            on connection errors, timeouts, and DNS failures.
+            Does NOT retry on HTTP error status codes (e.g., 503, 504).
+            Does NOT retry POST or PATCH requests.
+            No exponential backoff (immediate retry).
+        urllib3.util.retry.Retry - Full retry configuration object for advanced control.
+            Use this to retry on HTTP status codes, configure backoff, or retry POST/PATCH.
+            Example: retries=Retry(total=5, backoff_factor=1, status_forcelist=[503, 504],
+                                   allowed_methods=["GET", "POST"]).
 
     (other parameters for advanced/internal use).
 

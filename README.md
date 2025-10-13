@@ -184,14 +184,20 @@ pybsn supports automatic retry of failed HTTP requests to improve reliability wh
 
 ### Simple Retry Count
 
-Pass an integer to specify the total number of retry attempts:
+Pass an integer to specify retry attempts for **connection-level failures only**:
 
 ```python
-# Retry up to 3 times on failures
+# Retry up to 3 times on connection errors, timeouts, DNS failures
 client = pybsn.connect(host="controller", token="<token>", retries=3)
 ```
 
-By default, only idempotent HTTP methods (GET, HEAD, OPTIONS, TRACE) are automatically retried. Non-idempotent methods (POST, PUT, PATCH, DELETE) are not retried to prevent unintended side effects.
+**Important:** When using an integer value:
+- Retries **GET, HEAD, OPTIONS, PUT, DELETE, TRACE** requests (but **NOT POST or PATCH**)
+- Retries only on **connection-level failures** (connection errors, timeouts, DNS failures)
+- Does **NOT** retry on HTTP error status codes like 503 or 504
+- No exponential backoff (immediate retry)
+
+To retry on HTTP status codes or include POST/PATCH requests, use a `Retry` object (see below).
 
 ### Advanced Retry Configuration
 

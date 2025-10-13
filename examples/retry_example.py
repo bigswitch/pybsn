@@ -20,12 +20,13 @@ args = parser.parse_args()
 
 
 def example_simple_retry():
-    """Example 1: Simple integer retry count (retries GET requests 3 times)"""
+    """Example 1: Simple integer retry count (retries on connection-level failures only)"""
     print("Example 1: Simple integer retry count")
     client = pybsn.connect(args.host, args.user, args.password, retries=3)
 
-    # This will retry up to 3 times on connection errors or certain HTTP status codes
-    # By default, only idempotent methods (GET, HEAD, OPTIONS, TRACE) are retried
+    # This will retry up to 3 times on connection errors, timeouts, DNS failures
+    # Retries GET, HEAD, OPTIONS, PUT, DELETE, TRACE (but NOT POST or PATCH)
+    # Does NOT retry on HTTP status codes like 503 - only connection-level failures
     switches = client.root.core.switch()
     print(f"  Found {len(switches)} switches")
 
