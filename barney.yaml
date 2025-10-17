@@ -20,6 +20,7 @@ images:
         mappings:
           /src/package: .%package
         build: |
+          echo "=== test ==="
           ls /src/package/pybsn/__init__.py
 
 
