@@ -178,6 +178,69 @@ root.core.switch.match(name="leaf-1a").disconnect.rpc()
 ```
 
 ---
+## Retry Configuration
+
+pybsn supports automatic retry of failed HTTP requests to improve reliability when connecting to BigDB. You can configure retry behavior using the `retries` parameter in `pybsn.connect()`.
+
+### Simple Retry Count
+
+Pass an integer to specify retry attempts for **connection-level failures only**:
+
+```python
+# Retry up to 3 times on connection errors, timeouts, DNS failures
+client = pybsn.connect(host="controller", token="<token>", retries=3)
+```
+
+**Important:** When using an integer value:
+- Retries **GET, HEAD, OPTIONS, PUT, DELETE, TRACE** requests (but **NOT POST or PATCH**)
+- Retries only on **connection-level failures** (connection errors, timeouts, DNS failures)
+- Does **NOT** retry on HTTP error status codes like 503 or 504
+- No exponential backoff (immediate retry)
+
+To retry on HTTP status codes or include POST/PATCH requests, use a `Retry` object (see below).
+
+### Advanced Retry Configuration
+
+For more control over retry behavior, use a `urllib3.util.retry.Retry` object:
+
+```python
+from urllib3.util.retry import Retry
+
+# Configure custom retry behavior
+retry_config = Retry(
+    total=5,                          # Total retry attempts
+    backoff_factor=1,                 # Exponential backoff (1s, 2s, 4s, 8s, 16s)
+    status_forcelist=[503, 504],      # Retry on specific HTTP status codes
+)
+
+client = pybsn.connect(host="controller", token="<token>", retries=retry_config)
+```
+
+### Retry Non-Idempotent Methods
+
+**Use with caution!** To retry non-idempotent methods (POST, PUT, PATCH, DELETE), explicitly configure `allowed_methods`:
+
+```python
+from urllib3.util.retry import Retry
+
+# WARNING: Only use if your operations are truly idempotent!
+retry_config = Retry(
+    total=3,
+    backoff_factor=0.5,
+    status_forcelist=[503],
+    allowed_methods=["GET", "POST", "PUT", "PATCH", "DELETE"],  # Include all methods
+)
+
+client = pybsn.connect(host="controller", token="<token>", retries=retry_config)
+```
+
+### Default Behavior
+
+By default (`retries=None`), no automatic retries are performed. Requests fail immediately on errors, preserving backward compatibility with existing code.
+
+For more examples, see `examples/retry_example.py`.
+
+---
 ## Contributing
 
 If you'd like to contribute a feature or bugfix: Thanks! To make sure your
