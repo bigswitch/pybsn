@@ -554,8 +554,9 @@ def logged_request(
 
 
 BIGDB_PROTO_PORTS = [
-    ("https", 8443),
-    ("http", 8080),
+    ('https', 443, '/sys'),
+    ("https", 8443, ''),
+    ("http", 8080, ''),
 ]
 
 
@@ -569,8 +570,8 @@ def guess_url(session: requests.Session, host: str, validate_path: str = "/api/v
     if re.match(r"^https?://", host):
         return host
     else:
-        for schema, port in BIGDB_PROTO_PORTS:
-            url = "%s://%s:%d" % (schema, host, port)
+        for schema, port, prefix in BIGDB_PROTO_PORTS:
+            url = "%s://%s:%d" % (schema, host, port) + prefix
             try:
                 response = session.get(url + validate_path, timeout=2)
             except requests.exceptions.ConnectionError as e:
@@ -579,7 +580,7 @@ def guess_url(session: requests.Session, host: str, validate_path: str = "/api/v
             if response.status_code == 200:  # OK
                 return url
             else:
-                logger.debug("Could connect to URL %s: %s", url, response)
+                logger.debug("Could connect to URL %s: %s", url + prefix, response)
     raise Exception("Could not find available BigDB service on {}".format(host))
 
 
