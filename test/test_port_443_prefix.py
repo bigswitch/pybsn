@@ -5,6 +5,7 @@ These include:
 2. Fallback behavior when port 443 is unavailable
 3. Prefix is correctly applied only to port 443
 """
+
 import unittest
 from unittest.mock import Mock, patch
 
@@ -20,12 +21,7 @@ class TestGuessUrlFallback(unittest.TestCase):
     @responses.activate
     def test_port_443_with_sys_prefix_tried_first(self):
         """Port 443 with /sys prefix should be tried first."""
-        responses.add(
-            responses.GET,
-            "https://10.0.0.1:443/sys/api/v1/auth/healthy",
-            status=200,
-            body="true"
-        )
+        responses.add(responses.GET, "https://10.0.0.1:443/sys/api/v1/auth/healthy", status=200, body="true")
 
         session = requests.Session()
         url = pybsn.guess_url(session, "10.0.0.1")
@@ -39,14 +35,9 @@ class TestGuessUrlFallback(unittest.TestCase):
         responses.add(
             responses.GET,
             "https://10.0.0.1:443/sys/api/v1/auth/healthy",
-            body=requests.exceptions.ConnectionError("Connection refused")
+            body=requests.exceptions.ConnectionError("Connection refused"),
         )
-        responses.add(
-            responses.GET,
-            "https://10.0.0.1:8443/api/v1/auth/healthy",
-            status=200,
-            body="true"
-        )
+        responses.add(responses.GET, "https://10.0.0.1:8443/api/v1/auth/healthy", status=200, body="true")
 
         session = requests.Session()
         url = pybsn.guess_url(session, "10.0.0.1")
@@ -60,19 +51,14 @@ class TestGuessUrlFallback(unittest.TestCase):
         responses.add(
             responses.GET,
             "https://10.0.0.1:443/sys/api/v1/auth/healthy",
-            body=requests.exceptions.ConnectionError("Connection refused")
+            body=requests.exceptions.ConnectionError("Connection refused"),
         )
         responses.add(
             responses.GET,
             "https://10.0.0.1:8443/api/v1/auth/healthy",
-            body=requests.exceptions.ConnectionError("Connection refused")
+            body=requests.exceptions.ConnectionError("Connection refused"),
         )
-        responses.add(
-            responses.GET,
-            "http://10.0.0.1:8080/api/v1/auth/healthy",
-            status=200,
-            body="true"
-        )
+        responses.add(responses.GET, "http://10.0.0.1:8080/api/v1/auth/healthy", status=200, body="true")
 
         session = requests.Session()
         url = pybsn.guess_url(session, "10.0.0.1")
@@ -83,17 +69,8 @@ class TestGuessUrlFallback(unittest.TestCase):
     @responses.activate
     def test_non_200_response_causes_fallback(self):
         """Non-200 responses should cause fallback to next port."""
-        responses.add(
-            responses.GET,
-            "https://10.0.0.1:443/sys/api/v1/auth/healthy",
-            status=404
-        )
-        responses.add(
-            responses.GET,
-            "https://10.0.0.1:8443/api/v1/auth/healthy",
-            status=200,
-            body="true"
-        )
+        responses.add(responses.GET, "https://10.0.0.1:443/sys/api/v1/auth/healthy", status=404)
+        responses.add(responses.GET, "https://10.0.0.1:8443/api/v1/auth/healthy", status=200, body="true")
 
         session = requests.Session()
         url = pybsn.guess_url(session, "10.0.0.1")
@@ -106,17 +83,17 @@ class TestGuessUrlFallback(unittest.TestCase):
         responses.add(
             responses.GET,
             "https://10.0.0.1:443/sys/api/v1/auth/healthy",
-            body=requests.exceptions.ConnectionError("Connection refused")
+            body=requests.exceptions.ConnectionError("Connection refused"),
         )
         responses.add(
             responses.GET,
             "https://10.0.0.1:8443/api/v1/auth/healthy",
-            body=requests.exceptions.ConnectionError("Connection refused")
+            body=requests.exceptions.ConnectionError("Connection refused"),
         )
         responses.add(
             responses.GET,
             "http://10.0.0.1:8080/api/v1/auth/healthy",
-            body=requests.exceptions.ConnectionError("Connection refused")
+            body=requests.exceptions.ConnectionError("Connection refused"),
         )
 
         session = requests.Session()
@@ -141,17 +118,12 @@ class TestPort443PrefixApplication(unittest.TestCase):
     @responses.activate
     def test_sys_prefix_applied_to_port_443(self):
         """The /sys prefix should be included in all requests to port 443."""
-        responses.add(
-            responses.GET,
-            "https://10.0.0.1:443/sys/api/v1/auth/healthy",
-            status=200,
-            body="true"
-        )
+        responses.add(responses.GET, "https://10.0.0.1:443/sys/api/v1/auth/healthy", status=200, body="true")
         responses.add(
             responses.GET,
             "https://10.0.0.1:443/sys/api/v1/data/controller/core/switch",
             json=[{"dpid": "00:00:00:00:00:00:00:01"}],
-            status=200
+            status=200,
         )
 
         client = pybsn.connect("10.0.0.1")
@@ -167,19 +139,14 @@ class TestPort443PrefixApplication(unittest.TestCase):
         responses.add(
             responses.GET,
             "https://10.0.0.1:443/sys/api/v1/auth/healthy",
-            body=requests.exceptions.ConnectionError("Connection refused")
+            body=requests.exceptions.ConnectionError("Connection refused"),
         )
-        responses.add(
-            responses.GET,
-            "https://10.0.0.1:8443/api/v1/auth/healthy",
-            status=200,
-            body="true"
-        )
+        responses.add(responses.GET, "https://10.0.0.1:8443/api/v1/auth/healthy", status=200, body="true")
         responses.add(
             responses.GET,
             "https://10.0.0.1:8443/api/v1/data/controller/core/switch",
             json=[{"dpid": "00:00:00:00:00:00:00:01"}],
-            status=200
+            status=200,
         )
 
         client = pybsn.connect("10.0.0.1")
@@ -196,24 +163,19 @@ class TestPort443PrefixApplication(unittest.TestCase):
         responses.add(
             responses.GET,
             "https://10.0.0.1:443/sys/api/v1/auth/healthy",
-            body=requests.exceptions.ConnectionError("Connection refused")
+            body=requests.exceptions.ConnectionError("Connection refused"),
         )
         responses.add(
             responses.GET,
             "https://10.0.0.1:8443/api/v1/auth/healthy",
-            body=requests.exceptions.ConnectionError("Connection refused")
+            body=requests.exceptions.ConnectionError("Connection refused"),
         )
-        responses.add(
-            responses.GET,
-            "http://10.0.0.1:8080/api/v1/auth/healthy",
-            status=200,
-            body="true"
-        )
+        responses.add(responses.GET, "http://10.0.0.1:8080/api/v1/auth/healthy", status=200, body="true")
         responses.add(
             responses.GET,
             "http://10.0.0.1:8080/api/v1/data/controller/core/switch",
             json=[{"dpid": "00:00:00:00:00:00:00:01"}],
-            status=200
+            status=200,
         )
 
         client = pybsn.connect("10.0.0.1")
@@ -227,29 +189,13 @@ class TestPort443PrefixApplication(unittest.TestCase):
     @responses.activate
     def test_all_request_types_include_prefix_on_443(self):
         """All request types (data, rpc, schema) should include /sys prefix on port 443."""
+        responses.add(responses.GET, "https://10.0.0.1:443/sys/api/v1/auth/healthy", status=200, body="true")
+        responses.add(responses.GET, "https://10.0.0.1:443/sys/api/v1/data/controller/core/switch", json=[], status=200)
         responses.add(
-            responses.GET,
-            "https://10.0.0.1:443/sys/api/v1/auth/healthy",
-            status=200,
-            body="true"
+            responses.POST, "https://10.0.0.1:443/sys/api/v1/rpc/controller/test/action", json={"result": "ok"}, status=200
         )
         responses.add(
-            responses.GET,
-            "https://10.0.0.1:443/sys/api/v1/data/controller/core/switch",
-            json=[],
-            status=200
-        )
-        responses.add(
-            responses.POST,
-            "https://10.0.0.1:443/sys/api/v1/rpc/controller/test/action",
-            json={"result": "ok"},
-            status=200
-        )
-        responses.add(
-            responses.GET,
-            "https://10.0.0.1:443/sys/api/v1/schema/controller/core/switch",
-            json={"type": "object"},
-            status=200
+            responses.GET, "https://10.0.0.1:443/sys/api/v1/schema/controller/core/switch", json={"type": "object"}, status=200
         )
 
         client = pybsn.connect("10.0.0.1")
@@ -259,8 +205,7 @@ class TestPort443PrefixApplication(unittest.TestCase):
 
         # Verify all requests include /sys prefix
         for call in responses.calls[1:]:  # Skip the healthy check
-            self.assertIn("/sys/api/v1/", call.request.url,
-                         f"Request {call.request.url} should include /sys prefix")
+            self.assertIn("/sys/api/v1/", call.request.url, f"Request {call.request.url} should include /sys prefix")
 
 
 class TestFallbackTiming(unittest.TestCase):
@@ -270,7 +215,7 @@ class TestFallbackTiming(unittest.TestCase):
         """Verify the timeout for each port probe is 2 seconds."""
         session = requests.Session()
 
-        with patch.object(session, 'get') as mock_get:
+        with patch.object(session, "get") as mock_get:
             mock_get.side_effect = [
                 Mock(status_code=404),
                 Mock(status_code=200),
@@ -280,13 +225,13 @@ class TestFallbackTiming(unittest.TestCase):
 
             # Each call should have timeout=2
             for call in mock_get.call_args_list:
-                self.assertEqual(call[1].get('timeout'), 2)
+                self.assertEqual(call[1].get("timeout"), 2)
 
     def test_fallback_order_is_correct(self):
         """Verify ports are tried in order: 443, 8443, 8080."""
         session = requests.Session()
 
-        with patch.object(session, 'get') as mock_get:
+        with patch.object(session, "get") as mock_get:
             mock_get.side_effect = [
                 Mock(status_code=404),  # 443 fails
                 Mock(status_code=404),  # 8443 fails
@@ -305,5 +250,5 @@ class TestFallbackTiming(unittest.TestCase):
             self.assertIn("8080", urls[2], "Third attempt should be port 8080")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

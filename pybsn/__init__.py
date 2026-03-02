@@ -554,9 +554,9 @@ def logged_request(
 
 
 BIGDB_PROTO_PORTS = [
-    ('https', 443, '/sys'),
-    ("https", 8443, ''),
-    ("http", 8080, ''),
+    ("https", 443, "/sys"),
+    ("https", 8443, ""),
+    ("http", 8080, ""),
 ]
 
 
