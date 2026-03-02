@@ -580,7 +580,7 @@ def guess_url(session: requests.Session, host: str, validate_path: str = "/api/v
             if response.status_code == 200:  # OK
                 return url
             else:
-                logger.debug("Could connect to URL %s: %s", url + prefix, response)
+                logger.debug("Could connect to URL %s: %s", url, response)
     raise Exception("Could not find available BigDB service on {}".format(host))
 
 
