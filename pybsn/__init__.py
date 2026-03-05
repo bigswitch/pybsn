@@ -553,6 +553,7 @@ def logged_request(
 
     return response
 
+
 @dataclass(frozen=True)
 class PortAndProtocol:
     schema: str
