@@ -3,6 +3,7 @@ import logging
 import re
 import urllib.parse
 import warnings
+from dataclasses import dataclass
 from string import Template
 from typing import Any, Dict, List, Optional, Union
 from urllib.parse import urlparse
@@ -553,9 +554,17 @@ def logged_request(
     return response
 
 
+@dataclass(frozen=True)
+class PortAndProtocol:
+    schema: str
+    port_no: int
+    prefix: str
+
+
 BIGDB_PROTO_PORTS = [
-    ("https", 8443),
-    ("http", 8080),
+    PortAndProtocol(schema="https", port_no=443, prefix="/sys"),
+    PortAndProtocol(schema="https", port_no=8443, prefix=""),
+    PortAndProtocol(schema="http", port_no=8080, prefix=""),
 ]
 
 
@@ -569,8 +578,8 @@ def guess_url(session: requests.Session, host: str, validate_path: str = "/api/v
     if re.match(r"^https?://", host):
         return host
     else:
-        for schema, port in BIGDB_PROTO_PORTS:
-            url = "%s://%s:%d" % (schema, host, port)
+        for entry in BIGDB_PROTO_PORTS:
+            url = f"{entry.schema}://{host}:{entry.port_no}{entry.prefix}"
             try:
                 response = session.get(url + validate_path, timeout=2)
             except requests.exceptions.ConnectionError as e:
