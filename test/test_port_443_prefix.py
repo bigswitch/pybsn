@@ -26,7 +26,7 @@ class TestGuessUrlFallback(unittest.TestCase):
         session = requests.Session()
         url = pybsn.guess_url(session, "10.0.0.1")
 
-        self.assertEqual(url, "https://10.0.0.1:443/a")
+        self.assertEqual(url, f"https://10.0.0.1:443{pybsn.ATLAS_PREFIX}")
         self.assertEqual(len(responses.calls), 1)
 
     @responses.activate
@@ -131,7 +131,7 @@ class TestPort443PrefixApplication(unittest.TestCase):
 
         # Verify data request includes /a prefix
         data_call = [c for c in responses.calls if "/data/" in c.request.url][0]
-        self.assertIn("/a/api/v1/data/", data_call.request.url)
+        self.assertIn(f"{pybsn.ATLAS_PREFIX}/api/v1/data/", data_call.request.url)
 
     @responses.activate
     def test_prefix_not_applied_to_port_8443(self):
@@ -154,7 +154,7 @@ class TestPort443PrefixApplication(unittest.TestCase):
 
         # Verify data request does NOT include /a prefix
         data_call = [c for c in responses.calls if "/data/" in c.request.url][0]
-        self.assertNotIn("/a/", data_call.request.url)
+        self.assertNotIn(f"{pybsn.ATLAS_PREFIX}/", data_call.request.url)
         self.assertEqual(data_call.request.url, "https://10.0.0.1:8443/api/v1/data/controller/core/switch")
 
     @responses.activate
@@ -183,7 +183,7 @@ class TestPort443PrefixApplication(unittest.TestCase):
 
         # Verify data request does NOT include /a prefix
         data_call = [c for c in responses.calls if "/data/" in c.request.url][0]
-        self.assertNotIn("/a/", data_call.request.url)
+        self.assertNotIn(f"{pybsn.ATLAS_PREFIX}/", data_call.request.url)
         self.assertEqual(data_call.request.url, "http://10.0.0.1:8080/api/v1/data/controller/core/switch")
 
     @responses.activate
@@ -205,7 +205,7 @@ class TestPort443PrefixApplication(unittest.TestCase):
 
         # Verify all requests include /a prefix
         for call in responses.calls[1:]:  # Skip the healthy check
-            self.assertIn("/a/api/v1/", call.request.url, f"Request {call.request.url} should include /a prefix")
+            self.assertIn(f"{pybsn.ATLAS_PREFIX}/api/v1/", call.request.url, f"Request {call.request.url} should include {pybsn.ATLAS_PREFIX} prefix")
 
 
 class TestFallbackTiming(unittest.TestCase):
@@ -244,9 +244,9 @@ class TestFallbackTiming(unittest.TestCase):
             urls = [call[0][0] for call in mock_get.call_args_list]
 
             self.assertIn("443", urls[0], "First attempt should be port 443")
-            self.assertIn("/a/", urls[0], "Port 443 should include /a prefix")
+            self.assertIn(pybsn.ATLAS_PREFIX, urls[0], f"Port 443 should include {pybsn.ATLAS_PREFIX} prefix")
             self.assertIn("8443", urls[1], "Second attempt should be port 8443")
-            self.assertNotIn("/a/", urls[1], "Port 8443 should NOT include /a prefix")
+            self.assertNotIn(f"{pybsn.ATLAS_PREFIX}/", urls[1], f"Port 8443 should NOT include {pybsn.ATLAS_PREFIX} prefix")
             self.assertIn("8080", urls[2], "Third attempt should be port 8080")
 
 

@@ -554,6 +554,9 @@ def logged_request(
     return response
 
 
+ATLAS_PREFIX = "/a"
+
+
 @dataclass(frozen=True)
 class PortAndProtocol:
     schema: str
@@ -562,7 +565,7 @@ class PortAndProtocol:
 
 
 BIGDB_PROTO_PORTS = [
-    PortAndProtocol(schema="https", port_no=443, prefix="/a"),
+    PortAndProtocol(schema="https", port_no=443, prefix=ATLAS_PREFIX),
     PortAndProtocol(schema="https", port_no=8443, prefix=""),
     PortAndProtocol(schema="http", port_no=8080, prefix=""),
 ]
