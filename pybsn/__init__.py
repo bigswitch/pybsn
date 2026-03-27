@@ -562,7 +562,7 @@ class PortAndProtocol:
 
 
 BIGDB_PROTO_PORTS = [
-    PortAndProtocol(schema="https", port_no=443, prefix="/sys"),
+    PortAndProtocol(schema="https", port_no=443, prefix="/a"),
     PortAndProtocol(schema="https", port_no=8443, prefix=""),
     PortAndProtocol(schema="http", port_no=8080, prefix=""),
 ]

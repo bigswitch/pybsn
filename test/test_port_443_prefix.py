@@ -1,7 +1,7 @@
-"""Tests for port 443 with /sys prefix support
+"""Tests for port 443 with /a prefix support
 
 These include:
-1. Port 443 with /sys prefix discovery
+1. Port 443 with /a prefix discovery
 2. Fallback behavior when port 443 is unavailable
 3. Prefix is correctly applied only to port 443
 """
@@ -19,14 +19,14 @@ class TestGuessUrlFallback(unittest.TestCase):
     """Test the guess_url() function's port discovery and fallback logic."""
 
     @responses.activate
-    def test_port_443_with_sys_prefix_tried_first(self):
-        """Port 443 with /sys prefix should be tried first."""
-        responses.add(responses.GET, "https://10.0.0.1:443/sys/api/v1/auth/healthy", status=200, body="true")
+    def test_port_443_with_prefix_tried_first(self):
+        """Port 443 with /a prefix should be tried first."""
+        responses.add(responses.GET, "https://10.0.0.1:443/a/api/v1/auth/healthy", status=200, body="true")
 
         session = requests.Session()
         url = pybsn.guess_url(session, "10.0.0.1")
 
-        self.assertEqual(url, "https://10.0.0.1:443/sys")
+        self.assertEqual(url, "https://10.0.0.1:443/a")
         self.assertEqual(len(responses.calls), 1)
 
     @responses.activate
@@ -34,7 +34,7 @@ class TestGuessUrlFallback(unittest.TestCase):
         """Should fallback to port 8443 when 443 is not available."""
         responses.add(
             responses.GET,
-            "https://10.0.0.1:443/sys/api/v1/auth/healthy",
+            "https://10.0.0.1:443/a/api/v1/auth/healthy",
             body=requests.exceptions.ConnectionError("Connection refused"),
         )
         responses.add(responses.GET, "https://10.0.0.1:8443/api/v1/auth/healthy", status=200, body="true")
@@ -50,7 +50,7 @@ class TestGuessUrlFallback(unittest.TestCase):
         """Should fallback to port 8080 when both 443 and 8443 fail."""
         responses.add(
             responses.GET,
-            "https://10.0.0.1:443/sys/api/v1/auth/healthy",
+            "https://10.0.0.1:443/a/api/v1/auth/healthy",
             body=requests.exceptions.ConnectionError("Connection refused"),
         )
         responses.add(
@@ -69,7 +69,7 @@ class TestGuessUrlFallback(unittest.TestCase):
     @responses.activate
     def test_non_200_response_causes_fallback(self):
         """Non-200 responses should cause fallback to next port."""
-        responses.add(responses.GET, "https://10.0.0.1:443/sys/api/v1/auth/healthy", status=404)
+        responses.add(responses.GET, "https://10.0.0.1:443/a/api/v1/auth/healthy", status=404)
         responses.add(responses.GET, "https://10.0.0.1:8443/api/v1/auth/healthy", status=200, body="true")
 
         session = requests.Session()
@@ -82,7 +82,7 @@ class TestGuessUrlFallback(unittest.TestCase):
         """Should raise exception when all ports fail."""
         responses.add(
             responses.GET,
-            "https://10.0.0.1:443/sys/api/v1/auth/healthy",
+            "https://10.0.0.1:443/a/api/v1/auth/healthy",
             body=requests.exceptions.ConnectionError("Connection refused"),
         )
         responses.add(
@@ -113,15 +113,15 @@ class TestGuessUrlFallback(unittest.TestCase):
 
 
 class TestPort443PrefixApplication(unittest.TestCase):
-    """Test that /sys prefix is correctly applied only to port 443."""
+    """Test that /a prefix is correctly applied only to port 443."""
 
     @responses.activate
-    def test_sys_prefix_applied_to_port_443(self):
-        """The /sys prefix should be included in all requests to port 443."""
-        responses.add(responses.GET, "https://10.0.0.1:443/sys/api/v1/auth/healthy", status=200, body="true")
+    def test_prefix_applied_to_port_443(self):
+        """The /a prefix should be included in all requests to port 443."""
+        responses.add(responses.GET, "https://10.0.0.1:443/a/api/v1/auth/healthy", status=200, body="true")
         responses.add(
             responses.GET,
-            "https://10.0.0.1:443/sys/api/v1/data/controller/core/switch",
+            "https://10.0.0.1:443/a/api/v1/data/controller/core/switch",
             json=[{"dpid": "00:00:00:00:00:00:00:01"}],
             status=200,
         )
@@ -129,16 +129,16 @@ class TestPort443PrefixApplication(unittest.TestCase):
         client = pybsn.connect("10.0.0.1")
         client.get("controller/core/switch")
 
-        # Verify data request includes /sys prefix
+        # Verify data request includes /a prefix
         data_call = [c for c in responses.calls if "/data/" in c.request.url][0]
-        self.assertIn("/sys/api/v1/data/", data_call.request.url)
+        self.assertIn("/a/api/v1/data/", data_call.request.url)
 
     @responses.activate
-    def test_sys_prefix_not_applied_to_port_8443(self):
-        """The /sys prefix should NOT be included in requests to port 8443."""
+    def test_prefix_not_applied_to_port_8443(self):
+        """The /a prefix should NOT be included in requests to port 8443."""
         responses.add(
             responses.GET,
-            "https://10.0.0.1:443/sys/api/v1/auth/healthy",
+            "https://10.0.0.1:443/a/api/v1/auth/healthy",
             body=requests.exceptions.ConnectionError("Connection refused"),
         )
         responses.add(responses.GET, "https://10.0.0.1:8443/api/v1/auth/healthy", status=200, body="true")
@@ -152,17 +152,17 @@ class TestPort443PrefixApplication(unittest.TestCase):
         client = pybsn.connect("10.0.0.1")
         client.get("controller/core/switch")
 
-        # Verify data request does NOT include /sys prefix
+        # Verify data request does NOT include /a prefix
         data_call = [c for c in responses.calls if "/data/" in c.request.url][0]
-        self.assertNotIn("/sys", data_call.request.url)
+        self.assertNotIn("/a/", data_call.request.url)
         self.assertEqual(data_call.request.url, "https://10.0.0.1:8443/api/v1/data/controller/core/switch")
 
     @responses.activate
-    def test_sys_prefix_not_applied_to_port_8080(self):
-        """The /sys prefix should NOT be included in requests to port 8080."""
+    def test_prefix_not_applied_to_port_8080(self):
+        """The /a prefix should NOT be included in requests to port 8080."""
         responses.add(
             responses.GET,
-            "https://10.0.0.1:443/sys/api/v1/auth/healthy",
+            "https://10.0.0.1:443/a/api/v1/auth/healthy",
             body=requests.exceptions.ConnectionError("Connection refused"),
         )
         responses.add(
@@ -181,21 +181,21 @@ class TestPort443PrefixApplication(unittest.TestCase):
         client = pybsn.connect("10.0.0.1")
         client.get("controller/core/switch")
 
-        # Verify data request does NOT include /sys prefix
+        # Verify data request does NOT include /a prefix
         data_call = [c for c in responses.calls if "/data/" in c.request.url][0]
-        self.assertNotIn("/sys", data_call.request.url)
+        self.assertNotIn("/a/", data_call.request.url)
         self.assertEqual(data_call.request.url, "http://10.0.0.1:8080/api/v1/data/controller/core/switch")
 
     @responses.activate
     def test_all_request_types_include_prefix_on_443(self):
-        """All request types (data, rpc, schema) should include /sys prefix on port 443."""
-        responses.add(responses.GET, "https://10.0.0.1:443/sys/api/v1/auth/healthy", status=200, body="true")
-        responses.add(responses.GET, "https://10.0.0.1:443/sys/api/v1/data/controller/core/switch", json=[], status=200)
+        """All request types (data, rpc, schema) should include /a prefix on port 443."""
+        responses.add(responses.GET, "https://10.0.0.1:443/a/api/v1/auth/healthy", status=200, body="true")
+        responses.add(responses.GET, "https://10.0.0.1:443/a/api/v1/data/controller/core/switch", json=[], status=200)
         responses.add(
-            responses.POST, "https://10.0.0.1:443/sys/api/v1/rpc/controller/test/action", json={"result": "ok"}, status=200
+            responses.POST, "https://10.0.0.1:443/a/api/v1/rpc/controller/test/action", json={"result": "ok"}, status=200
         )
         responses.add(
-            responses.GET, "https://10.0.0.1:443/sys/api/v1/schema/controller/core/switch", json={"type": "object"}, status=200
+            responses.GET, "https://10.0.0.1:443/a/api/v1/schema/controller/core/switch", json={"type": "object"}, status=200
         )
 
         client = pybsn.connect("10.0.0.1")
@@ -203,9 +203,9 @@ class TestPort443PrefixApplication(unittest.TestCase):
         client.rpc("controller/test/action", {})
         client.schema("controller/core/switch")
 
-        # Verify all requests include /sys prefix
+        # Verify all requests include /a prefix
         for call in responses.calls[1:]:  # Skip the healthy check
-            self.assertIn("/sys/api/v1/", call.request.url, f"Request {call.request.url} should include /sys prefix")
+            self.assertIn("/a/api/v1/", call.request.url, f"Request {call.request.url} should include /a prefix")
 
 
 class TestFallbackTiming(unittest.TestCase):
@@ -244,9 +244,9 @@ class TestFallbackTiming(unittest.TestCase):
             urls = [call[0][0] for call in mock_get.call_args_list]
 
             self.assertIn("443", urls[0], "First attempt should be port 443")
-            self.assertIn("/sys", urls[0], "Port 443 should include /sys prefix")
+            self.assertIn("/a/", urls[0], "Port 443 should include /a prefix")
             self.assertIn("8443", urls[1], "Second attempt should be port 8443")
-            self.assertNotIn("/sys", urls[1], "Port 8443 should NOT include /sys prefix")
+            self.assertNotIn("/a/", urls[1], "Port 8443 should NOT include /a prefix")
             self.assertIn("8080", urls[2], "Third attempt should be port 8080")
 
 
