@@ -205,7 +205,11 @@ class TestPort443PrefixApplication(unittest.TestCase):
 
         # Verify all requests include /a prefix
         for call in responses.calls[1:]:  # Skip the healthy check
-            self.assertIn(f"{pybsn.ATLAS_PREFIX}/api/v1/", call.request.url, f"Request {call.request.url} should include {pybsn.ATLAS_PREFIX} prefix")
+            self.assertIn(
+                f"{pybsn.ATLAS_PREFIX}/api/v1/",
+                call.request.url,
+                f"Request {call.request.url} should include {pybsn.ATLAS_PREFIX} prefix",
+            )
 
 
 class TestFallbackTiming(unittest.TestCase):
