@@ -8,7 +8,7 @@
 			"commit": "5d6875f921e80df425bd793614c60fa9b7c3bc1d"
 		},
 		"barney.ci/golang": {
-			"commit": "48e807a9bf067e44fce542063bbaf75e2ca7138a"
+			"commit": "af4dff72b5e24a526bce59bc5301901ccec270a8"
 		},
 		"barney.ci/scdoc": {
 			"commit": "98217b1e9dd1484ca6ae055684d2e4955b6bb7a3"
