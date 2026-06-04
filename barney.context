@@ -11,7 +11,7 @@
 			"commit": "3fd81ca1ec9cc6ff0f446725e400c77da0be73f2"
 		},
 		"barney.ci/scdoc": {
-			"commit": "98217b1e9dd1484ca6ae055684d2e4955b6bb7a3"
+			"commit": "482a04c2170c6e6adabad472d38c9911894fd10c"
 		},
 		"github.com/golang/go": {
 			"commit": "a9ce111d580581fb925ae88f125c69b7d93504ea"
