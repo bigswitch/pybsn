@@ -3,6 +3,7 @@ import logging
 import re
 import urllib.parse
 import warnings
+from dataclasses import dataclass
 from string import Template
 from typing import Any, Dict, List, Optional, Union
 from urllib.parse import urlparse
@@ -553,9 +554,20 @@ def logged_request(
     return response
 
 
+API_PREFIX = "/a"
+
+
+@dataclass(frozen=True)
+class ApiEndpointConfig:
+    schema: str
+    port_no: int
+    prefix: str
+
+
 BIGDB_PROTO_PORTS = [
-    ("https", 8443),
-    ("http", 8080),
+    ApiEndpointConfig(schema="https", port_no=443, prefix=API_PREFIX),
+    ApiEndpointConfig(schema="https", port_no=8443, prefix=""),
+    ApiEndpointConfig(schema="http", port_no=8080, prefix=""),
 ]
 
 
@@ -568,18 +580,31 @@ def guess_url(session: requests.Session, host: str, validate_path: str = "/api/v
     """
     if re.match(r"^https?://", host):
         return host
+
+    # Parse schema-less URL to detect explicit port (host:port) or path prefix (host/prefix)
+    parsed = urlparse(f"//{host}")
+    if parsed.port is not None:
+        # User specified explicit port — use it directly, derive schema from port convention
+        schema = "https" if parsed.port in (443, 8443) else "http"
+        candidates = [(schema, parsed.hostname, parsed.port, parsed.path)]
+    elif parsed.path:
+        # User specified a path prefix but no port — probe all ports with the custom prefix
+        candidates = [(e.schema, parsed.hostname, e.port_no, parsed.path) for e in BIGDB_PROTO_PORTS]
     else:
-        for schema, port in BIGDB_PROTO_PORTS:
-            url = "%s://%s:%d" % (schema, host, port)
-            try:
-                response = session.get(url + validate_path, timeout=2)
-            except requests.exceptions.ConnectionError as e:
-                logger.debug("Error connecting to %s: %s", url, str(e))
-                continue
-            if response.status_code == 200:  # OK
-                return url
-            else:
-                logger.debug("Could connect to URL %s: %s", url, response)
+        # Bare hostname — probe all ports with their configured prefixes
+        candidates = [(e.schema, host, e.port_no, e.prefix) for e in BIGDB_PROTO_PORTS]
+
+    for schema, hostname, port, prefix in candidates:
+        url = f"{schema}://{hostname}:{port}{prefix}"
+        try:
+            response = session.get(url + validate_path, timeout=2)
+        except requests.exceptions.ConnectionError as e:
+            logger.debug("Error connecting to %s: %s", url, str(e))
+            continue
+        if response.status_code == 200:  # OK
+            return url
+        else:
+            logger.debug("Could connect to URL %s: %s", url, response)
     raise Exception("Could not find available BigDB service on {}".format(host))
 
 
