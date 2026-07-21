@@ -227,8 +227,19 @@ class TestSchemalessUrl(unittest.TestCase):
         self.assertEqual(len(responses.calls), 1)
 
     @responses.activate
-    def test_explicit_port_443_uses_https(self):
-        """host:443 should use https and only probe that port."""
+    def test_explicit_port_443_without_prefix_uses_default_prefix(self):
+        """host:443 should use https and the default /a prefix."""
+        responses.add(responses.GET, "https://192.0.2.1:443/a/api/v1/auth/healthy", status=200, body="true")
+
+        session = requests.Session()
+        url = pybsn.guess_url(session, "192.0.2.1:443")
+
+        self.assertEqual(url, "https://192.0.2.1:443/a")
+        self.assertEqual(len(responses.calls), 1)
+
+    @responses.activate
+    def test_explicit_port_443_with_prefix_uses_https(self):
+        """host:443/a should use https and only probe that port."""
         responses.add(responses.GET, "https://192.0.2.1:443/a/api/v1/auth/healthy", status=200, body="true")
 
         session = requests.Session()

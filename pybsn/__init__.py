@@ -559,15 +559,15 @@ API_PREFIX = "/a"
 
 @dataclass(frozen=True)
 class ApiEndpointConfig:
-    schema: str
+    scheme: str
     port_no: int
     prefix: str
 
 
 BIGDB_PROTO_PORTS = [
-    ApiEndpointConfig(schema="https", port_no=443, prefix=API_PREFIX),
-    ApiEndpointConfig(schema="https", port_no=8443, prefix=""),
-    ApiEndpointConfig(schema="http", port_no=8080, prefix=""),
+    ApiEndpointConfig(scheme="https", port_no=443, prefix=API_PREFIX),
+    ApiEndpointConfig(scheme="https", port_no=8443, prefix=""),
+    ApiEndpointConfig(scheme="http", port_no=8080, prefix=""),
 ]
 
 
@@ -585,17 +585,21 @@ def guess_url(session: requests.Session, host: str, validate_path: str = "/api/v
     parsed = urlparse(f"//{host}")
     if parsed.port is not None:
         # User specified explicit port — use it directly, derive schema from port convention
-        schema = "https" if parsed.port in (443, 8443) else "http"
-        candidates = [(schema, parsed.hostname, parsed.port, parsed.path)]
+        scheme = "https" if parsed.port in (443, 8443) else "http"
+        prefix = parsed.path
+        if not prefix:
+            matching_endpoint = next((endpoint for endpoint in BIGDB_PROTO_PORTS if endpoint.port_no == parsed.port), None)
+            prefix = matching_endpoint.prefix if matching_endpoint is not None else ""
+        candidates = [(scheme, parsed.hostname, parsed.port, prefix)]
     elif parsed.path:
         # User specified a path prefix but no port — probe all ports with the custom prefix
-        candidates = [(e.schema, parsed.hostname, e.port_no, parsed.path) for e in BIGDB_PROTO_PORTS]
+        candidates = [(e.scheme, parsed.hostname, e.port_no, parsed.path) for e in BIGDB_PROTO_PORTS]
     else:
         # Bare hostname — probe all ports with their configured prefixes
-        candidates = [(e.schema, host, e.port_no, e.prefix) for e in BIGDB_PROTO_PORTS]
+        candidates = [(e.scheme, host, e.port_no, e.prefix) for e in BIGDB_PROTO_PORTS]
 
-    for schema, hostname, port, prefix in candidates:
-        url = f"{schema}://{hostname}:{port}{prefix}"
+    for scheme, hostname, port, prefix in candidates:
+        url = f"{scheme}://{hostname}:{port}{prefix}"
         try:
             response = session.get(url + validate_path, timeout=2)
         except requests.exceptions.ConnectionError as e:
@@ -631,12 +635,13 @@ def _attempt_login(
 
     # If we reach here, status is 2xx (typically 200 for login endpoint)
     json_ = response.json()
-    url_path_prefix = urlparse(url).path.rstrip("/")
+    parsed_url = urlparse(url)
+    url_path_prefix = parsed_url.path.rstrip("/")
     session_cookie_path = f"{url_path_prefix}/api" if url_path_prefix else "/api"
     session_cookie = requests.cookies.create_cookie(
         name="session_cookie",
         value=json_["session-cookie"],
-        domain=urlparse(url).hostname,
+        domain=parsed_url.hostname,
         path=session_cookie_path,  # type: ignore[arg-type]
     )
     session.cookies.set_cookie(session_cookie)
