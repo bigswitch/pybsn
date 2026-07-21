@@ -581,7 +581,7 @@ def guess_url(session: requests.Session, host: str, validate_path: str = "/api/v
     if re.match(r"^https?://", host):
         return host
 
-    # Parse schema-less URL to detect explicit port (host:port) or path prefix (host/prefix)
+    # Parse a URL without a scheme to detect explicit port (host:port) or path prefix (host/prefix)
     parsed = urlparse(f"//{host}")
     hostname = parsed.hostname or host
     path_prefix = parsed.path
