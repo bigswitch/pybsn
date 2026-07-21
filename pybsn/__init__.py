@@ -583,23 +583,25 @@ def guess_url(session: requests.Session, host: str, validate_path: str = "/api/v
 
     # Parse schema-less URL to detect explicit port (host:port) or path prefix (host/prefix)
     parsed = urlparse(f"//{host}")
-    if parsed.port is not None:
-        # User specified explicit port — use it directly, derive schema from port convention
-        scheme = "https" if parsed.port in (443, 8443) else "http"
-        prefix = parsed.path
-        if not prefix:
-            matching_endpoint = next((endpoint for endpoint in BIGDB_PROTO_PORTS if endpoint.port_no == parsed.port), None)
-            prefix = matching_endpoint.prefix if matching_endpoint is not None else ""
-        candidates = [(scheme, parsed.hostname, parsed.port, prefix)]
-    elif parsed.path:
-        # User specified a path prefix but no port — probe all ports with the custom prefix
-        candidates = [(e.scheme, parsed.hostname, e.port_no, parsed.path) for e in BIGDB_PROTO_PORTS]
-    else:
-        # Bare hostname — probe all ports with their configured prefixes
-        candidates = [(e.scheme, host, e.port_no, e.prefix) for e in BIGDB_PROTO_PORTS]
+    hostname = parsed.hostname or host
+    path_prefix = parsed.path
+    endpoints = BIGDB_PROTO_PORTS
 
-    for scheme, hostname, port, prefix in candidates:
-        url = f"{scheme}://{hostname}:{port}{prefix}"
+    if parsed.port is not None:
+        # An explicit port was specified — use it directly, derive scheme from port convention
+        matching_endpoint = next((endpoint for endpoint in BIGDB_PROTO_PORTS if endpoint.port_no == parsed.port), None)
+        endpoints = [
+            ApiEndpointConfig(
+                scheme=matching_endpoint.scheme if matching_endpoint is not None else "https" if parsed.port in (443, 8443) else "http",
+                port_no=parsed.port,
+                prefix=path_prefix or (matching_endpoint.prefix if matching_endpoint is not None else ""),
+            )
+        ]
+        path_prefix = ""
+
+    for endpoint in endpoints:
+        prefix = path_prefix or endpoint.prefix
+        url = f"{endpoint.scheme}://{hostname}:{endpoint.port_no}{prefix}"
         try:
             response = session.get(url + validate_path, timeout=2)
         except requests.exceptions.ConnectionError as e:
