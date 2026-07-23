@@ -3,6 +3,7 @@ import logging
 import re
 import urllib.parse
 import warnings
+from dataclasses import dataclass
 from string import Template
 from typing import Any, Dict, List, Optional, Union
 from urllib.parse import urlparse
@@ -553,9 +554,20 @@ def logged_request(
     return response
 
 
+API_PREFIX = "/a"
+
+
+@dataclass(frozen=True)
+class ApiEndpointConfig:
+    scheme: str
+    port_no: int
+    prefix: str
+
+
 BIGDB_PROTO_PORTS = [
-    ("https", 8443),
-    ("http", 8080),
+    ApiEndpointConfig(scheme="https", port_no=443, prefix=API_PREFIX),
+    ApiEndpointConfig(scheme="https", port_no=8443, prefix=""),
+    ApiEndpointConfig(scheme="http", port_no=8080, prefix=""),
 ]
 
 
@@ -568,18 +580,42 @@ def guess_url(session: requests.Session, host: str, validate_path: str = "/api/v
     """
     if re.match(r"^https?://", host):
         return host
-    else:
-        for schema, port in BIGDB_PROTO_PORTS:
-            url = "%s://%s:%d" % (schema, host, port)
-            try:
-                response = session.get(url + validate_path, timeout=2)
-            except requests.exceptions.ConnectionError as e:
-                logger.debug("Error connecting to %s: %s", url, str(e))
-                continue
-            if response.status_code == 200:  # OK
-                return url
-            else:
-                logger.debug("Could connect to URL %s: %s", url, response)
+
+    # Parse a URL without a scheme to detect explicit port (host:port) or path prefix (host/prefix)
+    parsed = urlparse(f"//{host}")
+    hostname = parsed.hostname or host
+    path_prefix = parsed.path
+    endpoints = BIGDB_PROTO_PORTS
+
+    if parsed.port is not None:
+        # An explicit port was specified — use it directly, derive scheme from port convention
+        matching_endpoint = next((endpoint for endpoint in BIGDB_PROTO_PORTS if endpoint.port_no == parsed.port), None)
+        if matching_endpoint is not None:
+            scheme = matching_endpoint.scheme
+        else:
+            scheme = "https" if parsed.port in (443, 8443) else "http"
+        prefix = path_prefix or (matching_endpoint.prefix if matching_endpoint is not None else "")
+        endpoints = [
+            ApiEndpointConfig(
+                scheme=scheme,
+                port_no=parsed.port,
+                prefix=prefix,
+            )
+        ]
+        path_prefix = ""
+
+    for endpoint in endpoints:
+        prefix = path_prefix or endpoint.prefix
+        url = f"{endpoint.scheme}://{hostname}:{endpoint.port_no}{prefix}"
+        try:
+            response = session.get(url + validate_path, timeout=2)
+        except requests.exceptions.ConnectionError as e:
+            logger.debug("Error connecting to %s: %s", url, str(e))
+            continue
+        if response.status_code == 200:  # OK
+            return url
+        else:
+            logger.debug("Could connect to URL %s: %s", url, response)
     raise Exception("Could not find available BigDB service on {}".format(host))
 
 
@@ -606,8 +642,14 @@ def _attempt_login(
 
     # If we reach here, status is 2xx (typically 200 for login endpoint)
     json_ = response.json()
+    parsed_url = urlparse(url)
+    url_path_prefix = parsed_url.path.rstrip("/")
+    session_cookie_path = f"{url_path_prefix}/api" if url_path_prefix else "/api"
     session_cookie = requests.cookies.create_cookie(
-        name="session_cookie", value=json_["session-cookie"], domain=urlparse(url).hostname, path="/api"  # type: ignore[arg-type]
+        name="session_cookie",
+        value=json_["session-cookie"],
+        domain=parsed_url.hostname,
+        path=session_cookie_path,  # type: ignore[arg-type]
     )
     session.cookies.set_cookie(session_cookie)
     return url

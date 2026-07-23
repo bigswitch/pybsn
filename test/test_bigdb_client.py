@@ -47,6 +47,29 @@ class TestBigDBClient(unittest.TestCase):
         pybsn.connect("http://127.0.0.1:8080", "admin", "somepassword")
 
     @responses.activate
+    def test_connect_modern_login_port_443_prefix(self):
+        def _data_cb(req):
+            self.assertEqual(req.headers["Cookie"], "session_cookie=UPhNWlmDN0re8cg9xsqe9QT1QvQTznji")
+            return (200, {}, json.dumps({"state": "ok"}))
+
+        responses.add(responses.GET, "https://127.0.0.1:443/a/api/v1/auth/healthy", status=200, body="true")
+        responses.add_callback(
+            responses.POST,
+            "https://127.0.0.1:443/a/api/v1/rpc/controller/core/aaa/session/login",
+            callback=self._login_cb,
+            content_type="application/json",
+        )
+        responses.add_callback(
+            responses.GET,
+            "https://127.0.0.1:443/a/api/v1/data/controller/test",
+            callback=_data_cb,
+            content_type="application/json",
+        )
+
+        client = pybsn.connect("127.0.0.1", "admin", "somepassword")
+        self.assertEqual(client.get("controller/test"), {"state": "ok"})
+
+    @responses.activate
     def test_close_no_auth(self):
         self.client.close()
 
