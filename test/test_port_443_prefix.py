@@ -21,7 +21,13 @@ class TestGuessUrlFallback(unittest.TestCase):
     @responses.activate
     def test_port_443_with_prefix_tried_first(self):
         """Port 443 with /a prefix should be tried first."""
-        responses.add(responses.GET, "https://192.0.2.1:443/a/api/v1/auth/healthy", status=200, body="true")
+        responses.add(
+            responses.GET,
+            "https://192.0.2.1:443/a/api/v1/auth/healthy",
+            status=200,
+            body="true",
+            content_type="application/json",
+        )
 
         session = requests.Session()
         url = pybsn.guess_url(session, "192.0.2.1")
@@ -37,7 +43,13 @@ class TestGuessUrlFallback(unittest.TestCase):
             "https://192.0.2.1:443/a/api/v1/auth/healthy",
             body=requests.exceptions.ConnectionError("Connection refused"),
         )
-        responses.add(responses.GET, "https://192.0.2.1:8443/api/v1/auth/healthy", status=200, body="true")
+        responses.add(
+            responses.GET,
+            "https://192.0.2.1:8443/api/v1/auth/healthy",
+            status=200,
+            body="true",
+            content_type="application/json",
+        )
 
         session = requests.Session()
         url = pybsn.guess_url(session, "192.0.2.1")
@@ -53,7 +65,13 @@ class TestGuessUrlFallback(unittest.TestCase):
             "https://192.0.2.1:443/a/api/v1/auth/healthy",
             body=requests.exceptions.Timeout("Timed out"),
         )
-        responses.add(responses.GET, "https://192.0.2.1:8443/api/v1/auth/healthy", status=200, body="true")
+        responses.add(
+            responses.GET,
+            "https://192.0.2.1:8443/api/v1/auth/healthy",
+            status=200,
+            body="true",
+            content_type="application/json",
+        )
 
         session = requests.Session()
         url = pybsn.guess_url(session, "192.0.2.1")
@@ -74,7 +92,13 @@ class TestGuessUrlFallback(unittest.TestCase):
             "https://192.0.2.1:8443/api/v1/auth/healthy",
             body=requests.exceptions.ConnectionError("Connection refused"),
         )
-        responses.add(responses.GET, "http://192.0.2.1:8080/api/v1/auth/healthy", status=200, body="true")
+        responses.add(
+            responses.GET,
+            "http://192.0.2.1:8080/api/v1/auth/healthy",
+            status=200,
+            body="true",
+            content_type="application/json",
+        )
 
         session = requests.Session()
         url = pybsn.guess_url(session, "192.0.2.1")
@@ -86,7 +110,13 @@ class TestGuessUrlFallback(unittest.TestCase):
     def test_non_200_response_causes_fallback(self):
         """Non-200 responses should cause fallback to next port."""
         responses.add(responses.GET, "https://192.0.2.1:443/a/api/v1/auth/healthy", status=404)
-        responses.add(responses.GET, "https://192.0.2.1:8443/api/v1/auth/healthy", status=200, body="true")
+        responses.add(
+            responses.GET,
+            "https://192.0.2.1:8443/api/v1/auth/healthy",
+            status=200,
+            body="true",
+            content_type="application/json",
+        )
 
         session = requests.Session()
         url = pybsn.guess_url(session, "192.0.2.1")
@@ -103,7 +133,13 @@ class TestGuessUrlFallback(unittest.TestCase):
             body="<!doctype html><html><body>gui</body></html>",
             content_type="text/html",
         )
-        responses.add(responses.GET, "https://192.0.2.1:8443/api/v1/auth/healthy", status=200, body="true")
+        responses.add(
+            responses.GET,
+            "https://192.0.2.1:8443/api/v1/auth/healthy",
+            status=200,
+            body="true",
+            content_type="application/json",
+        )
 
         session = requests.Session()
         url = pybsn.guess_url(session, "192.0.2.1")
@@ -112,9 +148,15 @@ class TestGuessUrlFallback(unittest.TestCase):
         self.assertEqual(len(responses.calls), 2)
 
     @responses.activate
-    def test_false_health_response_is_still_accepted(self):
-        """A boolean false health payload still proves the endpoint is BigDB."""
-        responses.add(responses.GET, "https://192.0.2.1:443/a/api/v1/auth/healthy", status=200, body="false")
+    def test_json_health_response_is_still_accepted(self):
+        """A JSON health response is accepted regardless of the body content."""
+        responses.add(
+            responses.GET,
+            "https://192.0.2.1:443/a/api/v1/auth/healthy",
+            status=200,
+            body="false",
+            content_type="application/json",
+        )
 
         session = requests.Session()
         url = pybsn.guess_url(session, "192.0.2.1")
@@ -123,7 +165,7 @@ class TestGuessUrlFallback(unittest.TestCase):
 
     @responses.activate
     def test_custom_validate_path_accepts_any_200_body(self):
-        """Non-default validation paths keep accepting any 200 response body."""
+        """Non-default validation paths accept any JSON response body."""
         responses.add(
             responses.GET,
             "https://192.0.2.1:443/a/api/v1/schema/controller",
@@ -139,6 +181,30 @@ class TestGuessUrlFallback(unittest.TestCase):
         self.assertEqual(len(responses.calls), 1)
 
     @responses.activate
+    def test_custom_validate_path_html_falls_through(self):
+        """Non-default validation paths reject HTML catch-all responses too."""
+        responses.add(
+            responses.GET,
+            "https://192.0.2.1:443/a/api/v1/schema/controller",
+            status=200,
+            body="<html>gui</html>",
+            content_type="text/html",
+        )
+        responses.add(
+            responses.GET,
+            "https://192.0.2.1:8443/api/v1/schema/controller",
+            status=200,
+            body='{"schema": "ok"}',
+            content_type="application/json",
+        )
+
+        session = requests.Session()
+        url = pybsn.guess_url(session, "192.0.2.1", validate_path="/api/v1/schema/controller")
+
+        self.assertEqual(url, "https://192.0.2.1:8443")
+        self.assertEqual(len(responses.calls), 2)
+
+    @responses.activate
     def test_custom_validate_path_non_200_falls_through(self):
         """Non-default validation paths still require HTTP 200."""
         responses.add(responses.GET, "https://192.0.2.1:443/a/api/v1/schema/controller", status=404)
@@ -146,8 +212,8 @@ class TestGuessUrlFallback(unittest.TestCase):
             responses.GET,
             "https://192.0.2.1:8443/api/v1/schema/controller",
             status=200,
-            body="<html>ok</html>",
-            content_type="text/html",
+            body='{"schema": "ok"}',
+            content_type="application/json",
         )
 
         session = requests.Session()
@@ -197,7 +263,13 @@ class TestPort443PrefixApplication(unittest.TestCase):
     @responses.activate
     def test_prefix_applied_to_port_443(self):
         """The /a prefix should be included in all requests to port 443."""
-        responses.add(responses.GET, "https://192.0.2.1:443/a/api/v1/auth/healthy", status=200, body="true")
+        responses.add(
+            responses.GET,
+            "https://192.0.2.1:443/a/api/v1/auth/healthy",
+            status=200,
+            body="true",
+            content_type="application/json",
+        )
         responses.add(
             responses.GET,
             "https://192.0.2.1:443/a/api/v1/data/controller/core/switch",
@@ -220,7 +292,13 @@ class TestPort443PrefixApplication(unittest.TestCase):
             "https://192.0.2.1:443/a/api/v1/auth/healthy",
             body=requests.exceptions.ConnectionError("Connection refused"),
         )
-        responses.add(responses.GET, "https://192.0.2.1:8443/api/v1/auth/healthy", status=200, body="true")
+        responses.add(
+            responses.GET,
+            "https://192.0.2.1:8443/api/v1/auth/healthy",
+            status=200,
+            body="true",
+            content_type="application/json",
+        )
         responses.add(
             responses.GET,
             "https://192.0.2.1:8443/api/v1/data/controller/core/switch",
@@ -249,7 +327,13 @@ class TestPort443PrefixApplication(unittest.TestCase):
             "https://192.0.2.1:8443/api/v1/auth/healthy",
             body=requests.exceptions.ConnectionError("Connection refused"),
         )
-        responses.add(responses.GET, "http://192.0.2.1:8080/api/v1/auth/healthy", status=200, body="true")
+        responses.add(
+            responses.GET,
+            "http://192.0.2.1:8080/api/v1/auth/healthy",
+            status=200,
+            body="true",
+            content_type="application/json",
+        )
         responses.add(
             responses.GET,
             "http://192.0.2.1:8080/api/v1/data/controller/core/switch",
@@ -268,7 +352,13 @@ class TestPort443PrefixApplication(unittest.TestCase):
     @responses.activate
     def test_all_request_types_include_prefix_on_443(self):
         """All request types (data, rpc, schema) should include /a prefix on port 443."""
-        responses.add(responses.GET, "https://192.0.2.1:443/a/api/v1/auth/healthy", status=200, body="true")
+        responses.add(
+            responses.GET,
+            "https://192.0.2.1:443/a/api/v1/auth/healthy",
+            status=200,
+            body="true",
+            content_type="application/json",
+        )
         responses.add(responses.GET, "https://192.0.2.1:443/a/api/v1/data/controller/core/switch", json=[], status=200)
         responses.add(
             responses.POST, "https://192.0.2.1:443/a/api/v1/rpc/controller/test/action", json={"result": "ok"}, status=200
@@ -304,7 +394,13 @@ class TestSchemalessUrl(unittest.TestCase):
     @responses.activate
     def test_explicit_port_uses_https(self):
         """host:8443 should use https and only probe that port."""
-        responses.add(responses.GET, "https://192.0.2.1:8443/api/v1/auth/healthy", status=200, body="true")
+        responses.add(
+            responses.GET,
+            "https://192.0.2.1:8443/api/v1/auth/healthy",
+            status=200,
+            body="true",
+            content_type="application/json",
+        )
 
         session = requests.Session()
         url = pybsn.guess_url(session, "192.0.2.1:8443")
@@ -315,7 +411,13 @@ class TestSchemalessUrl(unittest.TestCase):
     @responses.activate
     def test_ipv6_without_port_reapplies_brackets(self):
         """Bracketless parsed IPv6 hostnames must be re-bracketed in URLs."""
-        responses.add(responses.GET, "https://[2001:db8::1]:443/a/api/v1/auth/healthy", status=200, body="true")
+        responses.add(
+            responses.GET,
+            "https://[2001:db8::1]:443/a/api/v1/auth/healthy",
+            status=200,
+            body="true",
+            content_type="application/json",
+        )
 
         session = requests.Session()
         url = pybsn.guess_url(session, "[2001:db8::1]")
@@ -326,7 +428,13 @@ class TestSchemalessUrl(unittest.TestCase):
     @responses.activate
     def test_ipv6_with_explicit_port_reapplies_brackets(self):
         """IPv6 literals with explicit ports must keep a valid URL authority."""
-        responses.add(responses.GET, "https://[2001:db8::1]:8443/api/v1/auth/healthy", status=200, body="true")
+        responses.add(
+            responses.GET,
+            "https://[2001:db8::1]:8443/api/v1/auth/healthy",
+            status=200,
+            body="true",
+            content_type="application/json",
+        )
 
         session = requests.Session()
         url = pybsn.guess_url(session, "[2001:db8::1]:8443")
@@ -337,7 +445,13 @@ class TestSchemalessUrl(unittest.TestCase):
     @responses.activate
     def test_explicit_port_443_without_prefix_uses_default_prefix(self):
         """host:443 should use https and the default /a prefix."""
-        responses.add(responses.GET, "https://192.0.2.1:443/a/api/v1/auth/healthy", status=200, body="true")
+        responses.add(
+            responses.GET,
+            "https://192.0.2.1:443/a/api/v1/auth/healthy",
+            status=200,
+            body="true",
+            content_type="application/json",
+        )
 
         session = requests.Session()
         url = pybsn.guess_url(session, "192.0.2.1:443")
@@ -348,7 +462,13 @@ class TestSchemalessUrl(unittest.TestCase):
     @responses.activate
     def test_explicit_port_443_with_prefix_uses_https(self):
         """host:443/a should use https and only probe that port."""
-        responses.add(responses.GET, "https://192.0.2.1:443/a/api/v1/auth/healthy", status=200, body="true")
+        responses.add(
+            responses.GET,
+            "https://192.0.2.1:443/a/api/v1/auth/healthy",
+            status=200,
+            body="true",
+            content_type="application/json",
+        )
 
         session = requests.Session()
         url = pybsn.guess_url(session, "192.0.2.1:443/a")
@@ -359,7 +479,13 @@ class TestSchemalessUrl(unittest.TestCase):
     @responses.activate
     def test_explicit_port_8080_uses_http(self):
         """host:8080 should use http and only probe that port."""
-        responses.add(responses.GET, "http://192.0.2.1:8080/api/v1/auth/healthy", status=200, body="true")
+        responses.add(
+            responses.GET,
+            "http://192.0.2.1:8080/api/v1/auth/healthy",
+            status=200,
+            body="true",
+            content_type="application/json",
+        )
 
         session = requests.Session()
         url = pybsn.guess_url(session, "192.0.2.1:8080")
@@ -392,7 +518,13 @@ class TestSchemalessUrl(unittest.TestCase):
             "https://192.0.2.1:443/custom/api/v1/auth/healthy",
             body=requests.exceptions.ConnectionError("Connection refused"),
         )
-        responses.add(responses.GET, "https://192.0.2.1:8443/custom/api/v1/auth/healthy", status=200, body="true")
+        responses.add(
+            responses.GET,
+            "https://192.0.2.1:8443/custom/api/v1/auth/healthy",
+            status=200,
+            body="true",
+            content_type="application/json",
+        )
 
         session = requests.Session()
         url = pybsn.guess_url(session, "192.0.2.1/custom")
@@ -403,7 +535,13 @@ class TestSchemalessUrl(unittest.TestCase):
     @responses.activate
     def test_root_only_trailing_slash_uses_default_prefix_without_double_slash(self):
         """A trailing slash alone should normalize to the default endpoint prefix."""
-        responses.add(responses.GET, "https://controller.example:443/a/api/v1/auth/healthy", status=200, body="true")
+        responses.add(
+            responses.GET,
+            "https://controller.example:443/a/api/v1/auth/healthy",
+            status=200,
+            body="true",
+            content_type="application/json",
+        )
 
         session = requests.Session()
         url = pybsn.guess_url(session, "controller.example/")
@@ -414,7 +552,13 @@ class TestSchemalessUrl(unittest.TestCase):
     @responses.activate
     def test_custom_path_prefix_trailing_slash_is_normalized(self):
         """A custom trailing slash should not create double-slash API paths."""
-        responses.add(responses.GET, "https://controller.example:443/custom/api/v1/auth/healthy", status=200, body="true")
+        responses.add(
+            responses.GET,
+            "https://controller.example:443/custom/api/v1/auth/healthy",
+            status=200,
+            body="true",
+            content_type="application/json",
+        )
 
         session = requests.Session()
         url = pybsn.guess_url(session, "controller.example/custom/")
@@ -433,7 +577,7 @@ class TestFallbackTiming(unittest.TestCase):
         with patch.object(session, "get") as mock_get:
             mock_get.side_effect = [
                 Mock(status_code=404),
-                Mock(status_code=200, text="true"),
+                Mock(status_code=200, text="true", headers={"Content-Type": "application/json"}),
             ]
 
             pybsn.guess_url(session, "192.0.2.1")
@@ -450,7 +594,7 @@ class TestFallbackTiming(unittest.TestCase):
             mock_get.side_effect = [
                 Mock(status_code=404),  # 443 fails
                 Mock(status_code=404),  # 8443 fails
-                Mock(status_code=200, text="true"),  # 8080 succeeds
+                Mock(status_code=200, text="true", headers={"Content-Type": "application/json"}),  # 8080 succeeds
             ]
 
             pybsn.guess_url(session, "192.0.2.1")

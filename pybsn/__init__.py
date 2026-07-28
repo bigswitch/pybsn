@@ -572,20 +572,18 @@ BIGDB_PROTO_PORTS = [
 ]
 
 
-def _is_valid_probe_response(response: requests.Response, validate_path: str) -> bool:
+def _is_valid_probe_response(response: requests.Response) -> bool:
     """Return True when a probe response confirms the endpoint is really BigDB.
 
-    The default auth health probe is vulnerable to GUI catch-all routes returning
-    HTML with HTTP 200 on older controllers. Only accept that probe when the body
-    is the expected boolean payload.
+    Older controllers can return GUI HTML with HTTP 200 for probe paths that are
+    not actually backed by BigDB. Accept only JSON probe responses so HTML
+    catch-all pages are rejected regardless of the validation path in use.
     """
     if response.status_code != 200:
         return False
 
-    if validate_path == "/api/v1/auth/healthy":
-        return response.text.strip().lower() in {"true", "false"}
-
-    return True
+    content_type = response.headers.get("Content-Type", "")
+    return content_type.lower().startswith("application/json")
 
 
 def _normalize_path_prefix(path_prefix: str) -> str:
@@ -649,7 +647,7 @@ def guess_url(session: requests.Session, host: str, validate_path: str = "/api/v
         except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
             logger.debug("Error connecting to %s: %s", url, str(e))
             continue
-        if _is_valid_probe_response(response, validate_path):
+        if _is_valid_probe_response(response):
             return url
         else:
             logger.debug("Could connect to URL %s: %s", url, response)
