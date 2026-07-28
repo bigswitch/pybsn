@@ -52,7 +52,13 @@ class TestBigDBClient(unittest.TestCase):
             self.assertEqual(req.headers["Cookie"], "session_cookie=UPhNWlmDN0re8cg9xsqe9QT1QvQTznji")
             return (200, {}, json.dumps({"state": "ok"}))
 
-        responses.add(responses.GET, "https://127.0.0.1:443/a/api/v1/auth/healthy", status=200, body="true")
+        responses.add(
+            responses.GET,
+            "https://127.0.0.1:443/a/api/v1/auth/healthy",
+            status=200,
+            body="true",
+            content_type="application/json",
+        )
         responses.add_callback(
             responses.POST,
             "https://127.0.0.1:443/a/api/v1/rpc/controller/core/aaa/session/login",
