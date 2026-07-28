@@ -1,5 +1,5 @@
-import json
 import ipaddress
+import json
 import logging
 import re
 import urllib.parse
