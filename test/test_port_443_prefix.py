@@ -46,6 +46,22 @@ class TestGuessUrlFallback(unittest.TestCase):
         self.assertEqual(len(responses.calls), 2)
 
     @responses.activate
+    def test_fallback_to_8443_when_443_times_out(self):
+        """Should fallback to port 8443 when 443 times out."""
+        responses.add(
+            responses.GET,
+            "https://192.0.2.1:443/a/api/v1/auth/healthy",
+            body=requests.exceptions.Timeout("Timed out"),
+        )
+        responses.add(responses.GET, "https://192.0.2.1:8443/api/v1/auth/healthy", status=200, body="true")
+
+        session = requests.Session()
+        url = pybsn.guess_url(session, "192.0.2.1")
+
+        self.assertEqual(url, "https://192.0.2.1:8443")
+        self.assertEqual(len(responses.calls), 2)
+
+    @responses.activate
     def test_fallback_to_8080_when_443_and_8443_unavailable(self):
         """Should fallback to port 8080 when both 443 and 8443 fail."""
         responses.add(
@@ -104,6 +120,41 @@ class TestGuessUrlFallback(unittest.TestCase):
         url = pybsn.guess_url(session, "192.0.2.1")
 
         self.assertEqual(url, "https://192.0.2.1:443/a")
+
+    @responses.activate
+    def test_custom_validate_path_accepts_any_200_body(self):
+        """Non-default validation paths keep accepting any 200 response body."""
+        responses.add(
+            responses.GET,
+            "https://192.0.2.1:443/a/api/v1/schema/controller",
+            status=200,
+            body='{"schema": "ok"}',
+            content_type="application/json",
+        )
+
+        session = requests.Session()
+        url = pybsn.guess_url(session, "192.0.2.1", validate_path="/api/v1/schema/controller")
+
+        self.assertEqual(url, "https://192.0.2.1:443/a")
+        self.assertEqual(len(responses.calls), 1)
+
+    @responses.activate
+    def test_custom_validate_path_non_200_falls_through(self):
+        """Non-default validation paths still require HTTP 200."""
+        responses.add(responses.GET, "https://192.0.2.1:443/a/api/v1/schema/controller", status=404)
+        responses.add(
+            responses.GET,
+            "https://192.0.2.1:8443/api/v1/schema/controller",
+            status=200,
+            body="<html>ok</html>",
+            content_type="text/html",
+        )
+
+        session = requests.Session()
+        url = pybsn.guess_url(session, "192.0.2.1", validate_path="/api/v1/schema/controller")
+
+        self.assertEqual(url, "https://192.0.2.1:8443")
+        self.assertEqual(len(responses.calls), 2)
 
     @responses.activate
     def test_exception_when_all_ports_fail(self):
@@ -243,6 +294,13 @@ class TestPort443PrefixApplication(unittest.TestCase):
 class TestSchemalessUrl(unittest.TestCase):
     """Test handling of schema-less URLs with explicit port or path prefix."""
 
+    def test_invalid_host_raises_parse_error(self):
+        """Malformed scheme-less input should fail instead of probing a raw host string."""
+        session = requests.Session()
+
+        with self.assertRaises(ValueError):
+            pybsn.guess_url(session, "")
+
     @responses.activate
     def test_explicit_port_uses_https(self):
         """host:8443 should use https and only probe that port."""
@@ -252,6 +310,28 @@ class TestSchemalessUrl(unittest.TestCase):
         url = pybsn.guess_url(session, "192.0.2.1:8443")
 
         self.assertEqual(url, "https://192.0.2.1:8443")
+        self.assertEqual(len(responses.calls), 1)
+
+    @responses.activate
+    def test_ipv6_without_port_reapplies_brackets(self):
+        """Bracketless parsed IPv6 hostnames must be re-bracketed in URLs."""
+        responses.add(responses.GET, "https://[2001:db8::1]:443/a/api/v1/auth/healthy", status=200, body="true")
+
+        session = requests.Session()
+        url = pybsn.guess_url(session, "[2001:db8::1]")
+
+        self.assertEqual(url, "https://[2001:db8::1]:443/a")
+        self.assertEqual(len(responses.calls), 1)
+
+    @responses.activate
+    def test_ipv6_with_explicit_port_reapplies_brackets(self):
+        """IPv6 literals with explicit ports must keep a valid URL authority."""
+        responses.add(responses.GET, "https://[2001:db8::1]:8443/api/v1/auth/healthy", status=200, body="true")
+
+        session = requests.Session()
+        url = pybsn.guess_url(session, "[2001:db8::1]:8443")
+
+        self.assertEqual(url, "https://[2001:db8::1]:8443")
         self.assertEqual(len(responses.calls), 1)
 
     @responses.activate
@@ -288,6 +368,23 @@ class TestSchemalessUrl(unittest.TestCase):
         self.assertEqual(len(responses.calls), 1)
 
     @responses.activate
+    def test_explicit_custom_port_uses_https(self):
+        """Unknown explicit ports should default to https."""
+        responses.add(
+            responses.GET,
+            "https://192.0.2.1:9443/api/v1/auth/healthy",
+            status=200,
+            body="true",
+            content_type="application/json",
+        )
+
+        session = requests.Session()
+        url = pybsn.guess_url(session, "192.0.2.1:9443")
+
+        self.assertEqual(url, "https://192.0.2.1:9443")
+        self.assertEqual(len(responses.calls), 1)
+
+    @responses.activate
     def test_custom_path_prefix_probes_all_ports(self):
         """host/custom-prefix should probe all ports with that prefix."""
         responses.add(
@@ -302,6 +399,28 @@ class TestSchemalessUrl(unittest.TestCase):
 
         self.assertEqual(url, "https://192.0.2.1:8443/custom")
         self.assertEqual(len(responses.calls), 2)
+
+    @responses.activate
+    def test_root_only_trailing_slash_uses_default_prefix_without_double_slash(self):
+        """A trailing slash alone should normalize to the default endpoint prefix."""
+        responses.add(responses.GET, "https://controller.example:443/a/api/v1/auth/healthy", status=200, body="true")
+
+        session = requests.Session()
+        url = pybsn.guess_url(session, "controller.example/")
+
+        self.assertEqual(url, "https://controller.example:443/a")
+        self.assertEqual(responses.calls[0].request.url, "https://controller.example:443/a/api/v1/auth/healthy")
+
+    @responses.activate
+    def test_custom_path_prefix_trailing_slash_is_normalized(self):
+        """A custom trailing slash should not create double-slash API paths."""
+        responses.add(responses.GET, "https://controller.example:443/custom/api/v1/auth/healthy", status=200, body="true")
+
+        session = requests.Session()
+        url = pybsn.guess_url(session, "controller.example/custom/")
+
+        self.assertEqual(url, "https://controller.example:443/custom")
+        self.assertEqual(responses.calls[0].request.url, "https://controller.example:443/custom/api/v1/auth/healthy")
 
 
 class TestFallbackTiming(unittest.TestCase):

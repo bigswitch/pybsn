@@ -1,4 +1,5 @@
 import json
+import ipaddress
 import logging
 import re
 import urllib.parse
@@ -587,6 +588,23 @@ def _is_valid_probe_response(response: requests.Response, validate_path: str) ->
     return True
 
 
+def _normalize_path_prefix(path_prefix: str) -> str:
+    if not path_prefix or path_prefix == "/":
+        return ""
+    if path_prefix.endswith("/"):
+        path_prefix = path_prefix[:-1]
+    return path_prefix if path_prefix.startswith("/") else f"/{path_prefix}"
+
+
+def _format_url_authority(hostname: str) -> str:
+    try:
+        address = ipaddress.ip_address(hostname)
+    except ValueError:
+        return hostname
+
+    return f"[{hostname}]" if isinstance(address, ipaddress.IPv6Address) else hostname
+
+
 def guess_url(session: requests.Session, host: str, validate_path: str = "/api/v1/auth/healthy") -> str:
     """Guess the correct BigDB URL for a given host if not specified completely.
     :param session: requests session to use
@@ -599,8 +617,11 @@ def guess_url(session: requests.Session, host: str, validate_path: str = "/api/v
 
     # Parse a URL without a scheme to detect explicit port (host:port) or path prefix (host/prefix)
     parsed = urlparse(f"//{host}")
-    hostname = parsed.hostname or host
-    path_prefix = parsed.path
+    hostname = parsed.hostname
+    if hostname is None:
+        raise ValueError(f"Could not parse host from {host!r}")
+    hostname = _format_url_authority(hostname)
+    path_prefix = _normalize_path_prefix(parsed.path)
     endpoints = BIGDB_PROTO_PORTS
 
     if parsed.port is not None:
@@ -609,7 +630,7 @@ def guess_url(session: requests.Session, host: str, validate_path: str = "/api/v
         if matching_endpoint is not None:
             scheme = matching_endpoint.scheme
         else:
-            scheme = "https" if parsed.port in (443, 8443) else "http"
+            scheme = "http" if parsed.port == 8080 else "https"
         prefix = path_prefix or (matching_endpoint.prefix if matching_endpoint is not None else "")
         endpoints = [
             ApiEndpointConfig(
@@ -625,7 +646,7 @@ def guess_url(session: requests.Session, host: str, validate_path: str = "/api/v
         url = f"{endpoint.scheme}://{hostname}:{endpoint.port_no}{prefix}"
         try:
             response = session.get(url + validate_path, timeout=2)
-        except requests.exceptions.ConnectionError as e:
+        except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
             logger.debug("Error connecting to %s: %s", url, str(e))
             continue
         if _is_valid_probe_response(response, validate_path):
