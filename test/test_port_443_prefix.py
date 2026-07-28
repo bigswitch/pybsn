@@ -78,6 +78,34 @@ class TestGuessUrlFallback(unittest.TestCase):
         self.assertEqual(url, "https://192.0.2.1:8443")
 
     @responses.activate
+    def test_html_response_on_443_causes_fallback(self):
+        """A GUI HTML catch-all on 443 /a should not be mistaken for BigDB."""
+        responses.add(
+            responses.GET,
+            "https://192.0.2.1:443/a/api/v1/auth/healthy",
+            status=200,
+            body="<!doctype html><html><body>gui</body></html>",
+            content_type="text/html",
+        )
+        responses.add(responses.GET, "https://192.0.2.1:8443/api/v1/auth/healthy", status=200, body="true")
+
+        session = requests.Session()
+        url = pybsn.guess_url(session, "192.0.2.1")
+
+        self.assertEqual(url, "https://192.0.2.1:8443")
+        self.assertEqual(len(responses.calls), 2)
+
+    @responses.activate
+    def test_false_health_response_is_still_accepted(self):
+        """A boolean false health payload still proves the endpoint is BigDB."""
+        responses.add(responses.GET, "https://192.0.2.1:443/a/api/v1/auth/healthy", status=200, body="false")
+
+        session = requests.Session()
+        url = pybsn.guess_url(session, "192.0.2.1")
+
+        self.assertEqual(url, "https://192.0.2.1:443/a")
+
+    @responses.activate
     def test_exception_when_all_ports_fail(self):
         """Should raise exception when all ports fail."""
         responses.add(
@@ -286,7 +314,7 @@ class TestFallbackTiming(unittest.TestCase):
         with patch.object(session, "get") as mock_get:
             mock_get.side_effect = [
                 Mock(status_code=404),
-                Mock(status_code=200),
+                Mock(status_code=200, text="true"),
             ]
 
             pybsn.guess_url(session, "192.0.2.1")
@@ -303,7 +331,7 @@ class TestFallbackTiming(unittest.TestCase):
             mock_get.side_effect = [
                 Mock(status_code=404),  # 443 fails
                 Mock(status_code=404),  # 8443 fails
-                Mock(status_code=200),  # 8080 succeeds
+                Mock(status_code=200, text="true"),  # 8080 succeeds
             ]
 
             pybsn.guess_url(session, "192.0.2.1")
