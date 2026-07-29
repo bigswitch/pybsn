@@ -382,7 +382,7 @@ class TestPort443PrefixApplication(unittest.TestCase):
 
 
 class TestSchemalessUrl(unittest.TestCase):
-    """Test handling of schema-less URLs with explicit port or path prefix."""
+    """Test handling of schema-less URLs with optional path prefixes."""
 
     def test_invalid_host_raises_parse_error(self):
         """Malformed scheme-less input should fail instead of probing a raw host string."""
@@ -392,21 +392,12 @@ class TestSchemalessUrl(unittest.TestCase):
             pybsn.guess_url(session, "")
 
     @responses.activate
-    def test_explicit_port_uses_https(self):
-        """host:8443 should use https and only probe that port."""
-        responses.add(
-            responses.GET,
-            "https://192.0.2.1:8443/api/v1/auth/healthy",
-            status=200,
-            body="true",
-            content_type="application/json",
-        )
-
+    def test_schemeless_explicit_port_is_rejected(self):
+        """Custom ports still require a fully qualified URL."""
         session = requests.Session()
-        url = pybsn.guess_url(session, "192.0.2.1:8443")
 
-        self.assertEqual(url, "https://192.0.2.1:8443")
-        self.assertEqual(len(responses.calls), 1)
+        with self.assertRaises(ValueError):
+            pybsn.guess_url(session, "192.0.2.1:8443")
 
     @responses.activate
     def test_ipv6_without_port_reapplies_brackets(self):
@@ -426,89 +417,12 @@ class TestSchemalessUrl(unittest.TestCase):
         self.assertEqual(len(responses.calls), 1)
 
     @responses.activate
-    def test_ipv6_with_explicit_port_reapplies_brackets(self):
-        """IPv6 literals with explicit ports must keep a valid URL authority."""
-        responses.add(
-            responses.GET,
-            "https://[2001:db8::1]:8443/api/v1/auth/healthy",
-            status=200,
-            body="true",
-            content_type="application/json",
-        )
-
+    def test_schemeless_ipv6_with_explicit_port_is_rejected(self):
+        """Bracketed IPv6 literals still require a scheme when a port is supplied."""
         session = requests.Session()
-        url = pybsn.guess_url(session, "[2001:db8::1]:8443")
 
-        self.assertEqual(url, "https://[2001:db8::1]:8443")
-        self.assertEqual(len(responses.calls), 1)
-
-    @responses.activate
-    def test_explicit_port_443_without_prefix_uses_default_prefix(self):
-        """host:443 should use https and the default /a prefix."""
-        responses.add(
-            responses.GET,
-            "https://192.0.2.1:443/a/api/v1/auth/healthy",
-            status=200,
-            body="true",
-            content_type="application/json",
-        )
-
-        session = requests.Session()
-        url = pybsn.guess_url(session, "192.0.2.1:443")
-
-        self.assertEqual(url, "https://192.0.2.1:443/a")
-        self.assertEqual(len(responses.calls), 1)
-
-    @responses.activate
-    def test_explicit_port_443_with_prefix_uses_https(self):
-        """host:443/a should use https and only probe that port."""
-        responses.add(
-            responses.GET,
-            "https://192.0.2.1:443/a/api/v1/auth/healthy",
-            status=200,
-            body="true",
-            content_type="application/json",
-        )
-
-        session = requests.Session()
-        url = pybsn.guess_url(session, "192.0.2.1:443/a")
-
-        self.assertEqual(url, "https://192.0.2.1:443/a")
-        self.assertEqual(len(responses.calls), 1)
-
-    @responses.activate
-    def test_explicit_port_8080_uses_http(self):
-        """host:8080 should use http and only probe that port."""
-        responses.add(
-            responses.GET,
-            "http://192.0.2.1:8080/api/v1/auth/healthy",
-            status=200,
-            body="true",
-            content_type="application/json",
-        )
-
-        session = requests.Session()
-        url = pybsn.guess_url(session, "192.0.2.1:8080")
-
-        self.assertEqual(url, "http://192.0.2.1:8080")
-        self.assertEqual(len(responses.calls), 1)
-
-    @responses.activate
-    def test_explicit_custom_port_uses_https(self):
-        """Unknown explicit ports should default to https."""
-        responses.add(
-            responses.GET,
-            "https://192.0.2.1:9443/api/v1/auth/healthy",
-            status=200,
-            body="true",
-            content_type="application/json",
-        )
-
-        session = requests.Session()
-        url = pybsn.guess_url(session, "192.0.2.1:9443")
-
-        self.assertEqual(url, "https://192.0.2.1:9443")
-        self.assertEqual(len(responses.calls), 1)
+        with self.assertRaises(ValueError):
+            pybsn.guess_url(session, "[2001:db8::1]:8443")
 
     @responses.activate
     def test_custom_path_prefix_probes_all_ports(self):

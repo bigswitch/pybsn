@@ -613,33 +613,17 @@ def guess_url(session: requests.Session, host: str, validate_path: str = "/api/v
     if re.match(r"^https?://", host):
         return host
 
-    # Parse a URL without a scheme to detect explicit port (host:port) or path prefix (host/prefix)
+    # Parse a URL without a scheme to detect an optional path prefix (host/prefix).
     parsed = urlparse(f"//{host}")
     hostname = parsed.hostname
     if hostname is None:
         raise ValueError(f"Could not parse host from {host!r}")
+    if parsed.port is not None:
+        raise ValueError(f"Schemeless hosts must not include an explicit port: {host!r}")
     hostname = _format_url_authority(hostname)
     path_prefix = _normalize_path_prefix(parsed.path)
-    endpoints = BIGDB_PROTO_PORTS
 
-    if parsed.port is not None:
-        # An explicit port was specified — use it directly, derive scheme from port convention
-        matching_endpoint = next((endpoint for endpoint in BIGDB_PROTO_PORTS if endpoint.port_no == parsed.port), None)
-        if matching_endpoint is not None:
-            scheme = matching_endpoint.scheme
-        else:
-            scheme = "http" if parsed.port == 8080 else "https"
-        prefix = path_prefix or (matching_endpoint.prefix if matching_endpoint is not None else "")
-        endpoints = [
-            ApiEndpointConfig(
-                scheme=scheme,
-                port_no=parsed.port,
-                prefix=prefix,
-            )
-        ]
-        path_prefix = ""
-
-    for endpoint in endpoints:
+    for endpoint in BIGDB_PROTO_PORTS:
         prefix = path_prefix or endpoint.prefix
         url = f"{endpoint.scheme}://{hostname}:{endpoint.port_no}{prefix}"
         try:
