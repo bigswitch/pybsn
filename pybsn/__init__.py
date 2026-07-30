@@ -572,7 +572,7 @@ BIGDB_PROTO_PORTS = [
 ]
 
 
-def _is_valid_probe_response(response: requests.Response) -> bool:
+def _is_valid_probe_response(url: str, response: requests.Response) -> bool:
     """Return True when a probe response confirms the endpoint is really BigDB.
 
     Older controllers can return GUI HTML with HTTP 200 for probe paths that are
@@ -580,10 +580,14 @@ def _is_valid_probe_response(response: requests.Response) -> bool:
     catch-all pages are rejected regardless of the validation path in use.
     """
     if response.status_code != 200:
+        logger.debug("Probe to %s returned status %d; skipping", url, response.status_code)
         return False
 
     content_type = response.headers.get("Content-Type", "")
-    return content_type.lower().startswith("application/json")
+    if content_type.lower().startswith("application/json"):
+        return True
+    logger.debug("Probe to %s returned 200 but unexpected Content-Type %r; skipping", url, content_type)
+    return False
 
 
 def _normalize_path_prefix(path_prefix: str) -> str:
@@ -631,10 +635,8 @@ def guess_url(session: requests.Session, host: str, validate_path: str = "/api/v
         except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
             logger.debug("Error connecting to %s: %s", url, str(e))
             continue
-        if _is_valid_probe_response(response):
+        if _is_valid_probe_response(url + validate_path, response):
             return url
-        else:
-            logger.debug("Could connect to URL %s: %s", url, response)
     raise Exception("Could not find available BigDB service on {}".format(host))
 
 

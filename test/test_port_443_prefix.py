@@ -484,6 +484,23 @@ class TestSchemalessUrl(unittest.TestCase):
 class TestFallbackTiming(unittest.TestCase):
     """Test fallback timeout behavior."""
 
+    def _assert_probe_rejection_log(self, first_response, expected_fragment):
+        session = requests.Session()
+
+        with patch.object(session, "get") as mock_get:
+            mock_get.side_effect = [
+                first_response,
+                Mock(status_code=200, headers={"Content-Type": "application/json"}),
+            ]
+
+            with self.assertLogs("pybsn", level="DEBUG") as logs:
+                pybsn.guess_url(session, "192.0.2.1")
+
+        self.assertTrue(
+            any(expected_fragment in message for message in logs.output),
+            logs.output,
+        )
+
     def test_timeout_is_2_seconds(self):
         """Verify the timeout for each port probe is 2 seconds."""
         session = requests.Session()
@@ -521,6 +538,20 @@ class TestFallbackTiming(unittest.TestCase):
             self.assertIn("8443", urls[1], "Second attempt should be port 8443")
             self.assertNotIn("/a/", urls[1], "Port 8443 should NOT include /a prefix")
             self.assertIn("8080", urls[2], "Third attempt should be port 8080")
+
+    def test_logs_non_200_probe_rejection_reason(self):
+        """Non-200 probe failures should log the rejected status code."""
+        self._assert_probe_rejection_log(
+            Mock(status_code=404, headers={}),
+            "returned status 404; skipping",
+        )
+
+    def test_logs_wrong_content_type_probe_rejection_reason(self):
+        """HTTP 200 HTML responses should log the unexpected content type."""
+        self._assert_probe_rejection_log(
+            Mock(status_code=200, headers={"Content-Type": "text/html"}),
+            "unexpected Content-Type 'text/html'; skipping",
+        )
 
 
 if __name__ == "__main__":
