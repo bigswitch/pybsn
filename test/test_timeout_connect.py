@@ -73,3 +73,18 @@ class TestTimeoutConnect(unittest.TestCase):
             mock_send.side_effect = iter([first_response])
             pybsn.connect("http://127.0.0.1:8080", "admin", "somepassword", timeout=timeout)
             self._assertAllCallsTimeoutValue(timeout, mock_send)
+
+    def test_attempt_login_cookie_matches_ipv4_and_ipv6_urls(self):
+        for url in ("http://127.0.0.1:8080", "https://[fdfd::1]:8443"):
+            with self.subTest(url=url):
+                session = requests.Session()
+                response = requests.Response()
+                response.status_code = 200
+                response.json = lambda: {"session-cookie": "some_token"}
+
+                with patch.object(pybsn, "logged_request", return_value=response):
+                    pybsn._attempt_login(session, url, "admin", "somepassword")
+
+                request = requests.Request("GET", url + "/api/v1/data/controller/test")
+                prepared_request = session.prepare_request(request)
+                self.assertEqual(prepared_request.headers["Cookie"], "session_cookie=some_token")
