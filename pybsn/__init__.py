@@ -5,7 +5,6 @@ import urllib.parse
 import warnings
 from string import Template
 from typing import Any, Dict, List, Optional, Union
-from urllib.parse import urlparse
 
 import requests
 import urllib3.util
@@ -607,7 +606,9 @@ def _attempt_login(
     # If we reach here, status is 2xx (typically 200 for login endpoint)
     json_ = response.json()
     session_cookie = requests.cookies.create_cookie(
-        name="session_cookie", value=json_["session-cookie"], domain=urlparse(url).hostname, path="/api"  # type: ignore[arg-type]
+        name="session_cookie",
+        value=json_["session-cookie"],
+        path="/api",
     )
     session.cookies.set_cookie(session_cookie)
     return url
