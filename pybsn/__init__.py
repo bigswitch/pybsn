@@ -3,13 +3,14 @@ import logging
 import re
 import urllib.parse
 import warnings
+from http.client import RemoteDisconnected
 from string import Template
 from typing import Any, Dict, List, Optional, Union
 from urllib.parse import urlparse
 
 import requests
 import urllib3.util
-from urllib3.exceptions import InsecureRequestWarning
+from urllib3.exceptions import InsecureRequestWarning, ProtocolError
 
 warnings.simplefilter("ignore", InsecureRequestWarning)
 
@@ -521,6 +522,20 @@ def _normalize(v: Any) -> str:
         return urllib.parse.quote(repr(v))
 
 
+_IDEMPOTENT_METHODS = frozenset({"DELETE", "GET", "HEAD", "OPTIONS", "PUT"})
+
+
+def _is_retryable_connection_error(exc: requests.exceptions.ConnectionError) -> bool:
+    """Match a stale keep-alive connection closed before any response bytes arrive.
+
+    Per RFC 9110 Section 9.2.2, an idempotent request can be retried after
+    a communication failure before the response is read.
+    """
+    if not exc.args or not isinstance(protocol_error := exc.args[0], ProtocolError):
+        return False
+    return any(isinstance(arg, RemoteDisconnected) for arg in protocol_error.args)
+
+
 def logged_request(
     session: requests.Session, request: requests.Request, timeout: Optional[Union[float, urllib3.util.Timeout]]
 ) -> requests.Response:
@@ -538,7 +553,15 @@ def logged_request(
             prepared.body,
         )
 
-    response = session.send(prepared, timeout=timeout)  # type: ignore[arg-type]
+    try:
+        response = session.send(prepared, timeout=timeout)  # type: ignore[arg-type]
+    except requests.exceptions.ConnectionError as e:
+        if prepared.method in _IDEMPOTENT_METHODS and _is_retryable_connection_error(e):
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug("Retrying %s %s after transport abort", prepared.method, prepared.url)
+            response = session.send(prepared, timeout=timeout)  # type: ignore[arg-type]
+        else:
+            raise
 
     if logger.isEnabledFor(logging.DEBUG):
         logger.debug(
