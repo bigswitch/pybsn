@@ -164,6 +164,46 @@ class TestGuessUrlFallback(unittest.TestCase):
         self.assertEqual(url, "https://192.0.2.1:443/a")
 
     @responses.activate
+    def test_json_content_type_with_charset_is_accepted(self):
+        """Standard JSON content types with parameters are still accepted."""
+        responses.add(
+            responses.GET,
+            "https://192.0.2.1:443/a/api/v1/auth/healthy",
+            status=200,
+            body="true",
+            content_type="application/json; charset=utf-8",
+        )
+
+        session = requests.Session()
+        url = pybsn.guess_url(session, "192.0.2.1")
+
+        self.assertEqual(url, "https://192.0.2.1:443/a")
+
+    @responses.activate
+    def test_json_like_content_type_is_rejected(self):
+        """Only the exact JSON media type should be accepted."""
+        responses.add(
+            responses.GET,
+            "https://192.0.2.1:443/a/api/v1/auth/healthy",
+            status=200,
+            body="true",
+            content_type="application/json-foo",
+        )
+        responses.add(
+            responses.GET,
+            "https://192.0.2.1:8443/api/v1/auth/healthy",
+            status=200,
+            body="true",
+            content_type="application/json",
+        )
+
+        session = requests.Session()
+        url = pybsn.guess_url(session, "192.0.2.1")
+
+        self.assertEqual(url, "https://192.0.2.1:8443")
+        self.assertEqual(len(responses.calls), 2)
+
+    @responses.activate
     def test_custom_validate_path_accepts_any_200_body(self):
         """Non-default validation paths accept any JSON response body."""
         responses.add(
@@ -254,6 +294,14 @@ class TestGuessUrlFallback(unittest.TestCase):
 
         url = pybsn.guess_url(session, "https://192.0.2.1:8443")
         self.assertEqual(url, "https://192.0.2.1:8443")
+        self.assertEqual(len(responses.calls), 0)
+
+    def test_complete_url_with_custom_prefix_bypasses_discovery(self):
+        """A fully qualified URL remains explicit even when it carries a custom prefix."""
+        session = requests.Session()
+
+        url = pybsn.guess_url(session, "https://controller.example/custom")
+        self.assertEqual(url, "https://controller.example/custom")
         self.assertEqual(len(responses.calls), 0)
 
 
@@ -382,7 +430,7 @@ class TestPort443PrefixApplication(unittest.TestCase):
 
 
 class TestSchemalessUrl(unittest.TestCase):
-    """Test handling of schema-less URLs with optional path prefixes."""
+    """Test handling of schema-less URLs."""
 
     def test_invalid_host_raises_parse_error(self):
         """Malformed scheme-less input should fail instead of probing a raw host string."""
@@ -425,26 +473,12 @@ class TestSchemalessUrl(unittest.TestCase):
             pybsn.guess_url(session, "[2001:db8::1]:8443")
 
     @responses.activate
-    def test_custom_path_prefix_probes_all_ports(self):
-        """host/custom-prefix should probe all ports with that prefix."""
-        responses.add(
-            responses.GET,
-            "https://192.0.2.1:443/custom/api/v1/auth/healthy",
-            body=requests.exceptions.ConnectionError("Connection refused"),
-        )
-        responses.add(
-            responses.GET,
-            "https://192.0.2.1:8443/custom/api/v1/auth/healthy",
-            status=200,
-            body="true",
-            content_type="application/json",
-        )
-
+    def test_schemeless_path_prefix_is_rejected(self):
+        """Custom prefixes require a fully qualified URL."""
         session = requests.Session()
-        url = pybsn.guess_url(session, "192.0.2.1/custom")
 
-        self.assertEqual(url, "https://192.0.2.1:8443/custom")
-        self.assertEqual(len(responses.calls), 2)
+        with self.assertRaises(ValueError):
+            pybsn.guess_url(session, "192.0.2.1/custom")
 
     @responses.activate
     def test_root_only_trailing_slash_uses_default_prefix_without_double_slash(self):
@@ -464,21 +498,12 @@ class TestSchemalessUrl(unittest.TestCase):
         self.assertEqual(responses.calls[0].request.url, "https://controller.example:443/a/api/v1/auth/healthy")
 
     @responses.activate
-    def test_custom_path_prefix_trailing_slash_is_normalized(self):
-        """A custom trailing slash should not create double-slash API paths."""
-        responses.add(
-            responses.GET,
-            "https://controller.example:443/custom/api/v1/auth/healthy",
-            status=200,
-            body="true",
-            content_type="application/json",
-        )
-
+    def test_schemeless_path_prefix_with_trailing_slash_is_rejected(self):
+        """Custom prefixes still require a scheme even with a trailing slash."""
         session = requests.Session()
-        url = pybsn.guess_url(session, "controller.example/custom/")
 
-        self.assertEqual(url, "https://controller.example:443/custom")
-        self.assertEqual(responses.calls[0].request.url, "https://controller.example:443/custom/api/v1/auth/healthy")
+        with self.assertRaises(ValueError):
+            pybsn.guess_url(session, "controller.example/custom/")
 
 
 class TestFallbackTiming(unittest.TestCase):
