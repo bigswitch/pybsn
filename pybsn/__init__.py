@@ -1,8 +1,10 @@
+import ipaddress
 import json
 import logging
 import re
 import urllib.parse
 import warnings
+from dataclasses import dataclass
 from string import Template
 from typing import Any, Dict, List, Optional, Union
 from urllib.parse import urlparse
@@ -553,33 +555,86 @@ def logged_request(
     return response
 
 
+API_PREFIX = "/a"
+
+
+@dataclass(frozen=True)
+class ApiEndpointConfig:
+    scheme: str
+    port_no: int
+    prefix: str
+
+
 BIGDB_PROTO_PORTS = [
-    ("https", 8443),
-    ("http", 8080),
+    ApiEndpointConfig(scheme="https", port_no=443, prefix=API_PREFIX),
+    ApiEndpointConfig(scheme="https", port_no=8443, prefix=""),
+    ApiEndpointConfig(scheme="http", port_no=8080, prefix=""),
 ]
+
+
+def _is_valid_probe_response(url: str, response: requests.Response) -> bool:
+    """Return True when a probe response is a usable BigDB success response.
+
+    Older controllers can return GUI HTML with HTTP 200 for probe paths that are
+    not actually backed by BigDB. Accept only JSON probe responses so HTML
+    catch-all pages are rejected regardless of the validation path in use.
+    """
+    if response.status_code != 200:
+        logger.debug("Probe to %s returned status %d; skipping", url, response.status_code)
+        return False
+
+    content_type, *_ct_params = response.headers.get("Content-Type", "").split(";", maxsplit=1)
+    if content_type.lower().strip() == "application/json":
+        return True
+    logger.debug(
+        "Probe to %s returned 200 but unexpected Content-Type %r; skipping",
+        url,
+        response.headers.get("Content-Type", ""),
+    )
+    return False
+
+
+def _format_url_host(hostname: str) -> str:
+    try:
+        address = ipaddress.ip_address(hostname)
+    except ValueError:
+        return hostname
+
+    return f"[{hostname}]" if isinstance(address, ipaddress.IPv6Address) else hostname
 
 
 def guess_url(session: requests.Session, host: str, validate_path: str = "/api/v1/auth/healthy") -> str:
     """Guess the correct BigDB URL for a given host if not specified completely.
     :param session: requests session to use
-    :param host: host as specified by the user
+    :param host: host as specified by the user. Scheme-less inputs stay in discovery
+                 mode and must not include an explicit port or custom path prefix.
+                 Explicit endpoints must be provided as full URLs with scheme.
     :param validate_path: BigDB path to use to validate the correctness of the guess
     :return fully qualified BigDB URL
     """
     if re.match(r"^https?://", host):
         return host
-    else:
-        for schema, port in BIGDB_PROTO_PORTS:
-            url = "%s://%s:%d" % (schema, host, port)
-            try:
-                response = session.get(url + validate_path, timeout=2)
-            except requests.exceptions.ConnectionError as e:
-                logger.debug("Error connecting to %s: %s", url, str(e))
-                continue
-            if response.status_code == 200:  # OK
-                return url
-            else:
-                logger.debug("Could connect to URL %s: %s", url, response)
+
+    # Parse a URL without a scheme to detect invalid explicit ports or path prefixes.
+    parsed = urlparse(f"//{host}")
+    hostname = parsed.hostname
+    if hostname is None:
+        raise ValueError(f"Could not parse host from {host!r}")
+    if parsed.port is not None:
+        raise ValueError(f"Schemeless hosts must not include an explicit port: {host!r}")
+    if parsed.path not in ("", "/"):
+        raise ValueError(f"Schemeless hosts must not include a path prefix: {host!r}")
+    hostname = _format_url_host(hostname)
+
+    for endpoint in BIGDB_PROTO_PORTS:
+        url = f"{endpoint.scheme}://{hostname}:{endpoint.port_no}{endpoint.prefix}"
+        try:
+            response = session.get(url + validate_path, timeout=2)
+        except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
+            logger.debug("Error connecting to %s: %s", url, str(e))
+            continue
+        if _is_valid_probe_response(url + validate_path, response):
+            return url
     raise Exception("Could not find available BigDB service on {}".format(host))
 
 
@@ -606,8 +661,14 @@ def _attempt_login(
 
     # If we reach here, status is 2xx (typically 200 for login endpoint)
     json_ = response.json()
+    parsed_url = urlparse(url)
+    url_path_prefix = parsed_url.path.rstrip("/")
+    session_cookie_path = f"{url_path_prefix}/api"
     session_cookie = requests.cookies.create_cookie(
-        name="session_cookie", value=json_["session-cookie"], domain=urlparse(url).hostname, path="/api"  # type: ignore[arg-type]
+        name="session_cookie",
+        value=json_["session-cookie"],
+        domain=parsed_url.hostname,
+        path=session_cookie_path,  # type: ignore[arg-type]
     )
     session.cookies.set_cookie(session_cookie)
     return url
@@ -627,8 +688,9 @@ def connect(
 
     Main entrypoint to pybsn.
 
-    :param host: BigDB Host to connect to; can be just the hostname/IP (1.2.3.4) or the BigDB URL
-                 prefix (https://1.2.3.4:8443/)
+    :param host: BigDB host to connect to. This can be a bare hostname/IP for endpoint
+                 discovery (for example 1.2.3.4 or [2001:db8::1]), or a full BigDB URL
+                 such as https://1.2.3.4:8443/ or https://controller.example/custom.
 
     To use user/password authentication (interactive session):
     :parameter username
