@@ -586,7 +586,11 @@ def _is_valid_probe_response(url: str, response: requests.Response) -> bool:
     content_type, *_ct_params = response.headers.get("Content-Type", "").split(";", maxsplit=1)
     if content_type.lower().strip() == "application/json":
         return True
-    logger.debug("Probe to %s returned 200 but unexpected Content-Type %r; skipping", url, response.headers.get("Content-Type", ""))
+    logger.debug(
+        "Probe to %s returned 200 but unexpected Content-Type %r; skipping",
+        url,
+        response.headers.get("Content-Type", ""),
+    )
     return False
 
 
