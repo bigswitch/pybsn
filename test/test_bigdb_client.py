@@ -2,10 +2,12 @@ import json
 import logging
 import os
 import unittest
+from http.client import RemoteDisconnected
 from unittest.mock import patch
 
 import requests
 import responses
+from urllib3.exceptions import ProtocolError
 
 import pybsn
 
@@ -283,3 +285,70 @@ class TestBigDBClient(unittest.TestCase):
                 responses.add(responses.GET, "http://127.0.0.1:8080/api/v1/schema/", json={"state": "ok"}, status=200)
                 self.client.schema()
                 mock_debug.assert_called()
+
+
+class TestTransportRetry(unittest.TestCase):
+    URL = "http://127.0.0.1:8080/api/v1/data/controller/test"
+
+    def setUp(self):
+        self.client = pybsn.connect("http://127.0.0.1:8080")
+
+    def _premature_close_error(self):
+        return requests.exceptions.ConnectionError(
+            ProtocolError(
+                "Connection aborted.",
+                RemoteDisconnected("Remote end closed connection without response"),
+            )
+        )
+
+    def _call_method(self, method):
+        fn = getattr(self.client, method.lower())
+        if method in ("GET", "DELETE"):
+            return fn(path="controller/test")
+        return fn(path="controller/test", data={"foo": "bar"})
+
+    def _assert_idempotent_method_retries_once_on_protocol_error(self, method):
+        responses.add(method, self.URL, body=self._premature_close_error())
+        responses.add(method, self.URL, json={"state": "ok"}, status=200)
+
+        self._call_method(method)
+
+        self.assertEqual(2, len(responses.calls), f"{method} should have retried once")
+
+    @responses.activate
+    def test_idempotent_methods_retry_on_protocol_error(self):
+        for method in (responses.GET, responses.PUT, responses.DELETE):
+            with self.subTest(method=method):
+                responses.reset()
+                self._assert_idempotent_method_retries_once_on_protocol_error(method)
+
+    @responses.activate
+    def test_post_does_not_retry_on_protocol_error(self):
+        responses.add(responses.POST, self.URL, body=self._premature_close_error())
+        with self.assertRaises(requests.exceptions.ConnectionError):
+            self.client.post(path="controller/test", data={"foo": "bar"})
+        self.assertEqual(len(responses.calls), 1)
+
+    @responses.activate
+    def test_patch_does_not_retry_on_protocol_error(self):
+        responses.add(responses.PATCH, self.URL, body=self._premature_close_error())
+        with self.assertRaises(requests.exceptions.ConnectionError):
+            self.client.patch(path="controller/test", data={"foo": "bar"})
+        self.assertEqual(len(responses.calls), 1)
+
+    @responses.activate
+    def test_no_retry_on_connection_refused_reraises_original_exception(self):
+        error = requests.exceptions.ConnectionError("Connection refused")
+        responses.add(responses.GET, self.URL, body=error)
+        with self.assertRaises(requests.exceptions.ConnectionError) as context:
+            self.client.get(path="controller/test")
+        self.assertIs(context.exception, error)
+        self.assertEqual(len(responses.calls), 1)
+
+    @responses.activate
+    def test_retry_fails_twice_raises(self):
+        responses.add(responses.GET, self.URL, body=self._premature_close_error())
+        responses.add(responses.GET, self.URL, body=self._premature_close_error())
+        with self.assertRaises(requests.exceptions.ConnectionError):
+            self.client.get(path="controller/test")
+        self.assertEqual(len(responses.calls), 2)

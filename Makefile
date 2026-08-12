@@ -22,11 +22,11 @@ fix:
 
 .PHONY: coverage
 coverage:
-	uv run coverage run --omit */*-packages/* -m unittest discover -v
+	uv run --extra test coverage run --omit */*-packages/* -m unittest discover -v
 
 .PHONY: coverage-report
 coverage-report:
-	uv run coverage report
+	uv run --extra test coverage report
 
 .PHONY: install-deps
 install-deps:
@@ -42,4 +42,4 @@ reformat:
 
 .PHONY: test
 test:
-	uv run --with .[test] python -m unittest discover -v
+	uv run --extra test python -m unittest discover -v
