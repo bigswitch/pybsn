@@ -667,7 +667,6 @@ def _attempt_login(
     session_cookie = requests.cookies.create_cookie(
         name="session_cookie",
         value=json_["session-cookie"],
-        domain=parsed_url.hostname,
         path=session_cookie_path,  # type: ignore[arg-type]
     )
     session.cookies.set_cookie(session_cookie)
