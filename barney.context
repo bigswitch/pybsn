@@ -2,19 +2,19 @@
 	"version": 1,
 	"repomap": {
 		"barney.ci/alpine": {
-			"commit": "052b61532a2df69c1d99db45d27c9ec7899530f3"
+			"commit": "2e521eb609c23f3a42330897afd618a721b80ab8"
 		},
 		"barney.ci/barneyfile": {
 			"commit": "37df91a7357b5f0fe24b4e33f574e514a30a0403"
 		},
 		"barney.ci/golang": {
-			"commit": "bbaa8e3aec6e1765f79adaf9712cae80590d1b14"
+			"commit": "8aedf2e754cea42084dd2c353fc6fd8323b1a17e"
 		},
 		"barney.ci/scdoc": {
 			"commit": "4b6c34f38a3800aea3abef8ea0e021e9623ed498"
 		},
 		"github.com/golang/go": {
-			"commit": "c19862e5f8415b4f24b189d065ed739517c548ba"
+			"commit": "1ea5a71ad8ceb7b9f16b4b6f8ea4739a4327dd6e"
 		}
 	}
 }
