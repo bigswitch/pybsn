@@ -2,7 +2,7 @@
 	"version": 1,
 	"repomap": {
 		"barney.ci/alpine": {
-			"commit": "2e521eb609c23f3a42330897afd618a721b80ab8"
+			"commit": "59d85a18999263531a804ce296ea835555973715"
 		},
 		"barney.ci/barneyfile": {
 			"commit": "37df91a7357b5f0fe24b4e33f574e514a30a0403"
