@@ -9,3 +9,13 @@ x-bar:
 epoch: 1
 ObsoleteNames:
   - github.com/bigswitch/pybsn
+
+Epoch: 1
+x-github-bridge:
+  reviews:
+    - image: test
+      events:
+        - type: pull_request
+        - type: push
+          branch-re: ^main$
+
