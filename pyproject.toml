@@ -24,11 +24,11 @@ dependencies = [
 
 [project.optional-dependencies]
 test = [
-    "responses>=0.10.6",
+    "responses>=0.22.0",
     "coverage>=5.0",
 ]
 dev = [
-    "responses>=0.10.6",
+    "responses>=0.22.0",
     "coverage>=5.0",
     "flake8>=3.8.0",
 ]
