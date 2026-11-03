@@ -14,7 +14,7 @@ sys.path.append("test")
 
 class TestRetryBigDbClientIntegration(unittest.TestCase):
     """
-    Integration tests with actual network failures to verify retry behavior end-to-end.
+    Mocked end-to-end discovery, login, and request tests using responses.
     """
 
     url = "http://127.0.0.1:8080"
@@ -155,8 +155,8 @@ class TestRetryBigDbClientIntegration(unittest.TestCase):
 
         client = pybsn.connect(self.url, "admin", "somepassword", retries=retry_config)
 
-        # Should fail without retries because 500 is not in forcelist
-        # But since raise_on_status=False, it returns the response
+        # HTTP 500 is outside status_forcelist, so it is not retried.
+        # BigDbClient raises HTTPError from the final response.
         with self.assertRaises(requests.exceptions.HTTPError) as raised:
             client.get("controller/core/switch")
 
