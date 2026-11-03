@@ -1068,11 +1068,11 @@ requires-dist = [
     { name = "coverage", marker = "extra == 'test'", specifier = ">=5.0" },
     { name = "flake8", marker = "extra == 'dev'", specifier = ">=3.8.0" },
     { name = "ipython", specifier = ">=7.13.0" },
-    { name = "requests", specifier = ">=2.32.4" },
+    { name = "requests", specifier = ">=2.25.0" },
     { name = "responses", marker = "extra == 'dev'", specifier = ">=0.10.6" },
     { name = "responses", marker = "extra == 'test'", specifier = ">=0.10.6" },
     { name = "traitlets", specifier = ">=4.3.3" },
-    { name = "urllib3", specifier = ">=2.2.3" },
+    { name = "urllib3", specifier = ">=1.26.0" },
 ]
 provides-extras = ["test", "dev"]
 

@@ -228,8 +228,8 @@ class TestRetryBigDbClientIntegration(unittest.TestCase):
         client = pybsn.connect("127.0.0.1", "admin", "somepassword", retries=Retry(total=1, status_forcelist=[503]))
 
         self.assertEqual(client.url, "https://127.0.0.1:8443")
-        self.assertEqual(len(primary.calls), 2)
-        self.assertEqual(len(fallback.calls), 1)
+        self.assertEqual(sum(call.request.url == primary.url for call in responses.calls), 2)
+        self.assertEqual(sum(call.request.url == fallback.url for call in responses.calls), 1)
 
     @responses.activate
     def test_retry_during_login(self):
