@@ -1,6 +1,7 @@
+import json
 import sys
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import requests
 from urllib3.util.retry import Retry
@@ -18,7 +19,7 @@ class TestRetryConnect(unittest.TestCase):
     def test_connect_no_retries(self):
         """Default behavior (retries=None), verify no custom HTTPAdapter mounted."""
         with patch.object(requests.Session, "send") as mock_send:
-            mock_send.return_value = self._create_mock_response(200, {"session-cookie": "test-cookie"})
+            mock_send.return_value = self._create_response(200, {"session-cookie": "test-cookie"})
             client = pybsn.connect("http://127.0.0.1:8080", "admin", "password")
             # Verify session has default adapters (not custom retry adapters)
             # Default sessions have basic HTTPAdapters with max_retries=0 (Retry(0))
@@ -34,7 +35,7 @@ class TestRetryConnect(unittest.TestCase):
     def test_connect_retries_int(self):
         """Pass retries=3, verify HTTPAdapter mounted with correct int value."""
         with patch.object(requests.Session, "send") as mock_send:
-            mock_send.return_value = self._create_mock_response(200, {"session-cookie": "test-cookie"})
+            mock_send.return_value = self._create_response(200, {"session-cookie": "test-cookie"})
             client = pybsn.connect("http://127.0.0.1:8080", "admin", "password", retries=3)
 
             # Verify adapters have max_retries configured with total=3
@@ -54,7 +55,7 @@ class TestRetryConnect(unittest.TestCase):
         retry_config = Retry(total=5, backoff_factor=0.5, status_forcelist=[500, 502, 503, 504])
 
         with patch.object(requests.Session, "send") as mock_send:
-            mock_send.return_value = self._create_mock_response(200, {"session-cookie": "test-cookie"})
+            mock_send.return_value = self._create_response(200, {"session-cookie": "test-cookie"})
             client = pybsn.connect("http://127.0.0.1:8080", "admin", "password", retries=retry_config)
 
             # Verify adapters have the correct Retry object
@@ -69,7 +70,7 @@ class TestRetryConnect(unittest.TestCase):
     def test_connect_retries_with_token(self):
         """Retries work with token auth."""
         with patch.object(requests.Session, "send") as mock_send:
-            mock_send.return_value = self._create_mock_response(200, [])
+            mock_send.return_value = self._create_response(200, [])
             client = pybsn.connect("http://127.0.0.1:8080", token="test-token", retries=3)
 
             # Verify adapters have max_retries configured with total=3
@@ -85,31 +86,37 @@ class TestRetryConnect(unittest.TestCase):
             self.assertEqual(https_adapter.max_retries.total, 3)
 
     def test_connect_retries_preserves_verify_tls_true(self):
-        """Verify TLS verification still works when verify_tls=True and retries set."""
-        with patch.object(requests.Session, "mount"):
-            with patch.object(requests.Session, "send") as mock_send:
-                mock_send.return_value = self._create_mock_response(200, {"session-cookie": "test-cookie"})
-                client = pybsn.connect("http://127.0.0.1:8080", "admin", "password", verify_tls=True, retries=3)
+        """Pass TLS verification through the session with the retry adapter installed."""
+        with patch.object(requests.adapters.HTTPAdapter, "send") as mock_send:
+            mock_send.return_value = self._create_response(200, {"session-cookie": "test-cookie"})
+            client = pybsn.connect("https://127.0.0.1:8443", "admin", "password", verify_tls=True, retries=3)
 
-                # Verify TLS verification is enabled
-                self.assertTrue(client.session.verify)
+            adapter = client.session.get_adapter("https://127.0.0.1:8443")
+            self.assertIsInstance(adapter.max_retries, Retry)
+            self.assertEqual(adapter.max_retries.total, 3)
+            self.assertTrue(client.session.verify)
+            mock_send.assert_called_once()
+            self.assertIs(mock_send.call_args.kwargs["verify"], True)
 
     def test_connect_retries_preserves_verify_tls_false(self):
-        """Verify TLS verification disabled when verify_tls=False and retries set."""
-        with patch.object(requests.Session, "mount"):
-            with patch.object(requests.Session, "send") as mock_send:
-                mock_send.return_value = self._create_mock_response(200, {"session-cookie": "test-cookie"})
-                client = pybsn.connect("http://127.0.0.1:8080", "admin", "password", verify_tls=False, retries=3)
+        """Pass disabled TLS verification through the session with retries installed."""
+        with patch.object(requests.adapters.HTTPAdapter, "send") as mock_send:
+            mock_send.return_value = self._create_response(200, {"session-cookie": "test-cookie"})
+            client = pybsn.connect("https://127.0.0.1:8443", "admin", "password", verify_tls=False, retries=3)
 
-                # Verify TLS verification is disabled
-                self.assertFalse(client.session.verify)
+            adapter = client.session.get_adapter("https://127.0.0.1:8443")
+            self.assertIsInstance(adapter.max_retries, Retry)
+            self.assertEqual(adapter.max_retries.total, 3)
+            self.assertFalse(client.session.verify)
+            mock_send.assert_called_once()
+            self.assertIs(mock_send.call_args.kwargs["verify"], False)
 
-    def _create_mock_response(self, status_code, json_data):
-        """Helper to create a mock response object."""
-        response = MagicMock(spec=requests.Response)
+    def _create_response(self, status_code, json_data):
+        """Create a response usable by real Session.send and mocked transport."""
+        response = requests.Response()
         response.status_code = status_code
-        response.json.return_value = json_data
-        response.raise_for_status.return_value = None
+        response._content = json.dumps(json_data).encode("utf-8")
+        response.headers["Content-Type"] = "application/json"
         return response
 
 

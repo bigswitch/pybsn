@@ -157,8 +157,13 @@ class TestRetryBigDbClientIntegration(unittest.TestCase):
 
         # Should fail without retries because 500 is not in forcelist
         # But since raise_on_status=False, it returns the response
-        with self.assertRaises(Exception):  # HTTPError from raise_for_status
+        with self.assertRaises(requests.exceptions.HTTPError) as raised:
             client.get("controller/core/switch")
+
+        self.assertEqual(raised.exception.response.status_code, 500)
+        switch_url = self.url + "/api/v1/data/controller/core/switch"
+        switch_requests = [call for call in responses.calls if call.request.method == "GET" and call.request.url == switch_url]
+        self.assertEqual(len(switch_requests), 1)
 
     @responses.activate
     def test_no_retry_when_not_configured(self):

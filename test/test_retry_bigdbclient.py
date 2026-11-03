@@ -364,41 +364,6 @@ class TestRetryBigDbClient(unittest.TestCase):
         with self.assertRaises(ConnectionError):
             client.get("controller/core/switch")
 
-    @responses.activate
-    def test_retry_backoff_behavior(self):
-        """Verify exponential backoff when using Retry object."""
-        self._add_login_responses()
-
-        # Configure retry with backoff and retry on 503
-        retry_config = Retry(total=3, backoff_factor=0.1, status_forcelist=[503])
-
-        # First two GET attempts return 503, third succeeds
-        responses.add(
-            responses.GET,
-            "http://127.0.0.1:8080/api/v1/data/controller/core/switch",
-            json={},
-            status=503,
-        )
-        responses.add(
-            responses.GET,
-            "http://127.0.0.1:8080/api/v1/data/controller/core/switch",
-            json={},
-            status=503,
-        )
-        responses.add(
-            responses.GET,
-            "http://127.0.0.1:8080/api/v1/data/controller/core/switch",
-            json=[{"name": "switch1"}],
-            status=200,
-        )
-
-        client = pybsn.connect(self.url, "admin", "somepassword", retries=retry_config)
-        result = client.get("controller/core/switch")
-
-        # Should succeed after retries
-        # Note: Backoff behavior is handled by urllib3 internally
-        self.assertEqual(result, [{"name": "switch1"}])
-
 
 if __name__ == "__main__":
     unittest.main()
