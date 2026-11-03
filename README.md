@@ -178,6 +178,72 @@ root.core.switch.match(name="leaf-1a").disconnect.rpc()
 ```
 
 ---
+## Retry Configuration
+
+pybsn supports automatic retry of failed HTTP requests to improve reliability when connecting to BigDB. You can configure retry behavior using the `retries` parameter in `pybsn.connect()`.
+
+Retries also apply to endpoint discovery for bare hostnames and IP addresses. Each candidate endpoint can consume the full retry budget before pybsn tries the next one. Discovery sets 2-second connect and read timeouts for each attempt, plus any configured backoff or `Retry-After` delay. For example, `retries=3` can spend about 8 seconds on connection timeouts at a dead first endpoint before trying a healthy fallback. Use a full URL such as `https://controller:8443` to skip discovery when the endpoint is known.
+
+### Simple Retry Count
+
+Pass an integer to specify the retry count:
+
+```python
+# Retry up to 3 times using urllib3's default retry policy
+client = pybsn.connect(host="controller", token="<token>", retries=3)
+```
+
+**Important:** When using an integer value:
+- Retries connection failures before sending a request for **all methods**, including POST and PATCH.
+- Retries read errors for **GET, HEAD, OPTIONS, PUT, DELETE, TRACE** only.
+- Retries **413, 429, 503** responses with a `Retry-After` header for those methods and honors its delay.
+- Does not retry POST/PATCH read errors or HTTP statuses.
+- Uses no exponential backoff.
+
+Use a `Retry` object to select other HTTP statuses, change `Retry-After` handling, or retry POST/PATCH read errors and statuses (see below). By default, exhausted status retries raise `requests.exceptions.RetryError`; set `raise_on_status=False` in the `Retry` configuration to let pybsn handle the final HTTP response instead. During endpoint discovery, pybsn then tries the next candidate endpoint.
+
+### Advanced Retry Configuration
+
+For more control over retry behavior, use a `urllib3.util.retry.Retry` object:
+
+```python
+from urllib3.util.retry import Retry
+
+# Configure custom retry behavior
+retry_config = Retry(
+    total=5,                          # Total retry attempts
+    backoff_factor=1,                 # Exponential backoff (0s, 2s, 4s, 8s, 16s)
+    status_forcelist=[503, 504],      # Retry on specific HTTP status codes
+)
+
+client = pybsn.connect(host="controller", token="<token>", retries=retry_config)
+```
+
+### Retry Non-Idempotent Methods
+
+**Use with caution!** To retry POST/PATCH read errors and HTTP statuses, explicitly configure `allowed_methods`. PUT and DELETE already belong to the default method set:
+
+```python
+from urllib3.util.retry import Retry
+
+# WARNING: Only use if your operations are truly idempotent!
+retry_config = Retry(
+    total=3,
+    backoff_factor=0.5,
+    status_forcelist=[503],
+    allowed_methods=["GET", "POST", "PUT", "PATCH", "DELETE"],  # Include all methods
+)
+
+client = pybsn.connect(host="controller", token="<token>", retries=retry_config)
+```
+
+### Default Behavior
+
+By default (`retries=None`), no automatic retries are performed. Requests fail immediately on errors, preserving backward compatibility with existing code.
+
+For more examples, see `examples/retry_example.py`.
+
+---
 ## Contributing
 
 If you'd like to contribute a feature or bugfix: Thanks! To make sure your
