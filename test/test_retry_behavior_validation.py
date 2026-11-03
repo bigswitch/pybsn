@@ -36,26 +36,26 @@ class TestRetryBehaviorValidation(unittest.TestCase):
         self.assertIsInstance(retry_config, Retry)
         self.assertEqual(retry_config.total, 3, "Should retry up to 3 times")
 
-        # Methods that will be retried (idempotent + PUT/DELETE)
+        # Methods eligible for read/status retries (connect failures apply to all methods).
         self.assertEqual(
             retry_config.allowed_methods,
             frozenset({"GET", "HEAD", "OPTIONS", "PUT", "DELETE", "TRACE"}),
-            "Should retry idempotent methods plus PUT/DELETE, but NOT POST or PATCH",
+            "Read/status retries should exclude POST and PATCH",
         )
 
         # Status codes - IMPORTANT: empty by default!
         self.assertEqual(
             retry_config.status_forcelist,
             set(),
-            "Should NOT retry any HTTP status codes by default (only connection errors)",
+            "No forced HTTP status codes; Retry-After handling remains enabled",
         )
 
         # Backoff
         self.assertEqual(retry_config.backoff_factor, 0, "Should have no exponential backoff by default")
 
     @responses.activate
-    def test_retry_int_does_not_retry_http_errors(self):
-        """Verify that retries=3 does NOT retry HTTP error status codes like 503."""
+    def test_retry_int_does_not_retry_503_without_retry_after(self):
+        """An integer retry count does not retry 503 without Retry-After."""
         responses.add(responses.GET, "http://127.0.0.1:8080/api/v1/auth/healthy", json={}, status=200)
         responses.add(
             responses.POST,
@@ -121,8 +121,8 @@ class TestRetryBehaviorValidation(unittest.TestCase):
         self.assertEqual(len(get_requests), 2, "Should make 2 requests (1 failure + 1 retry)")
 
     @responses.activate
-    def test_retry_int_does_not_retry_post_on_connection_error(self):
-        """Verify that retries=3 does NOT retry POST even on connection errors."""
+    def test_retry_int_propagates_mocked_post_exception(self):
+        """An exception injected by responses propagates outside urllib3 retry handling."""
         responses.add(responses.GET, "http://127.0.0.1:8080/api/v1/auth/healthy", json={}, status=200)
         responses.add(
             responses.POST,
@@ -140,17 +140,17 @@ class TestRetryBehaviorValidation(unittest.TestCase):
 
         client = pybsn.connect("http://127.0.0.1:8080", "admin", "password", retries=3)
 
-        # Should NOT retry POST - will raise immediately even on connection error
+        # Responses injects this exception above urllib3, so it propagates directly.
         with self.assertRaises(requests.exceptions.ConnectionError):
             client.post("controller/core/switch", data={"name": "test"})
 
-        # Verify only 1 POST request was made (no retries for POST with retries=int)
+        # Verify the mock raised its injected exception on the first POST.
         post_requests = [call for call in responses.calls if call.request.method == "POST" and "switch" in call.request.url]
-        self.assertEqual(len(post_requests), 1, "POST should NOT be retried even on connection errors")
+        self.assertEqual(len(post_requests), 1, "The injected exception should propagate without another mocked request")
 
     @responses.activate
-    def test_retry_int_does_not_retry_patch_on_connection_error(self):
-        """Verify that retries=3 does NOT retry PATCH even on connection errors."""
+    def test_retry_int_propagates_mocked_patch_exception(self):
+        """An exception injected by responses propagates outside urllib3 retry handling."""
         responses.add(responses.GET, "http://127.0.0.1:8080/api/v1/auth/healthy", json={}, status=200)
         responses.add(
             responses.POST,
@@ -168,13 +168,13 @@ class TestRetryBehaviorValidation(unittest.TestCase):
 
         client = pybsn.connect("http://127.0.0.1:8080", "admin", "password", retries=3)
 
-        # Should NOT retry PATCH - will raise immediately even on connection error
+        # Responses injects this exception above urllib3, so it propagates directly.
         with self.assertRaises(requests.exceptions.ConnectionError):
             client.patch("controller/core/switch", data={"name": "test"})
 
         # Verify only 1 PATCH request was made
         patch_requests = [call for call in responses.calls if call.request.method == "PATCH" and "switch" in call.request.url]
-        self.assertEqual(len(patch_requests), 1, "PATCH should NOT be retried even on connection errors")
+        self.assertEqual(len(patch_requests), 1, "The injected exception should propagate without another mocked request")
 
     @responses.activate
     def test_retry_int_allowed_methods_config(self):
@@ -185,7 +185,7 @@ class TestRetryBehaviorValidation(unittest.TestCase):
         because the 'responses' mocking library interferes with urllib3's retry mechanism.
         The responses library raises exceptions at the wrong layer, preventing retries.
 
-        The configuration test proves that GET/PUT/DELETE will be retried while POST/PATCH won't.
+        The allowed_methods setting controls read/status retries, not connection failures.
         """
         responses.add(responses.GET, "http://127.0.0.1:8080/api/v1/auth/healthy", json={}, status=200)
         responses.add(

@@ -184,20 +184,21 @@ pybsn supports automatic retry of failed HTTP requests to improve reliability wh
 
 ### Simple Retry Count
 
-Pass an integer to specify retry attempts for **connection-level failures only**:
+Pass an integer to specify the retry count:
 
 ```python
-# Retry up to 3 times on connection errors, timeouts, DNS failures
+# Retry up to 3 times using urllib3's default retry policy
 client = pybsn.connect(host="controller", token="<token>", retries=3)
 ```
 
 **Important:** When using an integer value:
-- Retries **GET, HEAD, OPTIONS, PUT, DELETE, TRACE** requests (but **NOT POST or PATCH**)
-- Retries only on **connection-level failures** (connection errors, timeouts, DNS failures)
-- Does **NOT** retry on HTTP error status codes like 503 or 504
-- No exponential backoff (immediate retry)
+- Retries connection failures before sending a request for **all methods**, including POST and PATCH.
+- Retries read errors for **GET, HEAD, OPTIONS, PUT, DELETE, TRACE** only.
+- Retries **413, 429, 503** responses with a `Retry-After` header for those methods and honors its delay.
+- Does not retry POST/PATCH read errors or HTTP statuses.
+- Uses no exponential backoff.
 
-To retry on HTTP status codes or include POST/PATCH requests, use a `Retry` object (see below).
+Use a `Retry` object to select other HTTP statuses, change `Retry-After` handling, or retry POST/PATCH read errors and statuses (see below). By default, exhausted status retries raise `requests.exceptions.RetryError`; set `raise_on_status=False` in the `Retry` configuration to let pybsn handle the final HTTP response instead. During endpoint discovery, pybsn then tries the next candidate endpoint.
 
 ### Advanced Retry Configuration
 
@@ -209,7 +210,7 @@ from urllib3.util.retry import Retry
 # Configure custom retry behavior
 retry_config = Retry(
     total=5,                          # Total retry attempts
-    backoff_factor=1,                 # Exponential backoff (1s, 2s, 4s, 8s, 16s)
+    backoff_factor=1,                 # Exponential backoff (0s, 2s, 4s, 8s, 16s)
     status_forcelist=[503, 504],      # Retry on specific HTTP status codes
 )
 
@@ -218,7 +219,7 @@ client = pybsn.connect(host="controller", token="<token>", retries=retry_config)
 
 ### Retry Non-Idempotent Methods
 
-**Use with caution!** To retry non-idempotent methods (POST, PUT, PATCH, DELETE), explicitly configure `allowed_methods`:
+**Use with caution!** To retry POST/PATCH read errors and HTTP statuses, explicitly configure `allowed_methods`. PUT and DELETE already belong to the default method set:
 
 ```python
 from urllib3.util.retry import Retry

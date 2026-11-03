@@ -632,7 +632,7 @@ def guess_url(session: requests.Session, host: str, validate_path: str = "/api/v
         url = f"{endpoint.scheme}://{hostname}:{endpoint.port_no}{endpoint.prefix}"
         try:
             response = session.get(url + validate_path, timeout=2)
-        except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
+        except (requests.exceptions.ConnectionError, requests.exceptions.Timeout, requests.exceptions.RetryError) as e:
             logger.debug("Error connecting to %s: %s", url, str(e))
             continue
         if _is_valid_probe_response(url + validate_path, response):
@@ -711,12 +711,12 @@ def connect(
 
     :parameter retries: Optional retry configuration for failed HTTP requests.
         None (default) - No automatic retries.
-        int - Retry count for connection-level failures only (e.g., retries=3).
-            When an integer is specified, retries GET, HEAD, OPTIONS, PUT, DELETE, TRACE requests
-            on connection errors, timeouts, and DNS failures.
-            Does NOT retry on HTTP error status codes (e.g., 503, 504).
-            Does NOT retry POST or PATCH requests.
-            No exponential backoff (immediate retry).
+        int - Retry count (e.g., retries=3). Connection failures before sending
+            a request are retried for all methods. Read errors are retried only
+            for GET, HEAD, OPTIONS, PUT, DELETE, TRACE. Those methods also retry
+            413, 429, 503 responses with a Retry-After header and honor its delay.
+            POST/PATCH read errors and HTTP statuses are not retried.
+            No exponential backoff.
         urllib3.util.retry.Retry - Full retry configuration object for advanced control.
             Use this to retry on HTTP status codes, configure backoff, or retry POST/PATCH.
             Example: retries=Retry(total=5, backoff_factor=1, status_forcelist=[503, 504],

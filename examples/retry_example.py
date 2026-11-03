@@ -20,13 +20,13 @@ args = parser.parse_args()
 
 
 def example_simple_retry():
-    """Example 1: Simple integer retry count (retries on connection-level failures only)"""
+    """Example 1: Simple integer retry count using urllib3 defaults"""
     print("Example 1: Simple integer retry count")
     client = pybsn.connect(args.host, args.user, args.password, retries=3)
 
-    # This will retry up to 3 times on connection errors, timeouts, DNS failures
-    # Retries GET, HEAD, OPTIONS, PUT, DELETE, TRACE (but NOT POST or PATCH)
-    # Does NOT retry on HTTP status codes like 503 - only connection-level failures
+    # Connection failures before sending a request are retried for all methods.
+    # Read/status retries apply to GET, HEAD, OPTIONS, PUT, DELETE, TRACE.
+    # 413/429/503 responses with Retry-After are retried and honor its delay.
     switches = client.root.core.switch()
     print(f"  Found {len(switches)} switches")
 
@@ -41,7 +41,7 @@ def example_custom_retry():
     # - Retry on specific HTTP status codes (503, 504)
     retry_config = Retry(
         total=5,
-        backoff_factor=1,  # Wait 1s, 2s, 4s, 8s, 16s between retries
+        backoff_factor=1,  # Wait 0s, 2s, 4s, 8s, 16s between retries
         status_forcelist=[503, 504],  # Retry on Service Unavailable and Gateway Timeout
     )
 
@@ -54,10 +54,10 @@ def example_custom_retry():
 
 def example_retry_non_idempotent():
     """Example 3: Retry non-idempotent methods (use with caution!)"""
-    print("\nExample 3: Retry non-idempotent methods (POST, PUT, PATCH, DELETE)")
+    print("\nExample 3: Add POST/PATCH read and status retries")
 
-    # By default, only safe/idempotent methods are retried
-    # To retry POST/PUT/PATCH/DELETE, explicitly configure allowed_methods
+    # Read/status retries exclude POST/PATCH by default; PUT/DELETE are included.
+    # Add POST/PATCH to allowed_methods only when those operations are idempotent.
     # WARNING: Only use this if your operations are truly idempotent!
     retry_config = Retry(
         total=3,
@@ -68,7 +68,7 @@ def example_retry_non_idempotent():
 
     client = pybsn.connect(args.host, args.user, args.password, retries=retry_config)
 
-    # Now POST/PUT/PATCH/DELETE operations will also retry on failures
+    # POST/PATCH read errors and 503 responses are now eligible for retries
     # Use with caution - ensure your operations are idempotent!
     switches = client.root.core.switch()
     print(f"  Found {len(switches)} switches (with non-idempotent retry enabled)")

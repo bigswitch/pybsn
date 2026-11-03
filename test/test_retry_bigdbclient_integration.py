@@ -215,6 +215,23 @@ class TestRetryBigDbClientIntegration(unittest.TestCase):
         self.assertEqual(client.url, "https://127.0.0.1:8443")
 
     @responses.activate
+    def test_retry_guess_url_falls_back_after_exhausted_status_retries(self):
+        primary = responses.get("https://127.0.0.1:443/a/api/v1/auth/healthy", json={}, status=503)
+        fallback = responses.get("https://127.0.0.1:8443/api/v1/auth/healthy", json={}, status=200)
+        responses.add_callback(
+            responses.POST,
+            "https://127.0.0.1:8443/api/v1/rpc/controller/core/aaa/session/login",
+            callback=self._login_cb,
+            content_type="application/json",
+        )
+
+        client = pybsn.connect("127.0.0.1", "admin", "somepassword", retries=Retry(total=1, status_forcelist=[503]))
+
+        self.assertEqual(client.url, "https://127.0.0.1:8443")
+        self.assertEqual(len(primary.calls), 2)
+        self.assertEqual(len(fallback.calls), 1)
+
+    @responses.activate
     def test_retry_during_login(self):
         """Verify retries work during login phase with 503 status."""
         responses.add(

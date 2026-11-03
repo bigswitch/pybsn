@@ -3,9 +3,9 @@
 Real integration test with actual HTTP server to validate retry behavior.
 
 This test uses a real HTTP server on an ephemeral port to verify that:
-1. GET requests ARE retried on connection failures
-2. POST requests are NOT retried on connection failures (even with retries=3)
-3. PATCH requests are NOT retried on connection failures (even with retries=3)
+1. GET requests ARE retried when the server drops the response
+2. POST requests are NOT retried when the server drops the response (even with retries=3)
+3. PATCH requests are NOT retried when the server drops the response (even with retries=3)
 """
 import http.server
 import json
@@ -25,6 +25,7 @@ class RequestCountingHandler(http.server.BaseHTTPRequestHandler):
     post_count = 0
     patch_count = 0
     fail_first_n_gets = 0  # Fail first N GET requests by closing connection
+    retry_after_failures = 0
 
     @classmethod
     def reset_counts(cls):
@@ -32,6 +33,7 @@ class RequestCountingHandler(http.server.BaseHTTPRequestHandler):
         cls.post_count = 0
         cls.patch_count = 0
         cls.fail_first_n_gets = 0
+        cls.retry_after_failures = 0
 
     def log_message(self, format, *args):
         """Suppress server logs during tests"""
@@ -53,6 +55,13 @@ class RequestCountingHandler(http.server.BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(b"{}")
         elif "/api/v1/data/controller/core/switch" in self.path:
+            if RequestCountingHandler.retry_after_failures > 0:
+                RequestCountingHandler.retry_after_failures -= 1
+                self.send_response(503)
+                self.send_header("Retry-After", "0")
+                self.send_header("Content-length", "0")
+                self.end_headers()
+                return
             result = [{"name": "switch1"}]
             response = json.dumps(result).encode()
             self.send_response(200)
@@ -148,7 +157,7 @@ class TestRetryRealServer(unittest.TestCase):
 
     def test_retry_int_does_not_retry_post_on_real_connection_error(self):
         """
-        Real test: POST requests are NOT retried on connection errors with retries=3.
+        Real test: POST requests are NOT retried after the server receives the request with retries=3.
 
         This uses a real HTTP server that drops POST connections to verify urllib3 does NOT retry.
         """
@@ -167,9 +176,17 @@ class TestRetryRealServer(unittest.TestCase):
             "Should only make 1 POST request to /switch (no retries)",
         )
 
+    def test_retry_int_retries_status_with_retry_after(self):
+        client = pybsn.connect(self.url, "admin", "password", retries=3)
+        RequestCountingHandler.retry_after_failures = 1
+        initial_get_count = RequestCountingHandler.get_count
+
+        self.assertEqual(client.get("controller/core/switch"), [{"name": "switch1"}])
+        self.assertEqual(RequestCountingHandler.get_count - initial_get_count, 2)
+
     def test_retry_int_does_not_retry_patch_on_real_connection_error(self):
         """
-        Real test: PATCH requests are NOT retried on connection errors with retries=3.
+        Real test: PATCH requests are NOT retried after the server receives the request with retries=3.
 
         This uses a real HTTP server that drops PATCH connections to verify urllib3 does NOT retry.
         """
