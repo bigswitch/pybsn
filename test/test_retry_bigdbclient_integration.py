@@ -85,8 +85,8 @@ class TestRetryBigDbClientIntegration(unittest.TestCase):
         self.assertEqual(result[0]["name"], "switch1")
 
     @responses.activate
-    def test_retry_with_connection_error(self):
-        """Server unreachable, verify retries happen and eventually fail."""
+    def test_retry_exhausts_repeated_503_responses(self):
+        """Repeated HTTP 503 responses exhaust the status retry budget."""
         self._add_login_responses()
 
         # Configure retry to retry on 503

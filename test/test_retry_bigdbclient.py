@@ -54,7 +54,7 @@ class TestRetryBigDbClient(unittest.TestCase):
 
     @responses.activate
     def test_get_retries_on_failure(self):
-        """GET request retries on connection error and succeeds after retry."""
+        """GET request retries on HTTP 503 status and succeeds after retry."""
         self._add_login_responses()
 
         # Configure retry to retry on 503 status
@@ -88,7 +88,7 @@ class TestRetryBigDbClient(unittest.TestCase):
 
     @responses.activate
     def test_post_retries_on_failure(self):
-        """POST request retries on connection error when configured."""
+        """POST request retries on HTTP 503 status when configured."""
         self._add_login_responses()
 
         # Configure retry to allow POST retries and retry on 503
@@ -122,7 +122,7 @@ class TestRetryBigDbClient(unittest.TestCase):
 
     @responses.activate
     def test_put_retries_on_failure(self):
-        """PUT request retries on connection error when configured."""
+        """PUT request retries on HTTP 503 status when configured."""
         self._add_login_responses()
 
         # Configure retry to allow PUT retries and retry on 503
@@ -156,7 +156,7 @@ class TestRetryBigDbClient(unittest.TestCase):
 
     @responses.activate
     def test_patch_retries_on_failure(self):
-        """PATCH request retries on connection error when configured."""
+        """PATCH request retries on HTTP 503 status when configured."""
         self._add_login_responses()
 
         # Configure retry to allow PATCH retries and retry on 503
@@ -190,7 +190,7 @@ class TestRetryBigDbClient(unittest.TestCase):
 
     @responses.activate
     def test_delete_retries_on_failure(self):
-        """DELETE request retries on connection error when configured."""
+        """DELETE request retries on HTTP 503 status when configured."""
         self._add_login_responses()
 
         # Configure retry to allow DELETE retries and retry on 503
@@ -223,7 +223,7 @@ class TestRetryBigDbClient(unittest.TestCase):
 
     @responses.activate
     def test_rpc_retries_on_failure(self):
-        """RPC request retries on connection error when configured."""
+        """RPC request retries on HTTP 503 status when configured."""
         self._add_login_responses()
 
         # Configure retry to allow POST retries (RPC uses POST) and retry on 503
@@ -257,7 +257,7 @@ class TestRetryBigDbClient(unittest.TestCase):
 
     @responses.activate
     def test_schema_retries_on_failure(self):
-        """Schema request retries on connection error."""
+        """Schema request retries on HTTP 503 status."""
         self._add_login_responses()
 
         # Configure retry to retry on 503

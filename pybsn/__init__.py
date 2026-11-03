@@ -710,6 +710,10 @@ def connect(
         for future operations unless it is changed.
 
     :parameter retries: Optional retry configuration for failed HTTP requests.
+        Applies during discovery, authentication and later requests. For bare
+        hosts, each candidate uses the full retry budget with 2-second connect
+        and read timeouts per attempt, plus backoff or Retry-After delays.
+        A full URL skips discovery.
         None (default) - No automatic retries.
         int - Retry count (e.g., retries=3). Connection failures before sending
             a request are retried for all methods. Read errors are retried only

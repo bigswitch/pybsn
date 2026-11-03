@@ -182,6 +182,8 @@ root.core.switch.match(name="leaf-1a").disconnect.rpc()
 
 pybsn supports automatic retry of failed HTTP requests to improve reliability when connecting to BigDB. You can configure retry behavior using the `retries` parameter in `pybsn.connect()`.
 
+Retries also apply to endpoint discovery for bare hostnames and IP addresses. Each candidate endpoint can consume the full retry budget before pybsn tries the next one. Discovery sets 2-second connect and read timeouts for each attempt, plus any configured backoff or `Retry-After` delay. For example, `retries=3` can spend about 8 seconds on connection timeouts at a dead first endpoint before trying a healthy fallback. Use a full URL such as `https://controller:8443` to skip discovery when the endpoint is known.
+
 ### Simple Retry Count
 
 Pass an integer to specify the retry count:
