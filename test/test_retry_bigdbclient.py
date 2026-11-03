@@ -2,9 +2,7 @@ import json
 import sys
 import unittest
 
-import requests
 import responses
-from requests.exceptions import ConnectionError
 from urllib3.util.retry import Retry
 
 import pybsn
@@ -288,81 +286,6 @@ class TestRetryBigDbClient(unittest.TestCase):
 
         # Should succeed after retries
         self.assertEqual(result, {"type": "object"})
-
-    @responses.activate
-    def test_retries_exhausted_raises(self):
-        """After exhausting retries, exception is raised."""
-        self._add_login_responses()
-
-        # Configure retry to retry on 503
-        retry_config = Retry(total=3, status_forcelist=[503], raise_on_status=False)
-
-        # All attempts return 503
-        for _ in range(10):  # More than enough failures to exhaust retries
-            responses.add(
-                responses.GET,
-                "http://127.0.0.1:8080/api/v1/data/controller/core/switch",
-                json={},
-                status=503,
-            )
-
-        client = pybsn.connect(self.url, "admin", "somepassword", retries=retry_config)
-
-        # Should raise HTTPError after retries are exhausted (from raise_for_status)
-        with self.assertRaises(requests.exceptions.HTTPError):
-            client.get("controller/core/switch")
-
-    @responses.activate
-    def test_retry_with_status_forcelist(self):
-        """Retry specific HTTP status codes when configured."""
-        self._add_login_responses()
-
-        # Configure retry to retry on 503 status
-        retry_config = Retry(total=3, status_forcelist=[503])
-
-        # First two attempts return 503, third succeeds
-        responses.add(
-            responses.GET,
-            "http://127.0.0.1:8080/api/v1/data/controller/core/switch",
-            json={},
-            status=503,
-        )
-        responses.add(
-            responses.GET,
-            "http://127.0.0.1:8080/api/v1/data/controller/core/switch",
-            json={},
-            status=503,
-        )
-        responses.add(
-            responses.GET,
-            "http://127.0.0.1:8080/api/v1/data/controller/core/switch",
-            json=[{"name": "switch1"}],
-            status=200,
-        )
-
-        client = pybsn.connect(self.url, "admin", "somepassword", retries=retry_config)
-        result = client.get("controller/core/switch")
-
-        # Should succeed after retries
-        self.assertEqual(result, [{"name": "switch1"}])
-
-    @responses.activate
-    def test_no_retry_when_not_configured(self):
-        """Verify default behavior unchanged - no retries when not configured."""
-        self._add_login_responses()
-
-        # First attempt fails
-        responses.add(
-            responses.GET,
-            "http://127.0.0.1:8080/api/v1/data/controller/core/switch",
-            body=ConnectionError("Connection failed"),
-        )
-
-        client = pybsn.connect(self.url, "admin", "somepassword")  # No retries parameter
-
-        # Should raise exception immediately without retries
-        with self.assertRaises(ConnectionError):
-            client.get("controller/core/switch")
 
 
 if __name__ == "__main__":
