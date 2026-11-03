@@ -29,6 +29,17 @@ jobs:
           - "3.11"
           - "3.12"
           - "3.13"
+        # Python 3.8/3.9 builds are unavailable on Ubuntu 26.04 (ubuntu-latest).
+        exclude:
+          - os-version: ubuntu-latest
+            python-version: "3.8"
+          - os-version: ubuntu-latest
+            python-version: "3.9"
+        include:
+          - os-version: ubuntu-24.04
+            python-version: "3.8"
+          - os-version: ubuntu-24.04
+            python-version: "3.9"
     steps:
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       with:
