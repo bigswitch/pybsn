@@ -14,8 +14,6 @@ import threading
 import time
 import unittest
 
-import requests
-
 import pybsn
 
 

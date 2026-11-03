@@ -145,9 +145,7 @@ class TestRetryBehaviorValidation(unittest.TestCase):
             client.post("controller/core/switch", data={"name": "test"})
 
         # Verify only 1 POST request was made (no retries for POST with retries=int)
-        post_requests = [
-            call for call in responses.calls if call.request.method == "POST" and "switch" in call.request.url
-        ]
+        post_requests = [call for call in responses.calls if call.request.method == "POST" and "switch" in call.request.url]
         self.assertEqual(len(post_requests), 1, "POST should NOT be retried even on connection errors")
 
     @responses.activate
@@ -175,9 +173,7 @@ class TestRetryBehaviorValidation(unittest.TestCase):
             client.patch("controller/core/switch", data={"name": "test"})
 
         # Verify only 1 PATCH request was made
-        patch_requests = [
-            call for call in responses.calls if call.request.method == "PATCH" and "switch" in call.request.url
-        ]
+        patch_requests = [call for call in responses.calls if call.request.method == "PATCH" and "switch" in call.request.url]
         self.assertEqual(len(patch_requests), 1, "PATCH should NOT be retried even on connection errors")
 
     @responses.activate

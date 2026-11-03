@@ -2,39 +2,51 @@ name: Release on PyPi
 on:
   workflow_dispatch: # Allows this workflow to be manually triggered
     inputs:
-      twineRepo: # User input can override default pypi repo, e.g. using 'testpypi'
-        description: 'Target Twine Repository for Release'
+      repository:
+        description: 'Target PyPI repository for release'
         required: true
-        default: 'pypi'
+        type: choice
+        default: pypi
+        options:
+          - pypi
+          - testpypi
   push:
     tags:
       - '*' # Trigger when any tag is pushed
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   deploy:
+    name: Build and publish distributions
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      id-token: write # Required for PyPI trusted publishing.
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      with:
+        persist-credentials: false
 
     - name: Set up Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
       with:
         python-version: '3.x'
 
     - name: Install uv
-      uses: astral-sh/setup-uv@v5
+      uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
+      with:
+        enable-cache: false
 
-    - name: Choose Twine Repository
-      run: |
-        if [ -z "${{ github.event.inputs.twineRepo }}" ]; then
-            echo TWINE_REPO=pypi >> $GITHUB_ENV
-        else
-            echo TWINE_REPO="${{ github.event.inputs.twineRepo }}" >> $GITHUB_ENV
-        fi
+    - name: Build distributions
+      run: uv build
 
-    - name: Build and publish
-      env:
-        TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
-        TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
-      run: |
-        uv build
-        uvx twine upload --repository "${{ env.TWINE_REPO }}" dist/*
+    - name: Publish distributions
+      uses: pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b # v1.14.0
+      with:
+        repository-url: ${{ github.event_name == 'workflow_dispatch' && inputs.repository == 'testpypi' && 'https://test.pypi.org/legacy/' || 'https://upload.pypi.org/legacy/' }}

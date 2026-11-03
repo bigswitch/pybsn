@@ -3,14 +3,16 @@ images:
   minimal-source:
     no-create-mountpoints: true
     units:
-      - build: |
+      - entry: {network: {enabled: false}}
+        build: |
           mkdir -p /dest/usr/lib/python3.11/site-packages/pybsn/
           cp pybsn/__init__.py /dest/usr/lib/python3.11/site-packages/pybsn/
 
   package:
     no-create-mountpoints: true
     units:
-      - build: |
+      - entry: {network: {enabled: false}}
+        build: |
           mkdir -p /dest/pybsn
           cp pybsn/__init__.py /dest/pybsn/
 
@@ -19,6 +21,7 @@ images:
       - sources: []
         mappings:
           /src/package: .%package
+        entry: {network: {enabled: false}}
         build: |
           ls /src/package/pybsn/__init__.py
 
@@ -26,7 +29,8 @@ images:
   # Deprecated ref
   pybsn-install-floor:
     units:
-      - build: |
+      - entry: {network: {enabled: false}}
+        build: |
           mkdir -p /dest/pybsn/
           cp pybsn/__init__.py /dest/pybsn/
           echo '#!/bin/sh
@@ -37,5 +41,4 @@ images:
                 cp ${SRC_DIR}/__init__.py ${DEST_PYTHON_SITE_PKGS}/pybsn/
           ' > /dest/pybsn/install_pybsn
           chmod 777 /dest/pybsn/install_pybsn
-
 
