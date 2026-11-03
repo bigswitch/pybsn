@@ -16,9 +16,10 @@ authors = [
 ]
 requires-python = ">=3.8"
 dependencies = [
-    "requests>=2.3.0",
+    "requests>=2.32.4",
     "IPython>=7.13.0",
     "traitlets>=4.3.3",
+    "urllib3>=2.2.3",
 ]
 
 [project.optional-dependencies]
