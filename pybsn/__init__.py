@@ -27,6 +27,10 @@ JSONValue = Union[JSONPrimitive, Dict[str, Any], List[Any]]  # Any allows nested
 TimeoutType = Union[None, float, "_ClientTimeout", urllib3.util.Timeout]
 
 
+class EndpointDiscoveryError(Exception):
+    """No probed endpoint returned a usable BigDB response."""
+
+
 class _ClientTimeout:
     pass
 
@@ -611,6 +615,7 @@ def guess_url(session: requests.Session, host: str, validate_path: str = "/api/v
                  Explicit endpoints must be provided as full URLs with scheme.
     :param validate_path: BigDB path to use to validate the correctness of the guess
     :return fully qualified BigDB URL
+    :raises EndpointDiscoveryError: No probed endpoint returned a usable BigDB response.
     """
     if re.match(r"^https?://", host):
         return host
@@ -635,7 +640,7 @@ def guess_url(session: requests.Session, host: str, validate_path: str = "/api/v
             continue
         if _is_valid_probe_response(url + validate_path, response):
             return url
-    raise Exception("Could not find available BigDB service on {}".format(host))
+    raise EndpointDiscoveryError("Could not find available BigDB service on {}".format(host))
 
 
 def _attempt_login(
@@ -709,6 +714,7 @@ def connect(
     (other parameters for advanced/internal use).
 
     :return A connected BigDBClient instance
+    :raises EndpointDiscoveryError: Endpoint discovery found no usable BigDB service.
     :raises Exception on error
     """
     session = requests.Session()
