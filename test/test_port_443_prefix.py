@@ -264,7 +264,7 @@ class TestGuessUrlFallback(unittest.TestCase):
 
     @responses.activate
     def test_exception_when_all_ports_fail(self):
-        """Should raise exception when all ports fail."""
+        """Exhausted discovery raises a dedicated error without retrying probes."""
         responses.add(
             responses.GET,
             "https://192.0.2.1:443/a/api/v1/auth/healthy",
@@ -282,10 +282,84 @@ class TestGuessUrlFallback(unittest.TestCase):
         )
 
         session = requests.Session()
-        with self.assertRaises(Exception) as context:
+        with self.assertRaises(pybsn.EndpointDiscoveryError) as context:
             pybsn.guess_url(session, "192.0.2.1")
 
-        self.assertIn("Could not find available BigDB service", str(context.exception))
+        self.assertEqual(str(context.exception), "Could not find available BigDB service on 192.0.2.1")
+        self.assertNotIsInstance(context.exception, requests.exceptions.RequestException)
+        self.assertEqual(len(responses.calls), len(pybsn.BIGDB_PROTO_PORTS))
+
+    def test_discovery_error_for_rejected_or_unreachable_endpoints(self):
+        """Discovery failure includes transport failures and rejected HTTP responses."""
+        failures = {
+            "timeout": requests.exceptions.ReadTimeout("Timed out"),
+            "unauthorized": Mock(status_code=401, headers={}),
+            "not found": Mock(status_code=404, headers={}),
+            "unavailable": Mock(status_code=503, headers={}),
+            "HTML catch-all": Mock(status_code=200, headers={"Content-Type": "text/html"}),
+        }
+        for reason, failure in failures.items():
+            with self.subTest(reason=reason):
+                session = Mock()
+                session.get.side_effect = [failure] * len(pybsn.BIGDB_PROTO_PORTS)
+
+                with self.assertRaises(pybsn.EndpointDiscoveryError) as context:
+                    pybsn.guess_url(session, "192.0.2.1")
+
+                self.assertNotIsInstance(context.exception, requests.exceptions.RequestException)
+                self.assertEqual(session.get.call_count, len(pybsn.BIGDB_PROTO_PORTS))
+
+    def test_connect_can_recover_after_discovery_failure(self):
+        """The caller can retry connect after discovery fails while a server is down."""
+        probe_count = len(pybsn.BIGDB_PROTO_PORTS)
+        with patch.object(requests.Session, "get") as get, patch.object(pybsn, "_attempt_login") as login:
+            get.side_effect = [requests.exceptions.ConnectionError("Server restarting")] * probe_count + [
+                Mock(status_code=200, headers={"Content-Type": "application/json"}),
+            ]
+
+            with self.assertRaises(pybsn.EndpointDiscoveryError):
+                pybsn.connect("192.0.2.1", "admin", "password")
+
+            self.assertEqual(get.call_count, probe_count)
+            login.assert_not_called()
+
+            client = pybsn.connect("192.0.2.1", "admin", "password")
+
+            self.assertEqual(client.url, "https://192.0.2.1:443/a")
+            self.assertEqual(get.call_count, probe_count + 1)
+            login.assert_called_once()
+
+    @responses.activate
+    def test_login_error_after_discovery_propagates(self):
+        """Authentication failures remain HTTP errors rather than discovery errors."""
+        responses.add(
+            responses.GET,
+            "https://192.0.2.1:443/a/api/v1/auth/healthy",
+            json=True,
+        )
+        responses.add(
+            responses.POST,
+            "https://192.0.2.1:443/a/api/v1/rpc/controller/core/aaa/session/login",
+            status=401,
+        )
+
+        with self.assertRaises(requests.exceptions.HTTPError) as context:
+            pybsn.connect("192.0.2.1", "admin", "password")
+
+        self.assertEqual(context.exception.response.status_code, 401)
+        self.assertEqual(len(responses.calls), 2)
+
+    def test_unexpected_probe_error_propagates(self):
+        """Unexpected errors do not become endpoint discovery failures."""
+        session = Mock()
+        error = ValueError("Invalid probe configuration")
+        session.get.side_effect = error
+
+        with self.assertRaises(ValueError) as context:
+            pybsn.guess_url(session, "192.0.2.1")
+
+        self.assertIs(context.exception, error)
+        session.get.assert_called_once()
 
     @responses.activate
     def test_complete_url_bypasses_discovery(self):
