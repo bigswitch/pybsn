@@ -136,12 +136,13 @@ Releases are automated via GitHub Actions when tags are pushed:
 ## Python Version Support
 
 - Supports Python 3.8+
-- CI runs on ubuntu-22.04 and ubuntu-latest
+- CI runs Python 3.8–3.13 on ubuntu-22.04 and Python 3.10–3.13 on ubuntu-latest
+- Python 3.8/3.9 run on ubuntu-24.04 instead of ubuntu-latest
 - Uses modern `setuptools` build backend with PEP 621 metadata
 
 ## Dependency Management
 
-- **Package dependencies** (`pyproject.toml`): Flexible version ranges (e.g., `requests>=2.3.0`)
+- **Package dependencies** (`pyproject.toml`): Flexible version ranges (e.g., `requests>=2.25.0`)
 - **Development dependencies** (`uv.lock`): Cryptographically pinned for reproducible builds
 - All CI/CD workflows use `uv` for fast, reliable dependency resolution
 - Package consumers get flexible dependencies; contributors get pinned lockfile

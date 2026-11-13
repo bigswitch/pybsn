@@ -12,6 +12,7 @@ from urllib.parse import urlparse
 import requests
 import urllib3.util
 from urllib3.exceptions import InsecureRequestWarning
+from urllib3.util.retry import Retry
 
 warnings.simplefilter("ignore", InsecureRequestWarning)
 
@@ -25,6 +26,7 @@ SCHEMA_PREFIX = "/api/v1/schema/"
 JSONPrimitive = Union[None, bool, int, float, str]
 JSONValue = Union[JSONPrimitive, Dict[str, Any], List[Any]]  # Any allows nested structures
 TimeoutType = Union[None, float, "_ClientTimeout", urllib3.util.Timeout]
+RetriesType = Union[None, int, Retry]
 
 
 class _ClientTimeout:
@@ -630,7 +632,7 @@ def guess_url(session: requests.Session, host: str, validate_path: str = "/api/v
         url = f"{endpoint.scheme}://{hostname}:{endpoint.port_no}{endpoint.prefix}"
         try:
             response = session.get(url + validate_path, timeout=2)
-        except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
+        except (requests.exceptions.ConnectionError, requests.exceptions.Timeout, requests.exceptions.RetryError) as e:
             logger.debug("Error connecting to %s: %s", url, str(e))
             continue
         if _is_valid_probe_response(url + validate_path, response):
@@ -682,6 +684,7 @@ def connect(
     verify_tls: bool = False,
     session_headers: Optional[Dict[str, str]] = None,
     timeout: Optional[Union[float, urllib3.util.Timeout]] = None,
+    retries: RetriesType = None,
 ) -> BigDbClient:
     """Creates a connected BigDb client.
 
@@ -706,6 +709,25 @@ def connect(
         to wait forever. The timeout value will be used as the default
         for future operations unless it is changed.
 
+    :parameter retries: Optional retry configuration for failed HTTP requests.
+        Applies during discovery, authentication and later requests. For bare
+        hosts, each candidate uses the full retry budget with 2-second connect
+        and read timeouts per attempt, plus backoff or Retry-After delays.
+        A full URL skips discovery.
+        None (default) - No automatic retries.
+        int - Retry count (e.g., retries=3). Connection failures before sending
+            a request are retried for all methods. Read failures while waiting for
+            response headers are retried only for GET, HEAD, OPTIONS, PUT,
+            DELETE, TRACE. Reading a response body is not retried, including
+            when a partially received body stalls. Those methods also retry
+            413, 429, 503 responses with a Retry-After header and honor its delay.
+            POST/PATCH read errors and HTTP statuses are not retried.
+            No exponential backoff.
+        urllib3.util.retry.Retry - Full retry configuration object for advanced control.
+            Use this to retry on HTTP status codes, configure backoff, or retry POST/PATCH.
+            Example: retries=Retry(total=5, backoff_factor=1, status_forcelist=[503, 504],
+                                   allowed_methods=["GET", "POST"]).
+
     (other parameters for advanced/internal use).
 
     :return A connected BigDBClient instance
@@ -716,6 +738,12 @@ def connect(
     if session_headers:
         for k, v in session_headers.items():
             session.headers[k] = v
+
+    # Mount HTTPAdapter with retry configuration if specified
+    if retries is not None:
+        adapter = requests.adapters.HTTPAdapter(max_retries=retries)
+        session.mount("http://", adapter)
+        session.mount("https://", adapter)
 
     url = guess_url(session, host)
     if login is None:

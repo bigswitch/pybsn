@@ -16,18 +16,19 @@ authors = [
 ]
 requires-python = ">=3.8"
 dependencies = [
-    "requests>=2.3.0",
+    "requests>=2.25.0",
     "IPython>=7.13.0",
     "traitlets>=4.3.3",
+    "urllib3>=1.26.0",
 ]
 
 [project.optional-dependencies]
 test = [
-    "responses>=0.10.6",
+    "responses>=0.22.0",
     "coverage>=5.0",
 ]
 dev = [
-    "responses>=0.10.6",
+    "responses>=0.22.0",
     "coverage>=5.0",
     "flake8>=3.8.0",
 ]
