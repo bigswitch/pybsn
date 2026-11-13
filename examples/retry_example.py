@@ -69,7 +69,8 @@ def example_retry_non_idempotent():
     client = pybsn.connect(args.host, args.user, args.password, retries=retry_config)
 
     # This GET checks connectivity; GET is already in the default method set.
-    # Later POST/PATCH calls can retry read errors and HTTP 503 with this policy.
+    # Later POST/PATCH calls can retry failures awaiting response headers and HTTP 503.
+    # Reading a partially received response body is not retried.
     # Use with caution - ensure those operations are idempotent!
     switches = client.root.core.switch()
     print(f"  Found {len(switches)} switches (with non-idempotent retry enabled)")

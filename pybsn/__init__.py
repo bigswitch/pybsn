@@ -716,8 +716,10 @@ def connect(
         A full URL skips discovery.
         None (default) - No automatic retries.
         int - Retry count (e.g., retries=3). Connection failures before sending
-            a request are retried for all methods. Read errors are retried only
-            for GET, HEAD, OPTIONS, PUT, DELETE, TRACE. Those methods also retry
+            a request are retried for all methods. Read failures while waiting for
+            response headers are retried only for GET, HEAD, OPTIONS, PUT,
+            DELETE, TRACE. Reading a response body is not retried, including
+            when a partially received body stalls. Those methods also retry
             413, 429, 503 responses with a Retry-After header and honor its delay.
             POST/PATCH read errors and HTTP statuses are not retried.
             No exponential backoff.

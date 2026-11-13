@@ -195,12 +195,14 @@ client = pybsn.connect(host="controller", token="<token>", retries=3)
 
 **Important:** When using an integer value:
 - Retries connection failures before sending a request for **all methods**, including POST and PATCH.
-- Retries read errors for **GET, HEAD, OPTIONS, PUT, DELETE, TRACE** only.
+- Retries read failures while waiting for response headers for **GET, HEAD, OPTIONS, PUT, DELETE, TRACE** only.
 - Retries **413, 429, 503** responses with a `Retry-After` header for those methods and honors its delay.
 - Does not retry POST/PATCH read errors or HTTP statuses.
 - Uses no exponential backoff.
 
 Use a `Retry` object to select other HTTP statuses, change `Retry-After` handling, or retry POST/PATCH read errors and statuses (see below). By default, exhausted status retries raise `requests.exceptions.RetryError`; set `raise_on_status=False` in the `Retry` configuration to let pybsn handle the final HTTP response instead. During endpoint discovery, pybsn then tries the next candidate endpoint.
+
+Reading a response body is not retried, even with a custom `Retry` object. For example, a connection dropped before the controller starts replying can be retried, but a response body that stalls halfway through fails without another attempt.
 
 ### Advanced Retry Configuration
 
